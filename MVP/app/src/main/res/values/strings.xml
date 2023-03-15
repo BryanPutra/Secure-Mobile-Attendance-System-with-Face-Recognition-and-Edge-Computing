@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MVP</string>
+    <string name="title_crop">Crop</string>
+    <string name="title_detect">Detect</string>
+    <string name="take_photo">Take Photo</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_register">Register</string>
+    <string name="register">Register</string>
+</resources>
