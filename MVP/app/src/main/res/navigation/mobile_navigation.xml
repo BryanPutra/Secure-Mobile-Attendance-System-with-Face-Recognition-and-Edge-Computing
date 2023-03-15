@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_register">
+
+    <fragment
+        android:id="@+id/navigation_register"
+        android:name="com.example.mvp.ui.register.RegisterFragment"
+        android:label="@string/title_register"
+        tools:layout="@layout/fragment_register" >
+        <action
+            android:id="@+id/action_navigation_register_to_navigation_preview"
+            app:destination="@id/navigation_preview" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_detect"
+        android:name="com.example.mvp.ui.detect.DetectFragment"
+        android:label="@string/title_detect"
+        tools:layout="@layout/fragment_detect" />
+    <fragment
+        android:id="@+id/navigation_preview"
+        android:name="com.example.mvp.ui.register.PreviewFragment"
+        android:label="PreviewFragment" >
+        <action
+            android:id="@+id/action_navigation_preview_to_navigation_register"
+            app:destination="@id/navigation_register" />
+    </fragment>
+
+</navigation>
