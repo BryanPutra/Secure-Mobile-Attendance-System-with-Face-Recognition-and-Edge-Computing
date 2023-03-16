@@ -29,7 +29,7 @@ class FrameAnalyzer ( private val context: Context, activity: DetectFragment,
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
         var bitmap = BitmapUtils.getBitmap(image)
-        bitmap = Model.toGrayscale(bitmap!!)
+        bitmap = BitmapUtils.toGrayscale(bitmap!!)
         val inputImage = InputImage.fromBitmap(bitmap,0)
         faceDetector.process(inputImage).addOnSuccessListener{ faces->
             if(faces.size == 0){

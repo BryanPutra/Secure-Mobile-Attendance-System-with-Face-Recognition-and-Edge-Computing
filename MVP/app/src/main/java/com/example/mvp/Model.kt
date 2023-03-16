@@ -31,24 +31,20 @@ import kotlin.math.sqrt
 
 class Model (context: Context){
     companion object{
-        const val modelName = "mobile_face_net.tflite"
-        const val modelInput = 112
-        const val modelOutput = 192
-        const val threshold = 0.5f
-        const val fileName = "embsKnown"
+        var modelName = "mobile_face_net.tflite"
+        var modelInput = 112
+        var modelOutput = 192
+        var threshold = 0.5f
+        var fileName = "embsKnown"
+        var modelDesc = "MobileFaceNet"
 
-        fun toGrayscale(bmpOriginal: Bitmap): Bitmap {
-            val height: Int = bmpOriginal.height
-            val width: Int = bmpOriginal.width
-            val bmpGrayscale = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val c = Canvas(bmpGrayscale)
-            val paint = Paint()
-            val cm = ColorMatrix()
-            cm.setSaturation(0f)
-            val f = ColorMatrixColorFilter(cm)
-            paint.colorFilter = f
-            c.drawBitmap(bmpOriginal, 0f, 0f, paint)
-            return bmpGrayscale
+        fun changeModel(status: Int){
+            modelName = if(status == 1) "facenet_quantized.tflite" else "mobile_face_net.tflite"
+            modelInput = if(status == 1) 160 else 112
+            modelOutput = if(status == 1) 128 else 192
+            threshold = if(status == 1) 0.65f else 0.5f
+            fileName = if(status == 1) "embsKnownFacenet" else "embsKnown"
+            modelDesc = if(status == 1) "Facenet" else "MobileFaceNet"
         }
     }
 
@@ -64,6 +60,8 @@ class Model (context: Context){
         contextLocal = context
         loadKnownFaces()
     }
+
+
 
     fun getKnownFacesSize():Int{
         return embsKnown.size
@@ -108,7 +106,7 @@ class Model (context: Context){
         val t1 = System.currentTimeMillis()
         val outputs = Array(1) { FloatArray(modelOutput ) }
         interpreter.run(inputs, outputs)
-        Log.e( "Performance" , "MobileFaceNet Inference Speed in ms : ${System.currentTimeMillis() - t1}")
+        Log.e( "Performance" , "$modelDesc Inference Speed in ms : ${System.currentTimeMillis() - t1}")
         return outputs
     }
 
