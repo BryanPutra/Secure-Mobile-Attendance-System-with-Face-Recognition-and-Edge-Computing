@@ -3,7 +3,6 @@ package com.example.mvp.ui.register
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,10 +17,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.example.mvp.Model
 import com.example.mvp.databinding.FragmentRegisterBinding
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.common.internal.ImageConvertUtils
-import java.util.concurrent.ExecutorService
 
 class RegisterFragment : Fragment() {
 
@@ -50,6 +49,17 @@ class RegisterFragment : Fragment() {
 
         _binding!!.imageCaptureButton.setOnClickListener { takePhoto() }
 
+        _binding!!.modelChangeButton.text = if(registerViewModel.getStatus() == 1) "FaceNet" else "MobileFaceNet"
+        _binding!!.modelChangeButton.setOnClickListener{
+            val status = registerViewModel.changeModel()
+            if(status == 1){
+                _binding!!.modelChangeButton.text = "FaceNet"
+
+            } else {
+                binding!!.modelChangeButton.text = "MobileFaceNet"
+            }
+            Model.changeModel(status)
+        }
         return root
     }
 

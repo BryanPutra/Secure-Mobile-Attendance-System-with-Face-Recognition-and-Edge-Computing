@@ -2,7 +2,6 @@ package com.example.mvp.ui.register
 
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +9,7 @@ import android.widget.Toast
 import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.example.mvp.BitmapUtils
 import com.example.mvp.Model
 import com.example.mvp.databinding.FragmentPreviewBinding
 import com.google.mlkit.vision.common.InputImage
@@ -43,7 +43,7 @@ class PreviewFragment : Fragment() {
             val faceDetector = FaceDetection.getClient(options)
 
             var bitmap = _binding!!.previewIv.drawable.toBitmap(_binding!!.previewIv.width,_binding!!.previewIv.height)
-            bitmap = Model.toGrayscale(bitmap)
+            bitmap = BitmapUtils.toGrayscale(bitmap)
             val inputImage = InputImage.fromBitmap(bitmap,0)
 
             faceDetector.process(inputImage).addOnSuccessListener { faces ->
