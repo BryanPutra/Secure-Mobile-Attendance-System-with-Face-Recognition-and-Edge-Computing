@@ -36,7 +36,7 @@ android {
                 '-opt-in=androidx.compose.material3.ExperimentalMaterial3Api'
         ]
     }
-    namespace 'com.example.secure_mobile_attendance_system_with_face_recognition_and_edge_computing'
+    namespace 'com.example.Thesis_Project'
     buildFeatures {
         compose true
     }

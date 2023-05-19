@@ -13,7 +13,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.Thesis_Project.elevation
-import com.example.secure_mobile_attendance_system_with_face_recognition_and_edge_computing.R
+import com.example.Thesis_Project.R
 
 @Composable
 fun ButtonMaxWidth(onClickCallback: () -> Unit, buttonText: String) {

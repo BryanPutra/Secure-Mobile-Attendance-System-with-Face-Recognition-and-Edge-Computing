@@ -14,7 +14,7 @@ import androidx.navigation.NavController
 import com.example.Thesis_Project.ScreenRoutes
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
-import com.example.secure_mobile_attendance_system_with_face_recognition_and_edge_computing.R
+import com.example.Thesis_Project.R
 
 @Composable
 fun LoginUserScreen(navController: NavController) {

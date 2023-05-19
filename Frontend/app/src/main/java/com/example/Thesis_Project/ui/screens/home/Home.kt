@@ -21,15 +21,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
-import com.example.Thesis_Project.ui.theme.SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme
-import com.example.secure_mobile_attendance_system_with_face_recognition_and_edge_computing.R
+import com.example.Thesis_Project.R
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,7 +37,7 @@ enum class homeTapState {
 }
 
 @Composable
-fun HomeScreen(navController: NavController? = null) {
+fun HomeScreen(navController: NavController) {
     HomeContainer(navController)
 }
 
@@ -210,7 +208,11 @@ fun NotesSection() {
                             shape = RoundedCornerShape(20),
                             colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.blue_500))
                         ) {
-                            Text(text = "Save", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Normal)
+                            Text(
+                                text = "Save",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Normal
+                            )
                         }
 //                        ButtonMaxWidth(onClickCallback = {}, buttonText = "Save")
                     }
@@ -298,10 +300,10 @@ fun HomeContainer(navController: NavController?) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
-        HomeScreen()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun DefaultPreview() {
+//    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
+//        HomeScreen()
+//    }
+//}
