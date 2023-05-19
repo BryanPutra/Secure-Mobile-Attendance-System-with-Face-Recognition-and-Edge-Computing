@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <dimen name="padding_sm">8dp</dimen>
+    <dimen name="padding_md">16dp</dimen>
+    <dimen name="padding_lg">24dp</dimen>
+    <dimen name="padding_xl">36dp</dimen>
+    <dimen name="margin_sm">8dp</dimen>
+    <dimen name="margin_md">16dp</dimen>
+    <dimen name="margin_lg">24dp</dimen>
+    <dimen name="margin_xl">36dp</dimen>
+    <dimen name="border_radius_md">12dp</dimen>
+    <dimen name="border_radius_lg">24dp</dimen>
+    <dimen name="shadow_sm">4dp</dimen>
+    <dimen name="shadow_md">6</dimen>
+    <dimen name="text_size_sm">8sp</dimen>
+    <dimen name="text_size_md">12sp</dimen>
+    <dimen name="text_size_lg">16sp</dimen>
+    <dimen name="text_size_xl">24sp</dimen>
+</resources>

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Secure-Mobile-Attendance-System-with-Face-Recognition-and-Edge-Computing</string>
+    <string name="title_activity_main1">MainActivity1</string>
 </resources>

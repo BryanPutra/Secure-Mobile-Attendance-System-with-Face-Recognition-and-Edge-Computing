@@ -1,4 +1,4 @@
-package com.example.secure_mobile_attendance_system_with_face_recognition_and_edge_computing
+package com.example.Thesis_Project
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
