@@ -1,4 +1,4 @@
-package com.example.Thesis_Project.ui
+package com.example.Thesis_Project.ui.component_item_model
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

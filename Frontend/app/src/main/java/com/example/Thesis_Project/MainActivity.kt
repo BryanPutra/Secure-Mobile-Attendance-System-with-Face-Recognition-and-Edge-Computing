@@ -3,11 +3,8 @@ package com.example.Thesis_Project
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import com.example.Thesis_Project.ui.Navigation
+import androidx.navigation.compose.rememberNavController
+import com.example.Thesis_Project.ui.navgraphs.RootNavigationGraph
 import com.example.Thesis_Project.ui.theme.SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,8 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
-                // A surface container using the 'background' color from the theme
-                Navigation()
+                RootNavigationGraph(navController = rememberNavController())
             }
         }
     }

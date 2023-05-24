@@ -16,10 +16,10 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.Thesis_Project.ScreenRoutes
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.routes.AuthScreenRoutes
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -60,7 +60,7 @@ fun Login(role: String, imageId: Int, navController: NavController) {
                         "User",
                         ignoreCase = true
                     )
-                ) navController.navigate(ScreenRoutes.LoginUserScreen.route)
+                ) navController.navigate(AuthScreenRoutes.LoginUserScreen.route)
             },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

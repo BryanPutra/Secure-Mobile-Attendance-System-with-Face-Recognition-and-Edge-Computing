@@ -11,10 +11,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
-import com.example.Thesis_Project.ScreenRoutes
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.routes.BottomNavBarRoutes
 
 @Composable
 fun LoginUserScreen(navController: NavController) {
@@ -65,7 +65,7 @@ fun LoginUserHeader() {
 fun LoginUserInputs(navController: NavController) {
 
     fun onSubmitLogin(){
-        navController.navigate(ScreenRoutes.HomeScreen.route)
+        navController.navigate(BottomNavBarRoutes.HomeScreen.route)
     }
 
     var username by rememberSaveable {

@@ -24,10 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.ui.components.BottomNavigationBar
+import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,7 +41,18 @@ enum class homeTapState {
 }
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavHostController = rememberNavController()) {
+    Scaffold(
+        bottomBar = { BottomNavigationBar(navController = navController, onItemClicked = {})},
+        content = { paddingValues ->
+            Surface(modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)) {
+                HomeNavGraph(
+                    navController = navController
+                )
+            }
+        })
     HomeContainer(navController)
 }
 
