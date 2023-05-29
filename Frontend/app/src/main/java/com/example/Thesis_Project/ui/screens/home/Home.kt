@@ -45,15 +45,12 @@ fun HomeScreen(navController: NavHostController = rememberNavController()) {
     Scaffold(
         bottomBar = { BottomNavigationBar(navController = navController, onItemClicked = {})},
         content = { paddingValues ->
-            Surface(modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)) {
+            Box(modifier = Modifier.padding(paddingValues)){
                 HomeNavGraph(
-                    navController = navController
+                    navController = navController,
                 )
             }
         })
-    HomeContainer(navController)
 }
 
 @Composable

@@ -6,9 +6,12 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.WorkHistory
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.ui.component_item_model.BottomNavItem
@@ -36,11 +39,12 @@ val bottomNavItems =
 
 @Composable
 fun BottomNavigationBar(
-    navController: NavController,
+    navController: NavHostController,
     modifier: Modifier = Modifier,
     onItemClicked: (BottomNavItem) -> Unit
 ) {
-    val backStackEntry = navController.currentBackStackEntryAsState()
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backStackEntry?.destination
     NavigationBar(
         modifier = Modifier,
         containerColor = colorResource(id = R.color.white),
@@ -48,9 +52,13 @@ fun BottomNavigationBar(
         contentColor = colorResource(id = R.color.blue_500)
     ) {
         bottomNavItems.forEach { item ->
-            val selected = item.route == backStackEntry.value?.destination?.route
+            val selected = currentDestination?.hierarchy?.any {it.route == item.route} == true
             NavigationBarItem(
-                selected = selected, onClick = { onItemClicked(item) },
+                selected = selected,
+                onClick = { navController.navigate(item.route){
+                    launchSingleTop = true
+                    restoreState = true
+                } },
                 icon = {
                     Icon(
                         imageVector = item.icon,

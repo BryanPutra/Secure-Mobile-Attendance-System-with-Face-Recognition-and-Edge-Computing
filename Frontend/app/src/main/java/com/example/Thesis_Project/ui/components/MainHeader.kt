@@ -27,18 +27,18 @@ import java.util.*
 
 @Composable
 fun historyNavButton(
-    isSelected: MutableState<Boolean>,
+    isSelected: Boolean,
     historyType: String,
     onClicked: () -> Unit
 ) {
 
-    val textColor: Color = if (isSelected.value) {
+    val textColor: Color = if (isSelected) {
         colorResource(id = R.color.blue_500)
     } else {
         colorResource(id = R.color.white)
     }
 
-    val boxModifier: Modifier = if (isSelected.value) {
+    val boxModifier: Modifier = if (isSelected) {
         Modifier
             .width(110.dp)
             .background(
@@ -76,21 +76,26 @@ fun historyNavButton(
 }
 
 @Composable
-fun MainHeader(page: String?, userFullName: String) {
+fun MainHeader(
+    page: String?,
+    userFullName: String,
+    correctionSelected: Boolean,
+    leaveSelected: Boolean,
+    onCorrectionSelected: (Boolean) -> Unit,
+    onLeaveSelected: (Boolean) -> Unit
+) {
 
-    val correctionSelected = remember { mutableStateOf(false) };
-    val leaveSelected = remember { mutableStateOf(false) };
     val currentDate = remember { mutableStateOf(Date()) }
     val currentDateString = formatDateToString(currentDate.value)
 
     val setCorrectionSelected = {
-        correctionSelected.value = true;
-        leaveSelected.value = false;
+        onCorrectionSelected(true);
+        onCorrectionSelected(false);
     }
 
     val setLeaveSelected = {
-        correctionSelected.value = false;
-        leaveSelected.value = true;
+        onLeaveSelected(true);
+        onLeaveSelected(false);
     }
 
     Column(
@@ -141,13 +146,13 @@ fun MainHeader(page: String?, userFullName: String) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
-        MainHeader(
-            "history_screen",
-            "Bryan Putra",
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun DefaultPreview() {
+//    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
+//        MainHeader(
+//            "history_screen",
+//            "Bryan Putra",
+//        )
+//    }
+//}

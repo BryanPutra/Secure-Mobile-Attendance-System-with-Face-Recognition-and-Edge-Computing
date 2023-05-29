@@ -15,6 +15,7 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
+import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 
 @Composable
 fun LoginUserScreen(navController: NavController) {
@@ -65,7 +66,8 @@ fun LoginUserHeader() {
 fun LoginUserInputs(navController: NavController) {
 
     fun onSubmitLogin(){
-        navController.navigate(BottomNavBarRoutes.HomeScreen.route)
+        navController.popBackStack()
+        navController.navigate(NavGraphs.HOME)
     }
 
     var username by rememberSaveable {

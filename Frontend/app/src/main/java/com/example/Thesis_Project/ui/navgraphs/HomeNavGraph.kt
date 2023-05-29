@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.navgraphs
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import com.example.Thesis_Project.ui.screens.calendar.CalendarScreen
 import com.example.Thesis_Project.ui.screens.history.HistoryScreen
@@ -8,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
+import com.example.Thesis_Project.ui.screens.home.HomeContainer
 
 @Composable
 fun HomeNavGraph(navController: NavHostController){
@@ -17,7 +19,7 @@ fun HomeNavGraph(navController: NavHostController){
         startDestination = BottomNavBarRoutes.HomeScreen.route
     ){
         composable(route = BottomNavBarRoutes.HomeScreen.route){
-            HomeScreen(navController = navController)
+            HomeContainer(navController = navController)
         }
         composable(route = BottomNavBarRoutes.CalendarScreen.route) {
             CalendarScreen(navController = navController)
