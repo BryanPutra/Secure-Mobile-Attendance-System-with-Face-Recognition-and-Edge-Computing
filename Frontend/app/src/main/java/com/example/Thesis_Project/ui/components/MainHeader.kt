@@ -123,25 +123,23 @@ fun MainHeader(
             )
         }
 
-        if (page !== BottomNavBarRoutes.HistoryScreen.route) {
-            return
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
-        ) {
-            historyNavButton(
-                isSelected = correctionSelected,
-                historyType = "Correction",
-                onClicked = setCorrectionSelected
-            )
-            historyNavButton(
-                isSelected = leaveSelected,
-                historyType = "Leave",
-                onClicked = setLeaveSelected
-            )
+        if (page == BottomNavBarRoutes.HistoryScreen.route) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+            ) {
+                historyNavButton(
+                    isSelected = correctionSelected,
+                    historyType = "Correction",
+                    onClicked = setCorrectionSelected
+                )
+                historyNavButton(
+                    isSelected = leaveSelected,
+                    historyType = "Leave",
+                    onClicked = setLeaveSelected
+                )
+            }
         }
     }
 }
