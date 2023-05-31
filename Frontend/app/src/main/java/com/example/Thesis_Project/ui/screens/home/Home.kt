@@ -11,10 +11,8 @@ import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -61,7 +59,7 @@ fun TapCard(navController: NavController? = null, tapState: homeTapState) {
 @Composable
 fun TapInCard(tapInDisabled: Boolean) {
 
-    val currentDateTime = remember { mutableStateOf(Date()) }
+    val currentDateTime = rememberSaveable { mutableStateOf(Date()) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -126,17 +124,18 @@ fun TapOutCard() {
 
 @Composable
 fun NotesSection() {
-    val isEditing = remember { mutableStateOf(false) }
-    val lastUpdatedDate = remember { mutableStateOf(Date()) }
-    var notesString =
-        remember { mutableStateOf("Meeting at 4PM \nDo Reports \nMeeting in 18th May") }
+    var isEditing by rememberSaveable { mutableStateOf(false) }
+    val lastUpdatedDate by rememberSaveable { mutableStateOf(Date()) }
+    var notesString by rememberSaveable {
+        mutableStateOf("Meeting at 4PM \nDo Reports \nMeeting in 18th May")
+    }
 
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
-    val formattedDate = dateFormat.format(lastUpdatedDate.value)
+    val formattedDate = dateFormat.format(lastUpdatedDate)
 
     val bulletPoint = "\u2022 "
     val annotatedText = buildAnnotatedString {
-        val lines = notesString.value.trim().split("\n")
+        val lines = notesString.trim().split("\n")
 
         lines.forEachIndexed { index, line ->
             append(bulletPoint)
@@ -161,7 +160,7 @@ fun NotesSection() {
     ) {
 
         Card(
-            onClick = { isEditing.value = !isEditing.value },
+            onClick = { isEditing = !isEditing },
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
@@ -179,11 +178,11 @@ fun NotesSection() {
                     alignment = Alignment.CenterVertically
                 ),
             ) {
-                if (isEditing.value) {
+                if (isEditing) {
                     OutlinedTextField(
                         modifier = Modifier.fillMaxWidth(1f),
-                        value = notesString.value,
-                        onValueChange = { newNotes -> notesString.value = newNotes })
+                        value = notesString,
+                        onValueChange = { newNotes -> notesString = newNotes })
                 } else {
                     Text(
                         text = annotatedText,
@@ -208,7 +207,7 @@ fun NotesSection() {
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    if (isEditing.value) {
+                    if (isEditing) {
                         Button(
                             onClick = {},
                             modifier = Modifier.fillMaxWidth(),
@@ -226,7 +225,6 @@ fun NotesSection() {
                                 fontWeight = FontWeight.Normal
                             )
                         }
-//                        ButtonMaxWidth(onClickCallback = {}, buttonText = "Save")
                     }
                 }
             }

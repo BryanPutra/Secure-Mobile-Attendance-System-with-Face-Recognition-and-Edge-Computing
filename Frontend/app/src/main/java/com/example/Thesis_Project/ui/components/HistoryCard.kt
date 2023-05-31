@@ -74,7 +74,7 @@ fun HistoryCard(historyType: String, description: String, date: String, status: 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Last updated: $date",
+                        text = date,
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )

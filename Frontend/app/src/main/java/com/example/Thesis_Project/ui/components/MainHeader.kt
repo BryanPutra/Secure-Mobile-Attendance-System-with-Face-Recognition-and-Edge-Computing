@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,10 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -67,6 +65,7 @@ fun historyNavButton(
                 shape = RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge)
             )
             .padding(MaterialTheme.spacing.spaceSmall)
+            .clickable { onClicked() }
     }
     Box(
         modifier = boxModifier, contentAlignment = Alignment.Center
@@ -79,21 +78,23 @@ fun historyNavButton(
 fun MainHeader(
     page: String?,
     userFullName: String,
-    correctionSelected: Boolean,
-    leaveSelected: Boolean,
+    correctionSelected: Boolean? = null,
+    leaveSelected: Boolean? = null,
     onCorrectionSelected: (Boolean) -> Unit,
     onLeaveSelected: (Boolean) -> Unit
 ) {
 
-    val currentDate = remember { mutableStateOf(Date()) }
-    val currentDateString = formatDateToString(currentDate.value)
+    val currentDate by remember { mutableStateOf(Date()) }
+    val currentDateString = formatDateToString(currentDate)
 
     val setCorrectionSelected = {
+        Log.d("tag", "setCorrectionSelected")
         onCorrectionSelected(true);
         onCorrectionSelected(false);
     }
 
     val setLeaveSelected = {
+        Log.d("tag1", "setLeaveSelected")
         onLeaveSelected(true);
         onLeaveSelected(false);
     }
@@ -130,12 +131,12 @@ fun MainHeader(
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
             ) {
                 historyNavButton(
-                    isSelected = correctionSelected,
+                    isSelected = correctionSelected ?: false,
                     historyType = "Correction",
                     onClicked = setCorrectionSelected
                 )
                 historyNavButton(
-                    isSelected = leaveSelected,
+                    isSelected = leaveSelected ?: false,
                     historyType = "Leave",
                     onClicked = setLeaveSelected
                 )

@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.history
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -68,7 +69,9 @@ fun HistoryScreen(navController: NavController) {
 
 @Composable
 fun HistoryContainer(navController: NavController) {
-    val currentRoute = navController?.currentBackStackEntryAsState()?.value?.destination?.route
+    val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
+    val destination = currentBackStackEntry?.destination
+    val currentRoute = currentBackStackEntry?.destination?.route
     val correctionSelected = remember { mutableStateOf(false) };
     val leaveSelected = remember { mutableStateOf(false) };
 
@@ -84,17 +87,22 @@ fun HistoryContainer(navController: NavController) {
             leaveSelected = leaveSelected.value,
             onCorrectionSelected = { newCorrectionState ->
                 correctionSelected.value = newCorrectionState
+                Log.d("changedCorrectionState", "$correctionSelected.value $newCorrectionState")
             },
-            onLeaveSelected = { newLeaveState -> leaveSelected.value = newLeaveState }
+            onLeaveSelected = { newLeaveState ->
+                leaveSelected.value = newLeaveState
+                Log.d("changedCorrectionState", "${leaveSelected.value} newLeaveState")
+            }
         )
         if (correctionSelected.value) {
-            LazyColumn (verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
-                item{
-                    Text(
-                        "Correction List",
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                }
+            Text(
+                "Correction List",
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            LazyColumn(
+                modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
+            ) {
                 items(correctionCardItems) { correctionCardItem ->
                     HistoryCard(
                         historyType = correctionCardItem.historyType,
@@ -105,7 +113,10 @@ fun HistoryContainer(navController: NavController) {
                 }
             }
         } else {
-            LazyColumn (verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
+            LazyColumn(
+                modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+            ) {
                 item {
                     Text(
                         "Leave List",
