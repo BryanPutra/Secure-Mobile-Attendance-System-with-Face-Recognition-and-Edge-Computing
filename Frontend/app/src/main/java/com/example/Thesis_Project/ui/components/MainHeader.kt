@@ -12,65 +12,56 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.theme.SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import java.util.*
 
 @Composable
-fun historyNavButton(
+fun HistoryNavButton(
     isSelected: Boolean,
     historyType: String,
     onClicked: () -> Unit
 ) {
 
-    val textColor: Color = if (isSelected) {
+    val buttonColor: Color = if (isSelected) {
         colorResource(id = R.color.blue_500)
     } else {
         colorResource(id = R.color.white)
     }
 
-    val boxModifier: Modifier = if (isSelected) {
-        Modifier
-            .width(110.dp)
-            .background(
-                color = colorResource(id = R.color.white),
-            )
-            .border(
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = colorResource(id = R.color.blue_500)
-                ),
-                shape = RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge)
-            )
-            .padding(MaterialTheme.spacing.spaceSmall)
-            .clickable { onClicked() }
+    val inverseButtonColor: Color = if (isSelected) {
+        colorResource(id = R.color.white)
     } else {
+        colorResource(id = R.color.blue_500)
+    }
+
+    val boxModifier: Modifier =
         Modifier
             .width(110.dp)
-            .background(
-                color = colorResource(id = R.color.blue_500),
-            )
+            .clip(RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge))
             .border(
                 border = BorderStroke(
                     width = 1.dp,
-                    color = colorResource(id = R.color.white),
+                    color = buttonColor
                 ),
                 shape = RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge)
             )
+            .background(
+                color = inverseButtonColor,
+            )
             .padding(MaterialTheme.spacing.spaceSmall)
             .clickable { onClicked() }
-    }
+
     Box(
         modifier = boxModifier, contentAlignment = Alignment.Center
     ) {
-        Text(text = historyType, color = textColor, style = MaterialTheme.typography.bodySmall)
+        Text(text = historyType, color = buttonColor, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -90,13 +81,13 @@ fun MainHeader(
     val setCorrectionSelected = {
         Log.d("tag", "setCorrectionSelected")
         onCorrectionSelected(true);
-        onCorrectionSelected(false);
+        onLeaveSelected(false);
     }
 
     val setLeaveSelected = {
         Log.d("tag1", "setLeaveSelected")
         onLeaveSelected(true);
-        onLeaveSelected(false);
+        onCorrectionSelected(false);
     }
 
     Column(
@@ -130,12 +121,12 @@ fun MainHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
             ) {
-                historyNavButton(
+                HistoryNavButton(
                     isSelected = correctionSelected ?: false,
                     historyType = "Correction",
                     onClicked = setCorrectionSelected
                 )
-                historyNavButton(
+                HistoryNavButton(
                     isSelected = leaveSelected ?: false,
                     historyType = "Leave",
                     onClicked = setLeaveSelected

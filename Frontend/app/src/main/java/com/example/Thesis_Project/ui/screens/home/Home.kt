@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.home
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -28,8 +29,11 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.User
+import com.example.Thesis_Project.backend.db.db_models.db_util
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -234,6 +238,13 @@ fun NotesSection() {
 
 @Composable
 fun HomeContainer(navController: NavController?) {
+
+    val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+
+    val user: User = db_util.GetUser(db, "vMQz8RTu4iR7pJMLlrnN")
+
+    Log.d("user", user.email ?: "user not found")
+
     Box(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -288,6 +299,13 @@ fun HomeContainer(navController: NavController?) {
                     tint = colorResource(id = R.color.gray_50),
                     modifier = Modifier.size(MaterialTheme.spacing.iconExtraLarge)
                 )
+                user.userid?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
             }
             TapInCard(tapInDisabled = false)
             NotesSection()

@@ -69,16 +69,14 @@ fun HistoryScreen(navController: NavController) {
 
 @Composable
 fun HistoryContainer(navController: NavController) {
-    val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
-    val destination = currentBackStackEntry?.destination
+    val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = currentBackStackEntry?.destination?.route
-    val correctionSelected = remember { mutableStateOf(false) };
+    val correctionSelected = remember { mutableStateOf(true) };
     val leaveSelected = remember { mutableStateOf(false) };
 
     Column(
         modifier = Modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
     ) {
         MainHeader(
             page = currentRoute,
@@ -87,22 +85,22 @@ fun HistoryContainer(navController: NavController) {
             leaveSelected = leaveSelected.value,
             onCorrectionSelected = { newCorrectionState ->
                 correctionSelected.value = newCorrectionState
-                Log.d("changedCorrectionState", "$correctionSelected.value $newCorrectionState")
             },
             onLeaveSelected = { newLeaveState ->
                 leaveSelected.value = newLeaveState
-                Log.d("changedCorrectionState", "${leaveSelected.value} newLeaveState")
             }
         )
         if (correctionSelected.value) {
-            Text(
-                "Correction List",
-                style = MaterialTheme.typography.headlineSmall,
-            )
             LazyColumn(
                 modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
             ) {
+                item {
+                    Text(
+                        "Correction List",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                }
                 items(correctionCardItems) { correctionCardItem ->
                     HistoryCard(
                         historyType = correctionCardItem.historyType,
@@ -115,7 +113,7 @@ fun HistoryContainer(navController: NavController) {
         } else {
             LazyColumn(
                 modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
             ) {
                 item {
                     Text(
