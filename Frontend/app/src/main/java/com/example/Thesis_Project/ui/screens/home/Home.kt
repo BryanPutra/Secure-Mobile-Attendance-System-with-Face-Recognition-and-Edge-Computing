@@ -30,10 +30,12 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.User
-import com.example.Thesis_Project.backend.db.db_models.db_util
+import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -239,11 +241,17 @@ fun NotesSection() {
 @Composable
 fun HomeContainer(navController: NavController?) {
 
-    val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    val db: FirebaseFirestore = Firebase.firestore
 
-    val user: User = db_util.GetUser(db, "vMQz8RTu4iR7pJMLlrnN")
-
-    Log.d("user", user.email ?: "user not found")
+    var user:User = User();
+    db_util.getUser(db, "vMQz8RTu4iR7pJMLlrnN") { data ->
+        if (data != null) {
+            user = data;
+            Log.e("USERDATA", user.email!!)
+        } else {
+            Log.e("USERDATA", "User not found")
+        }
+    }
 
     Box(
         modifier = Modifier
