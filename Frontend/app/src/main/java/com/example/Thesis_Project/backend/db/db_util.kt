@@ -1,25 +1,25 @@
-package com.example.Thesis_Project.backend.db.db_models
+package com.example.Thesis_Project.backend.db
 
 import android.util.Log
+import com.example.Thesis_Project.backend.db.db_models.User
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
 
 object db_util {
 
-    fun GetUser(db: FirebaseFirestore, userid: String): User {
-        var user:User = User();
-        try {
-            db.collection("users").document(userid).get().addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot != null) {
-                    user = documentSnapshot.toObject<User>()!!;
-                    return@addOnSuccessListener;
+    fun getUser(db: FirebaseFirestore, userId: String, callback: (User?) -> Unit) {
+        db.collection("users").document(userId).get()
+            .addOnSuccessListener { documentSnapshot ->
+                if (documentSnapshot.exists()) {
+                    val user = documentSnapshot.toObject<User>()
+                    callback(user)
+                } else {
+                    callback(null)
                 }
-            };
-        }
-        catch (e: FirebaseFirestoreException) {
-            Log.d("Error Fetching Data", "getUser: $e")
-        }
-        return user;
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Fetching Data", "getUser: $exception")
+                callback(null)
+            }
     }
 }
