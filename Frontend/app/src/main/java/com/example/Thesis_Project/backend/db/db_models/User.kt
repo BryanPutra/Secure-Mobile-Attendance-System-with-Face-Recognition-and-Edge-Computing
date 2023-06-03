@@ -13,6 +13,6 @@ data class User(
     val leaveleft: Int? = null,
     val leaveallow: Boolean? = null,
     val permissionleft: Int? = null,
-    val monthlytoleranceworktime: List<Int>? = null,
+    val monthlytoleranceworktime: Map<String,Int>? = null,
     val joindate: Date? = null
     )

@@ -1,8 +1,9 @@
 package com.example.Thesis_Project.backend.db.db_models
+import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
 data class LeaveRequest(
-    val leaverequestid: String? = null,
+    var leaverequestid: String? = null,
     val userid: String? = null,
     val leavestart: Date? = null,
     val leaveend: Date? = null,
@@ -14,4 +15,5 @@ data class LeaveRequest(
     val rejectedflag: Boolean? = null,
     val rejectedtime: Date? = null,
     val rejectedby: String? = null,
+    var createdate: Date? = null
     )
