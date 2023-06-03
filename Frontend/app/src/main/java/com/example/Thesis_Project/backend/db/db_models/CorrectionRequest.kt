@@ -1,8 +1,9 @@
 package com.example.Thesis_Project.backend.db.db_models
+import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
 
 data class CorrectionRequest(
-    val correctionrequestid: String? = null,
+    var correctionrequestid: String? = null,
     val userid: String? = null,
     val timein: Date? = null,
     val timeout: Date? = null,
@@ -13,4 +14,5 @@ data class CorrectionRequest(
     val rejectedflag: Boolean? = null,
     val rejectedtime: Date? = null,
     val rejectedby: String? = null,
+    var createdate: Date? = null
     )

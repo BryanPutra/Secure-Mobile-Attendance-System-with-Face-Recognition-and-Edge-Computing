@@ -29,7 +29,9 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
 import com.example.Thesis_Project.backend.db.db_models.User
+import com.example.Thesis_Project.backend.db.db_testing
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
@@ -38,9 +40,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
 import java.util.*
 
 enum class homeTapState {
@@ -246,75 +245,16 @@ fun HomeContainer(navController: NavController?) {
 
     val db: FirebaseFirestore = Firebase.firestore
 
-    // Testing get user
     var user:User = User();
     db_util.getUser(db, "vMQz8RTu4iR7pJMLlrnN") { data ->
         if (data != null) {
             user = data;
-            for(i in user.monthlytoleranceworktime!!){
-                Log.e("USERDATA", i.toString())
-            }
+            Log.d("USERDATA",user.userid!!);
+            db_testing.runTests(db,user.userid!!);
         } else {
             Log.e("USERDATA", "User not found")
         }
     }
-
-    // Testing get attendance
-    // First date and end date of current month (java dates super gay)
-    val datestart = Date.from(LocalDate.now().withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
-    val dateend = Date.from(LocalDate.now().plusMonths(1).withDayOfMonth(1).minusDays(1).atTime(
-        LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant());
-
-    db_util.getAttendance(db, "vMQz8RTu4iR7pJMLlrnN",datestart,dateend) {data ->
-        if(data != null){
-            if(data.isNotEmpty()) {
-                for (i in data) {
-                    Log.e("ATTENDANCEDATA", i.timein!!.toString())
-                    Log.e("ATTENDANCEDATA", i.timeout!!.toString())
-                }
-            }
-            else{
-                Log.e("ATTENDANCEDATA", "Attendance not found") // Error because there is no data in db
-            }
-        } else {
-            Log.e("ATTENDANCEDATA", "Attendance not found")  // Error because firestore fetch failed
-        }
-    }
-
-    // Testing leave request
-    db_util.getLeaveRequest(db, null) {data ->
-        if(data != null){
-            if(data.isNotEmpty()) {
-                for (i in data) {
-                    Log.e("LEAVEREQDATA", i.leavestart!!.toString())
-                    Log.e("LEAVEREQDATA", i.leaveend!!.toString())
-                }
-            }
-            else{
-                Log.e("LEAVEREQDATA", "Leave request not found") // Error because there is no data in db
-            }
-        } else {
-            Log.e("LEAVEREQDATA", "Leave request not found")  // Error because firestore fetch failed
-        }
-    }
-
-    // Testing correction request
-    db_util.getCorrectionRequest(db, "vMQz8RTu4iR7pJMLlrnN") {data ->
-        if(data != null){
-            if(data.isNotEmpty()) {
-                for (i in data) {
-                    Log.e("CORRECTREQDATA", i.timein!!.toString())
-                    Log.e("CORRECTREQDATA", i.timeout!!.toString())
-                }
-            }
-            else{
-                Log.e("CORRECTREQDATA", "Correction request not found") // Error because there is no data in db
-            }
-        } else {
-            Log.e("CORRECTREQDATA", "Correction request not found")  // Error because firestore fetch failed
-        }
-    }
-
 
     Box(
         modifier = Modifier
