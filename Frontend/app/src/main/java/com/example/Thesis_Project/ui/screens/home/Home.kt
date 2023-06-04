@@ -67,19 +67,19 @@ fun TapCard(navController: NavController? = null, tapState: homeTapState) {
 @Composable
 fun TapInCard(tapInDisabled: Boolean) {
 
-    val currentDateTime = rememberSaveable { mutableStateOf(Date()) }
+    var currentDateTime by rememberSaveable { mutableStateOf(Date()) }
 
     LaunchedEffect(Unit) {
         while (true) {
-            currentDateTime.value = Date()
+            currentDateTime = Date()
             delay(60000) // Delay for 1 minute (60000 milliseconds)
         }
     }
 
     val dateFormat = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.ENGLISH)
     val timeFormat = SimpleDateFormat("HH : mm", Locale.ENGLISH)
-    val formattedDate = dateFormat.format(currentDateTime.value)
-    val formattedTime = timeFormat.format(currentDateTime.value)
+    val formattedDate = dateFormat.format(currentDateTime)
+    val formattedTime = timeFormat.format(currentDateTime)
 
     Card(
         modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(

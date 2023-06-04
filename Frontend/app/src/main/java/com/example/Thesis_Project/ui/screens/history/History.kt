@@ -4,13 +4,10 @@ import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -71,8 +68,8 @@ fun HistoryScreen(navController: NavController) {
 fun HistoryContainer(navController: NavController) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = currentBackStackEntry?.destination?.route
-    val correctionSelected = remember { mutableStateOf(true) };
-    val leaveSelected = remember { mutableStateOf(false) };
+    var correctionSelected by rememberSaveable { mutableStateOf(true) };
+    var leaveSelected by rememberSaveable { mutableStateOf(false) };
 
     Column(
         modifier = Modifier
@@ -81,16 +78,16 @@ fun HistoryContainer(navController: NavController) {
         MainHeader(
             page = currentRoute,
             userFullName = "Bryan Putra",
-            correctionSelected = correctionSelected.value,
-            leaveSelected = leaveSelected.value,
+            correctionSelected = correctionSelected,
+            leaveSelected = leaveSelected,
             onCorrectionSelected = { newCorrectionState ->
-                correctionSelected.value = newCorrectionState
+                correctionSelected = newCorrectionState
             },
             onLeaveSelected = { newLeaveState ->
-                leaveSelected.value = newLeaveState
+                leaveSelected = newLeaveState
             }
         )
-        if (correctionSelected.value) {
+        if (correctionSelected) {
             LazyColumn(
                 modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
