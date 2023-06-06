@@ -12,6 +12,6 @@ data class User(
     val embedding: String? = null,
     val leaveleft: Int? = null,
     val leaveallow: Boolean? = null,
-    val monthlytoleranceworktime: Map<String,Int>? = null,
+    val monthlytoleranceworktime: MutableMap<String,Int>? = null,
     val joindate: Date? = null
     )

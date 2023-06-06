@@ -249,8 +249,7 @@ fun HomeContainer(navController: NavController?) {
     db_util.getUser(db, "vMQz8RTu4iR7pJMLlrnN") { data ->
         if (data != null) {
             user = data;
-            Log.d("USERDATA",user.userid!!);
-            db_testing.runTests(db,user.userid!!);
+            db_testing.runTests(db,user);
         } else {
             Log.e("USERDATA", "User not found")
         }
