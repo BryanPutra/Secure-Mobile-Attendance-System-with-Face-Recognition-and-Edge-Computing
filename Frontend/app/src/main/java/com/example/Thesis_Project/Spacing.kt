@@ -25,6 +25,7 @@ data class Spacing(
     val borderRadiusLarge: Dp = 24.dp,
     val borderRadiusExtraLarge: Dp = 60.dp,
 
+    val iconExtraSmall: Dp = 18.dp,
     val iconSmall: Dp = 24.dp,
     val iconMedium: Dp = 28.dp,
     val iconLarge: Dp = 32.dp,

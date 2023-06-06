@@ -243,18 +243,18 @@ fun NotesSection() {
 @Composable
 fun HomeContainer(navController: NavController?) {
 
-    val db: FirebaseFirestore = Firebase.firestore
-
-    var user:User = User();
-    db_util.getUser(db, "vMQz8RTu4iR7pJMLlrnN") { data ->
-        if (data != null) {
-            user = data;
-            Log.d("USERDATA",user.userid!!);
-            db_testing.runTests(db,user.userid!!);
-        } else {
-            Log.e("USERDATA", "User not found")
-        }
-    }
+//    val db: FirebaseFirestore = Firebase.firestore
+//
+//    var user:User = User();
+//    db_util.getUser(db, "vMQz8RTu4iR7pJMLlrnN") { data ->
+//        if (data != null) {
+//            user = data;
+//            Log.d("USERDATA",user.userid!!);
+//            db_testing.runTests(db,user.userid!!);
+//        } else {
+//            Log.e("USERDATA", "User not found")
+//        }
+//    }
 
     Box(
         modifier = Modifier
@@ -310,13 +310,13 @@ fun HomeContainer(navController: NavController?) {
                     tint = colorResource(id = R.color.gray_50),
                     modifier = Modifier.size(MaterialTheme.spacing.iconExtraLarge)
                 )
-                user.userid?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
+//                user.userid?.let {
+//                    Text(
+//                        text = it,
+//                        style = MaterialTheme.typography.titleLarge,
+//                        fontWeight = FontWeight.Normal
+//                    )
+//                }
             }
             TapInCard(tapInDisabled = false)
             NotesSection()
