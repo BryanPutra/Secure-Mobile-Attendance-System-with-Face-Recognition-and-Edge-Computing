@@ -5,6 +5,7 @@ import java.util.Date
 data class CorrectionRequest(
     var correctionrequestid: String? = null,
     val userid: String? = null,
+    val attendanceid: String? = null,
     val timein: Date? = null,
     val timeout: Date? = null,
     val reason: String? = null,
