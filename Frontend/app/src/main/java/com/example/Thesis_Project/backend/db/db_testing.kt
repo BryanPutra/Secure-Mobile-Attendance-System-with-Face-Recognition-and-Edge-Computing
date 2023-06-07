@@ -3,6 +3,7 @@ package com.example.Thesis_Project.backend.db
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,13 +18,27 @@ object db_testing {
 //        testGetLeaveRequest(db,userid);
 //        testGetCorrectionRequest(db,userid);
 //
-//        testCreateAttendance(db,user.userid!!);
+//        testCreateAttendance(db,user);
 
-        testCreateLeaveRequest(db,user) // Leave left parameter only temporary, Frontend should not actually send it and instead read from userdata ViewModel or something;
-//        testCreateCorrectionRequest(db,userid);
+//        testCreateLeaveRequest(db,user)
+//        db_util.getAttendance(db,user.userid,db_util.startOfDay(LocalDate.now().minusDays(0)),db_util.endOfDay(LocalDate.now().minusDays(0))){ data ->
+//            if(data!= null && data.isNotEmpty()){
+//                testCreateCorrectionRequest(db,user,data[0])
+//            }
+//        }
+
+//        db_util.getCorrectionRequest(db,user.userid){ req ->
+//            if(req!!.isNotEmpty()){
+//                db_util.getCompanyParams(db){data ->
+//                    testApproveCorrectionRequest(db,req[0],user,data!!)
+//                }
+//            }
+//        }
+
 //
 //        testRejectCorrectionRequest(db,"nDG36ZOgWGVvaNVeeqQG",userid);
 //        testRejectLeaveRequest(db,"gFgsZdwLeQQA45X9bRtV",userid);
+
     }
     fun testGetAttendance(db: FirebaseFirestore, userid: String? = null){
         val datestart = db_util.firstDateOfMonth();
@@ -41,6 +56,34 @@ object db_testing {
                 }
             } else {
                 Log.e("ATTENDANCEDATA", "Attendance not found")  // Error because firestore fetch failed
+            }
+        }
+    }
+
+    fun testCreateUser(db:FirebaseFirestore, uid: String, email: String, adminflag: Boolean, name: String){
+        // All other user info is handled in backend
+        val usertemp = User(
+            userid = uid,
+            email = email,
+            adminflag = adminflag,
+            name = name,
+                           )
+        db_util.getCompanyParams(db){data ->
+            db_util.createUser(db,usertemp, data!!)
+        }
+    }
+
+    fun testCheckLoginUserAdmin(db: FirebaseFirestore, userid: String){
+        db_util.checkUserIsAdmin(db,userid){result ->
+            if(result != null){
+                if(result){
+                    // User is admin, success login
+                    // do stuff
+                }
+                else{
+                    // User is not admin, don't login
+                    // do stuff
+                }
             }
         }
     }
@@ -80,19 +123,19 @@ object db_testing {
     }
 
     // Logic for tap in
-    fun testCreateAttendance(db: FirebaseFirestore, userid: String){
-        db_util.checkTapOutStatus(db,userid){status ->
+    fun testCreateAttendance(db: FirebaseFirestore, user: User){
+        db_util.checkTapOutStatus(db,user.userid!!){status ->
             // Maybe move checkTapOutStatus function to frontend when view is generated
             if(!status!!){
                 // Face recognition stuff here
                 // If pass create attendance
                 val temp_attendance = Attendance(
-                    userid=userid,
+                    userid=user.userid,
                     leaveflag=false,
                     permissionflag = false,
                     absentflag = false,
                     timein = db_util.curDateTime())
-                db_util.createAttendance(db,temp_attendance);
+                db_util.createAttendance(db,temp_attendance,user);
             }
         }
     }
@@ -178,82 +221,93 @@ object db_testing {
         // date parameter in companyTimeIn and companyTimeOut should be set to date of new request
 
         // Absent -> permission
-        // userid, reason, permissionflag, timein from db_util.companyTimeIn(date), timeout from db_util.companyTimeOut(date)
+        // userid, reason, permissionflag, attendanceid, timein from db_util.companyTimeIn(date), timeout from db_util.companyTimeOut(date)
 
         // Absent -> leave
-        // userid, reason, leaveflag, timein from db_util.companyTimeIn(date), timeout from db_util.companyTimeOut(date)
+        // userid, reason, leaveflag, attendanceid, timein from db_util.companyTimeIn(date), timeout from db_util.companyTimeOut(date)
 
         // Absent -> present
-        // userid, reason, presentflag, timein from user input, timeout from user input
+        // userid, reason, presentflag, attendanceid, timein from user input, timeout from user input
 
         // Present -> present/Leave -> leave/Permission -> permission
-        // userid, reason, timein from user input, timeout from user input
+        // userid, reason, attendanceid, timein from user input, timeout from user input
 
-        val temp_correction = CorrectionRequest(
-            userid = user.userid,
-            timein = Date(),
-            timeout = Date(),
-            reason = "testing",
-            leaveflag = false,
-            permissionflag = false,
-            presentflag = true
-        );
+        db_util.checkCorrectionRequestExist(db, attendance.attendanceid!!) { exist ->
+            // Check whether selected date already have correction request or not
+            if (exist != null) {
+                if (!exist) {
+                    val temp_correction = CorrectionRequest(
+                        userid = user.userid,
+                        timein = Date(),
+                        timeout = Date(),
+                        reason = "testing",
+                        leaveflag = false,
+                        permissionflag = false,
+                        presentflag = false,
+                        attendanceid = attendance.attendanceid
+                    );
 
-        db_util.checkPendingRequestDuration(db, user.userid!!, temp_correction.timein!!) { leaveamt, permamt ->
-            if(leaveamt != null){
-                db_util.getCompanyParams(db) { companyParams ->
-                    if (companyParams != null) {
-                        if (temp_correction.permissionflag!!) {
-                            db_util.getTotalPermissionThisYear(db, user.userid) { data ->
-                                if (data != null) {
-                                    if (1 + data + permamt!! > companyParams.maxpermissionsleft!!) {
-                                        // Put error popup here on frontend
-                                        Log.e(
-                                            "CREATECORRECTIONREQUEST",
-                                            "Not enough permissions left to create request"
-                                        )
-                                    } else {
-                                        db_util.createCorrectionRequest(db, temp_correction)
-                                    }
-                                }
-                            }
-                        }
-                        else if(temp_correction.leaveflag!!){
-                            db_util.getTotalLeaveThisMonth(db, user.userid) { data ->
-                                if (data != null) {
-                                    if (1 + data + leaveamt!! > companyParams.maxmonthlyleaveleft!!) {
-                                        // Put error popup here on frontend
-                                        Log.e("CREATECORRECTIONREQUEST", "Leave request exceeds monthly quota")
-                                    } else if (1 + leaveamt!! > user.leaveleft!!) {
-                                        // Put error popup here on frontend
-                                        Log.e("CREATECORRECTIONREQUEST", "Not enough leave left to create request")
-                                    } else {
-                                        db_util.createCorrectionRequest(db, temp_correction)
-                                    }
-                                }
-                            }
-                        }
-                        else if(temp_correction.presentflag!!){
-                            db_util.createCorrectionRequest(db,temp_correction)
-                        }
-                        else{
-                            if(attendance.permissionflag!! || attendance.leaveflag!!){
-                                db_util.getAttendance(db,user.userid,db_util.startOfDay(db_util.dateToLocalDate(temp_correction.timein!!)),db_util.endOfDay(db_util.dateToLocalDate(temp_correction.timeout!!))){ attendances ->
-                                    if(attendances != null){
-                                        if(attendances.isNotEmpty()){
+                    db_util.checkPendingRequestDuration(db, user.userid!!, temp_correction.timein!!) { leaveamt, permamt ->
+                        if (leaveamt != null) {
+                            db_util.getCompanyParams(db) { companyParams ->
+                                if (companyParams != null) {
+                                    if (temp_correction.permissionflag!!) {
+                                        db_util.getTotalPermissionThisYear(db, user.userid) { data ->
+                                            if (data != null) {
+                                                if (1 + data + permamt!! > companyParams.maxpermissionsleft!!) {
+                                                    // Put error popup here on frontend
+                                                    Log.e("CREATECORRECTIONREQUEST", "Not enough permissions left to create request")
+                                                } else {
+                                                    db_util.createCorrectionRequest(db, temp_correction)
+                                                }
+                                            }
+                                        }
+                                    } else if (temp_correction.leaveflag!!) {
+                                        if (user.leaveallow!!) {
+                                            db_util.getTotalLeaveThisMonth(db, user.userid) { data ->
+                                                if (data != null) {
+                                                    if (1 + data + leaveamt!! > companyParams.maxmonthlyleaveleft!!) {
+                                                        // Put error popup here on frontend
+                                                        Log.e("CREATECORRECTIONREQUEST", "Leave request exceeds monthly quota")
+                                                    } else if (1 + leaveamt!! > user.leaveleft!!) {
+                                                        // Put error popup here on frontend
+                                                        Log.e("CREATECORRECTIONREQUEST", "Not enough leave left to create request")
+                                                    } else {
+                                                        db_util.createCorrectionRequest(db, temp_correction)
+                                                    }
+                                                }
+                                            }
+                                        } else {
                                             // Put error popup here on frontend
-                                            Log.e("CREATECORRECTIONREQUEST", "Selected date overlaps with an existing leave/correction request")
-                                        } else{
-                                            db_util.createCorrectionRequest(db,temp_correction)
+                                            Log.e("CREATECORRECTIONREQUEST", "Leave not allowed for currrent user")
+                                        }
+                                    } else if (temp_correction.presentflag!!) {
+                                        db_util.createCorrectionRequest(db, temp_correction)
+                                    } else {
+                                        if (attendance.permissionflag!! || attendance.leaveflag!!) {
+                                            db_util.getAttendance(db, user.userid, db_util.startOfDay(
+                                                db_util.dateToLocalDate(temp_correction.timein!!)),
+                                                db_util.endOfDay(db_util.dateToLocalDate(temp_correction.timeout!!))) { attendances ->
+                                                if (attendances != null) {
+                                                    if (attendances.isNotEmpty()) {
+                                                        // Put error popup here on frontend
+                                                        Log.e("CREATECORRECTIONREQUEST", "New selected date overlaps with an existing attendance")
+                                                    } else {
+                                                        db_util.createCorrectionRequest(db, temp_correction)
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            db_util.createCorrectionRequest(db, temp_correction)
                                         }
                                     }
                                 }
                             }
-                            else{
-                                db_util.createCorrectionRequest(db,temp_correction)
-                            }
                         }
                     }
+                } else {
+                    // Put error popup here on frontend
+                    Log.e("CREATECORRECTIONREQUEST", "Correction request already exists for selected date")
                 }
             }
         }
@@ -261,8 +315,12 @@ object db_testing {
 
     // User here refers to the admin whose approving the request (current logged in user)
     fun testApproveLeaveRequest(db: FirebaseFirestore, leaverequest: LeaveRequest, user: User, companyparams: CompanyParams){
-        // leaverequest and companyparams dari frontend, jangan get lagi disini biar gk boros
         db_util.approveLeaveRequest(db,leaverequest,user,companyparams)
+    }
+
+    // User here refers to the admin whose approving the request (current logged in user)
+    fun testApproveCorrectionRequest(db: FirebaseFirestore, correctionrequest: CorrectionRequest, user:User, companyparams: CompanyParams){
+        db_util.approveCorrectionRequest(db,correctionrequest,user,companyparams)
     }
 
     fun testRejectLeaveRequest(db:FirebaseFirestore, leaverequestid: String, userid: String){

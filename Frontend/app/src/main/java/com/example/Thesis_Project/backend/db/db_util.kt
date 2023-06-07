@@ -2,10 +2,12 @@ package com.example.Thesis_Project.backend.db
 
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
+import com.example.Thesis_Project.backend.db.db_util.localDateTimeToDate
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.ktx.Firebase
 import java.time.*
 import java.time.temporal.TemporalAdjusters.firstDayOfYear
 import java.time.temporal.TemporalAdjusters.lastDayOfYear
@@ -27,6 +29,63 @@ object db_util {
                 callback(null)
             }
     }
+
+    fun createUser(db: FirebaseFirestore, user:User, companyparams:CompanyParams){
+        val doc = db.collection("users").document(user.userid!!)
+        val map:MutableMap<String,Int> = mutableMapOf<String,Int>()
+        for(i in 1..12){
+            map[i.toString()] = companyparams.toleranceworktime!!
+        }
+        user.joindate = curDateTime()
+        user.leaveleft = 0
+        user.notelastupdated = curDateTime()
+        user.monthlytoleranceworktime = map
+        user.leaveallow = false
+        user.note = ""
+        doc.set(user)
+            .addOnSuccessListener {
+            Log.d("CREATEUSER", "User successfully created with id ${user.userid}")
+        }
+            .addOnFailureListener { exception ->
+                Log.e("Error Creating Data", "createuser $exception")
+            }
+    }
+
+    fun checkUserIsAdmin(db: FirebaseFirestore, userid: String, callback: (Boolean?) -> Unit){
+        db.collection("users").document(userid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if(snapshot.exists()){
+                    val temp = snapshot.toObject<User>()
+                    if(temp!!.adminflag!!){
+                        callback(true)
+                    } else{
+                        callback(false)
+                    }
+                }
+                else{
+                    Log.e("CHECKUSERISADMIN","User not found")
+                    callback(false)
+                }
+            }
+            .addOnFailureListener {exception ->
+                Log.e("Error Fetch Data","checkUserIsAdmin $exception")
+                callback(null)
+            }
+    }
+
+    fun updateUserNote(db: FirebaseFirestore, user:User){
+        db.collection("users").document(user.userid!!)
+            .update("note", user.note, "notelastupdated", curDateTime())
+            .addOnSuccessListener {
+                Log.d("UPDATEUSERNOTE","Note successfully updated")
+            }
+            .addOnFailureListener { exception->
+                Log.e("Error Updating Data","updateUserNote $exception")
+            }
+    }
+
+
     // userid == null -> get all users
     fun getAttendance(db: FirebaseFirestore, userId: String?, dateStart: Date, dateEnd: Date, callback: (List<Attendance>?) -> Unit){
         var query = db.collection("attendances")
@@ -143,16 +202,21 @@ object db_util {
             }
     }
 
-    fun createAttendance(db: FirebaseFirestore, data: Attendance){
+    fun createAttendance(db: FirebaseFirestore, data: Attendance,user: User){
         val collection = db.collection("attendances").document()
+        val userref = db.collection("users").document(user.userid!!)
         data.attendanceid = collection.id
-        db.collection("attendances").document(collection.id).set(data)
-            .addOnSuccessListener {
-                Log.d("CREATEATTENDANCE","Attendance created with id ${collection.id}")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Creating Data", "createAttendance $exception")
-            }
+        db.runTransaction{transaction ->
+            transaction.set(collection,data)
+            transaction.update(userref,"embedding",user.embedding)
+            null
+        }
+        .addOnSuccessListener {
+            Log.d("CREATEATTENDANCE","Attendance created with id ${collection.id}")
+        }
+        .addOnFailureListener { exception ->
+            Log.e("Error Creating Data", "createAttendance $exception")
+        }
     }
 
     fun createLeaveRequest(db:FirebaseFirestore, data: LeaveRequest){
@@ -309,16 +373,59 @@ object db_util {
                     }
                     null
                 }.addOnSuccessListener {
-                    Log.d(
-                        "APPROVELEAVEREQUEST",
-                        "Leave request id ${leaverequest.leaverequestid} successfully approved"
-                    )
+                    Log.d("APPROVELEAVEREQUEST", "Leave request id ${leaverequest.leaverequestid} successfully approved")
                 }.addOnFailureListener { exception ->
-                    Log.e("APPROVELEAVEREQUEST", "approveLeaveRequest $exception")
+                    Log.e("Error Updating Data", "approveLeaveRequest $exception")
                 }
             }
         }
 
+    }
+
+    // User here refers to the admin whose approving the request
+    fun approveCorrectionRequest(db:FirebaseFirestore, correctionrequest: CorrectionRequest,user: User, companyparams: CompanyParams){
+        val userref = db.collection("users").document(correctionrequest.userid!!)
+        val attendanceref = db.collection("attendances").document(correctionrequest.attendanceid!!)
+        val correctionreqref = db.collection("correction_requests").document(correctionrequest.correctionrequestid!!)
+        db.runTransaction{ transaction ->
+            val attendancesnapshot = transaction.get(attendanceref)
+            val leaveflag = attendancesnapshot.getBoolean("leaveflag")
+            val permissionflag = attendancesnapshot.getBoolean("permissionflag")
+            val oldworktime = attendancesnapshot.getLong("worktime")
+            transaction.update(correctionreqref,"approvedby",user.userid,"approvedflag",true,"approvedtime", curDateTime())
+            if(correctionrequest.permissionflag!!){
+                transaction.update(attendanceref,"permissionflag",true,"absentflag",false)
+            }
+            else if(correctionrequest.leaveflag!!){
+                transaction.update(attendanceref,"leaveflag",true,"absentflag",false)
+                transaction.update(userref,"leaveleft",FieldValue.increment(-1))
+            } else if(correctionrequest.presentflag!!){
+                val worktime = calcWorkTime(correctionrequest.timein!!,correctionrequest.timeout!!,companyparams)
+                transaction.update(attendanceref,"absentflag",false,"timein",correctionrequest.timein, "timeout",correctionrequest.timeout,"worktime",worktime)
+                if(worktime < companyparams.companyworktime!!){
+                    val newmap = user.monthlytoleranceworktime
+                    newmap!![dateToLocalDate(correctionrequest.timein).month.value.toString()] = newmap[LocalDate.now().month.value.toString()]!! + (worktime - companyparams.companyworktime!!)
+                    transaction.update(userref,"monthlytoleranceworktime",newmap)
+                }
+            } else {
+                if(leaveflag!! || permissionflag!!){
+                    transaction.update(attendanceref,"timein",correctionrequest.timein!!,"timeout",correctionrequest.timeout!!)
+                }
+                else{
+                    val worktime = calcWorkTime(correctionrequest.timein!!,correctionrequest.timeout!!,companyparams)
+                    transaction.update(attendanceref,"timein",correctionrequest.timein, "timeout",correctionrequest.timeout,"worktime",worktime)
+                    val newmap = user.monthlytoleranceworktime
+                    newmap!![dateToLocalDate(correctionrequest.timein).month.value.toString()] = newmap[LocalDate.now().month.value.toString()]!! + (worktime - oldworktime!!.toInt())
+                    transaction.update(userref,"monthlytoleranceworktime",newmap)
+
+                }
+            }
+            null
+        }.addOnSuccessListener {
+            Log.d("APPROVECORRECTIONREQUEST", "Correction request id ${correctionrequest.correctionrequestid} successfully approved")
+        }.addOnFailureListener { exception ->
+            Log.e("Error Updating Data", "approveCorrectionRequest $exception")
+        }
     }
 
     // First int leave, second int permission
@@ -367,8 +474,24 @@ object db_util {
                     }
             }
             .addOnFailureListener { exception ->
-                Log.e("Fetch Data Failed","checkPendingCorrectionRequestDuration $exception")
+                Log.e("Fetch Data Failed","checkPendingRequestDuration $exception")
                 callback(null,null)
+            }
+    }
+
+    fun checkCorrectionRequestExist(db:FirebaseFirestore, attendanceid: String, callback: (Boolean?) -> Unit){
+        db.collection("correction_requests").whereEqualTo("attendanceid",attendanceid)
+            .get()
+            .addOnSuccessListener { querySnapshot->
+                if(querySnapshot.isEmpty){
+                    callback(false)
+                }
+                else{
+                    callback(true)
+                }
+            }
+            .addOnFailureListener { exception->
+                Log.e("Fetch Data Failed", "checkCorrectionRequestExist $exception")
             }
     }
 
@@ -401,7 +524,7 @@ object db_util {
             newmap[LocalDate.now().month.value.toString()] = newmap[LocalDate.now().month.value.toString()]!! + (worktime - companyparams.companyworktime!!)
         }
         db.runTransaction { transaction ->
-            transaction.update(userref, "embedding", user.embedding,"monthlytoleranceworktime", newmap)
+            transaction.update(userref, "monthlytoleranceworktime", newmap)
             transaction.update(attendanceref,"timeout", curDateTime(),"worktime",worktime)
             null
         }
@@ -459,9 +582,13 @@ object db_util {
         var targettime = LocalDateTime.of(timeouttemp.year,timeouttemp.month,timeouttemp.dayOfMonth,tapintime[0].toInt(),tapintime[1].toInt())
         targettime = targettime.plusMinutes((companyparams.companyworktime!! + companyparams.maxcompensatetime!!).toLong())
         if(timeouttemp.isAfter(targettime)){
-            return Duration.between(timeintemp,targettime).toMinutes().toInt()
+            var ret = Duration.between(timeintemp,targettime).toMinutes().toInt()
+            if(ret > companyparams.companyworktime!!) {ret = companyparams.companyworktime!!}
+            return ret
         }
-        return Duration.between(timeintemp,timeouttemp).toMinutes().toInt()
+        var ret = Duration.between(timeintemp,timeouttemp).toMinutes().toInt()
+        if(ret > companyparams.companyworktime!!) {ret = companyparams.companyworktime!!}
+        return ret
     }
 
     fun companyTimeIn(date: LocalDateTime, companyparams: CompanyParams): Date{
