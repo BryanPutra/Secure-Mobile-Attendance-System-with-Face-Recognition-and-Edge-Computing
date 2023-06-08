@@ -19,6 +19,22 @@ object db_testing {
 //        testGetCorrectionRequest(db,userid);
 //
 //        testCreateAttendance(db,user);
+//        testCreateUser(db,UUID.randomUUID().toString(),"good2@gmail.com",false,"Aric Hernando")
+
+//        val holidaydates = mutableListOf<Date>()
+//        holidaydates.add(Date.from(LocalDate.of(2022,1,1).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()))
+//        holidaydates.add(Date.from(LocalDate.of(2022,12,25).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()))
+//        db_util.getCompanyParams(db){params ->
+//            db_util.checkYearlyMaintenanceDone(db){ result ->
+//                if(!result!!){
+//                    db_util.adminYearlyMaintenance(db,params!!, holidaydates)
+//                } else {
+//                    // Popup yearly maintenance already done by other admin
+//                    Log.e("TESTING","ALREADY DONE")
+//                }
+//            }
+//        }
+//        db_util.deleteHolidayManual(db,"hgMirIxqZZ6cCPvDZsnc")
 
 //        testCreateLeaveRequest(db,user)
 //        db_util.getAttendance(db,user.userid,db_util.startOfDay(LocalDate.now().minusDays(0)),db_util.endOfDay(LocalDate.now().minusDays(0))){ data ->
@@ -35,7 +51,17 @@ object db_testing {
 //            }
 //        }
 
-//
+        // 14 days check back run only once when user enter home/login, don't run again if user go back to home tab
+//        db_util.getCompanyParams(db){params ->
+//            db_util.checkBackAttendance(db,user,params!!){ popupflag ->
+//                if(popupflag != null){
+//                    Log.d("Testing","Success!")
+//                }
+//            }
+//        }
+
+//        testCancelCorrectionRequest(db,"58l1N7R3wFQcITEPQ3t0")
+//        db_util.addHolidayManual(db,Date.from(LocalDate.now().atStartOfDay().plusDays(5).atZone(ZoneId.systemDefault()).toInstant()))
 //        testRejectCorrectionRequest(db,"nDG36ZOgWGVvaNVeeqQG",userid);
 //        testRejectLeaveRequest(db,"gFgsZdwLeQQA45X9bRtV",userid);
 
@@ -87,6 +113,7 @@ object db_testing {
             }
         }
     }
+
 
     fun testGetLeaveRequest(db:FirebaseFirestore, userid: String? = null){
         db_util.getLeaveRequest(db, userid) {data ->
@@ -309,6 +336,28 @@ object db_testing {
                     // Put error popup here on frontend
                     Log.e("CREATECORRECTIONREQUEST", "Correction request already exists for selected date")
                 }
+            }
+        }
+    }
+
+    fun testCancelLeaveRequest(db:FirebaseFirestore, leaverequestid: String){
+        db_util.cancelLeaveRequest(db,leaverequestid){ result ->
+            if(result){
+                // Delete success
+            }
+            else {
+                // Admin has already approved/rejected the request
+            }
+        }
+    }
+
+    fun testCancelCorrectionRequest(db:FirebaseFirestore, correctionrequestid: String){
+        db_util.cancelCorrectionRequest(db,correctionrequestid){ result ->
+            if(result){
+                // Delete success
+            }
+            else {
+                // Admin has already approved/rejected the request
             }
         }
     }

@@ -2,9 +2,12 @@ package com.example.Thesis_Project.backend.db
 
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
+import com.example.Thesis_Project.backend.db.db_util.getAttendance
+import com.example.Thesis_Project.backend.db.db_util.getHolidays
 import com.example.Thesis_Project.backend.db.db_util.localDateTimeToDate
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
@@ -219,6 +222,17 @@ object db_util {
         }
     }
 
+    fun registerFace(db:FirebaseFirestore, userid: String, embs: String){
+        db.collection("users").document(userid)
+            .update("embedding",embs)
+            .addOnSuccessListener{
+                Log.d("REGISTERFACE","Face successfully registered")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Updating Data", "registerface $exception")
+            }
+    }
+
     fun createLeaveRequest(db:FirebaseFirestore, data: LeaveRequest){
         val collection = db.collection("leave_requests").document()
         data.leaverequestid = collection.id
@@ -329,13 +343,13 @@ object db_util {
                             } else {
                                 val attendance = Attendance(
                                     attendanceid = collection.id,
-                                    timein = localDateTimeToDate(timein),
-                                    timeout = localDateTimeToDate(timeout),
+                                    timein = localDateTimeToDate(timein.toLocalDate().atStartOfDay()),
+                                    timeout = localDateTimeToDate(timein.toLocalDate().atStartOfDay()),
                                     userid = leaverequest.userid,
                                     leaveflag = false,
                                     permissionflag = false,
                                     absentflag = true,
-                                    worktime = worktime
+                                    worktime = 0
                                 )
                                 transaction.set(attendanceref, attendance)
                             }
@@ -404,7 +418,7 @@ object db_util {
                 transaction.update(attendanceref,"absentflag",false,"timein",correctionrequest.timein, "timeout",correctionrequest.timeout,"worktime",worktime)
                 if(worktime < companyparams.companyworktime!!){
                     val newmap = user.monthlytoleranceworktime
-                    newmap!![dateToLocalDate(correctionrequest.timein).month.value.toString()] = newmap[LocalDate.now().month.value.toString()]!! + (worktime - companyparams.companyworktime!!)
+                    newmap!![dateToLocalDate(correctionrequest.timein).month.value.toString()] = newmap[dateToLocalDate(correctionrequest.timein).month.value.toString()]!! + (worktime - companyparams.companyworktime!!)
                     transaction.update(userref,"monthlytoleranceworktime",newmap)
                 }
             } else {
@@ -415,7 +429,7 @@ object db_util {
                     val worktime = calcWorkTime(correctionrequest.timein!!,correctionrequest.timeout!!,companyparams)
                     transaction.update(attendanceref,"timein",correctionrequest.timein, "timeout",correctionrequest.timeout,"worktime",worktime)
                     val newmap = user.monthlytoleranceworktime
-                    newmap!![dateToLocalDate(correctionrequest.timein).month.value.toString()] = newmap[LocalDate.now().month.value.toString()]!! + (worktime - oldworktime!!.toInt())
+                    newmap!![dateToLocalDate(correctionrequest.timein).month.value.toString()] = newmap[dateToLocalDate(correctionrequest.timein).month.value.toString()]!! + (worktime - oldworktime!!.toInt())
                     transaction.update(userref,"monthlytoleranceworktime",newmap)
 
                 }
@@ -469,12 +483,12 @@ object db_util {
                         callback(leavecount,permcount)
                     }
                     .addOnFailureListener { exception ->
-                        Log.e("Fetch Data Failed","checkPendingLeaveRequestDuration $exception")
+                        Log.e("Error Fetch Data","checkPendingLeaveRequestDuration $exception")
                         callback(null,null)
                     }
             }
             .addOnFailureListener { exception ->
-                Log.e("Fetch Data Failed","checkPendingRequestDuration $exception")
+                Log.e("Error Fetch Data","checkPendingRequestDuration $exception")
                 callback(null,null)
             }
     }
@@ -491,7 +505,7 @@ object db_util {
                 }
             }
             .addOnFailureListener { exception->
-                Log.e("Fetch Data Failed", "checkCorrectionRequestExist $exception")
+                Log.e("Error Fetch Data", "checkCorrectionRequestExist $exception")
             }
     }
 
@@ -510,7 +524,7 @@ object db_util {
                 }
             }
             .addOnFailureListener { exception ->
-                Log.e("Fetch Data Failed","checkTapStatus $exception")
+                Log.e("Error Fetch Data","checkTapStatus $exception")
                 callback(null)
             }
     }
@@ -536,6 +550,301 @@ object db_util {
             }
 
     }
+
+    fun getHolidays(db:FirebaseFirestore, callback: (List<Holiday>?)-> Unit){
+        db.collection("holidays").get()
+            .addOnSuccessListener { snapshot->
+                val holidays = mutableListOf<Holiday>()
+                if(!snapshot.isEmpty){
+                    for(i in snapshot){
+                        val temp = i.toObject<Holiday>()
+                        temp.date = Date.from(dateToLocalDate(temp.date!!).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
+                        holidays.add(temp)
+                    }
+                }
+                    callback(holidays)
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Fetch Data", "getHolidays $exception")
+                callback(null)
+            }
+    }
+
+    fun getPendingRequestDates(db: FirebaseFirestore,userid: String, callback: (List<Date>?) -> Unit){
+        val dates = mutableListOf<Date>()
+        db.collection("correction_requests")
+            .whereEqualTo("userid",userid)
+            .whereEqualTo("approvedby",null)
+            .whereEqualTo("rejectedby",null)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                for(i in querySnapshot){
+                    val temp = i.toObject<CorrectionRequest>()
+                    dates.add(Date.from(dateToLocalDate(temp.timein!!).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()))
+                }
+                db.collection("leave_requests")
+                    .whereEqualTo("userid",userid)
+                    .whereEqualTo("approvedby",null)
+                    .whereEqualTo("rejectedby",null)
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        for(i in snapshot){
+                            val temp = i.toObject<LeaveRequest>()
+                            for(i in 0 until temp.duration!!) {
+                                dates.add(Date.from(dateToLocalDate(temp.leavestart!!).atStartOfDay().plusDays(i.toLong()).atZone(ZoneId.systemDefault()).toInstant()))
+                            }
+                        }
+                        callback(dates)
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.e("Error Fetch Data","getPendingRequestDates $exception")
+                        callback(null)
+                    }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Fetch Data","getPendingRequestDates $exception")
+                callback(null)
+            }
+    }
+
+    fun cancelLeaveRequest(db:FirebaseFirestore, leaverequestid: String, callback: (Boolean)->Unit){
+        val leaveref = db.collection("leave_requests").document(leaverequestid)
+        db.runTransaction{ transaction ->
+            val leavesnapshot = transaction.get(leaveref)
+            if(leavesnapshot.exists() && leavesnapshot.getString("rejectedby") == null && leavesnapshot.getString("approvedby") == null){
+                transaction.delete(leaveref)
+            } else {
+                throw FirebaseFirestoreException("Invalid request",FirebaseFirestoreException.Code.ABORTED)
+            }
+            null
+        }
+            .addOnSuccessListener{
+                Log.d("CANCELLEAVEREQUEST","Leave request $leaverequestid successfully cancelled")
+                callback(true)
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Update Data", "cancelLeaveRequest $exception")
+                callback(false)
+            }
+    }
+
+    fun cancelCorrectionRequest(db:FirebaseFirestore, correctionrequestid: String, callback: (Boolean)->Unit){
+        val correctionref = db.collection("correction_requests").document(correctionrequestid!!)
+        db.runTransaction{ transaction ->
+            val correctionsnapshot = transaction.get(correctionref)
+            if(correctionsnapshot.exists() && correctionsnapshot.getString("rejectedby") == null && correctionsnapshot.getString("approvedby") == null){
+                transaction.delete(correctionref)
+            } else {
+                throw FirebaseFirestoreException("Invalid request",FirebaseFirestoreException.Code.ABORTED)
+            }
+            null
+        }
+            .addOnSuccessListener{
+                Log.d("CANCELCORRECTIONREQUEST","Correction request $correctionrequestid successfully cancelled")
+                callback(true)
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Update Data", "cancelCorrectionRequest $exception")
+                callback(false)
+            }
+    }
+
+    // Callback boolean denotes whether frontend should show popup or not (12pm auto insert timeout)
+    fun checkBackAttendance(db: FirebaseFirestore, user: User, companyparams: CompanyParams, callback: (Boolean?) -> Unit){
+        var popupflag = false
+        getAttendance(db, user.userid, Date.from(LocalDate.now().atStartOfDay().minusDays(14).atZone(ZoneId.systemDefault()).toInstant()), curDateTime()){ attendances->
+            if(attendances != null){
+                getHolidays(db){ holidays ->
+                    if(holidays != null){
+                        getPendingRequestDates(db, user.userid!!){ dates ->
+                            if(dates != null){
+                                db.runTransaction{ transaction ->
+                                    val skippeddates = mutableListOf<LocalDate>()
+                                    for(i in holidays){
+                                        skippeddates.add(dateToLocalDate(i.date!!))
+                                    }
+                                    for(i in dates){
+                                        skippeddates.add(dateToLocalDate(i))
+                                    }
+                                    for(i in attendances){
+                                        skippeddates.add(dateToLocalDate(i.timein!!))
+                                    }
+                                    for(i in 1..14){
+                                        val tempdate = LocalDate.now().minusDays(i.toLong())
+                                        if(!skippeddates.contains(tempdate) && tempdate.dayOfWeek != DayOfWeek.SATURDAY && tempdate.dayOfWeek != DayOfWeek.SUNDAY){
+                                            val collection = db.collection("attendances").document()
+                                            val attendanceref = db.collection("attendances").document(collection.id)
+                                            val data = Attendance(
+                                                attendanceid = collection.id,
+                                                userid=user.userid,
+                                                leaveflag=false,
+                                                permissionflag = false,
+                                                absentflag = true,
+                                                timein = localDateTimeToDate(tempdate.atStartOfDay()),
+                                                timeout = localDateTimeToDate(tempdate.atStartOfDay()),
+                                                worktime = 0)
+                                            transaction.set(attendanceref, data)
+                                        }
+                                    }
+                                    val userref = db.collection("users").document(user.userid!!)
+                                    val newmap = user.monthlytoleranceworktime
+                                    for(i in attendances){
+                                        if(i.timeout == null){
+                                            val attendanceref = db.collection("attendances").document(i.attendanceid!!)
+                                            val timeout = localDateTimeToDate(dateToLocalDate(i.timein!!).atTime(LocalTime.NOON))
+                                            val worktime = calcWorkTime(i.timein!!, timeout, companyparams)
+                                            newmap!![dateToLocalDate(i.timein!!).month.value.toString()] = newmap[dateToLocalDate(i.timein!!).month.value.toString()]!! + (worktime - companyparams.companyworktime!!)
+                                            transaction.update(attendanceref,"timeout",timeout, "worktime",worktime)
+                                            popupflag = true
+                                        }
+                                    }
+                                    transaction.update(userref,"monthlytoleranceworktime",newmap)
+                                    null
+                                }
+                                .addOnSuccessListener{
+                                    callback(popupflag)
+                                }
+                                .addOnFailureListener{ exception ->
+                                   Log.e("Error Fetch Data", "checkBackAttendance $exception")
+                                   callback(null)
+                                }
+                            } else {
+                                Log.e("Error Fetch Data", "checkBackAttendance getPendingDates failed")
+                                callback(null)
+                            }
+                        }
+                    } else {
+                        Log.e("Error Fetch Data", "checkBackAttendance getHolidays failed")
+                        callback(null)
+                    }
+                }
+            } else {
+                Log.e("Error Fetch Data", "checkBackAttendance getAttendance failed")
+                callback(null)
+            }
+        }
+
+    }
+
+    fun addHolidayManual(db: FirebaseFirestore, date: Date){
+        val document = db.collection("holidays").document()
+        val temp = Holiday(document.id, date)
+        db.collection("holidays").document(document.id).set(temp)
+            .addOnSuccessListener {
+                Log.d("ADDHOLIDAYMANUAL","Holiday successfully added with id ${document.id}")
+            }
+            .addOnFailureListener {exception ->
+                Log.e("Error Create Data", "addHolidayManual $exception")
+            }
+    }
+
+    fun deleteHolidayManual(db: FirebaseFirestore, holidayid: String){
+        db.collection("holidays").document(holidayid).delete()
+            .addOnSuccessListener {
+                Log.d("DELETEHOLIDAYMANUAL","Holiday successfully deleted")
+            }
+            .addOnFailureListener {exception ->
+                Log.e("Error Delete Data", "deleteHolidayManual $exception")
+            }
+    }
+
+    fun checkYearlyMaintenanceDone(db: FirebaseFirestore, callback: (Boolean?) -> Unit){
+        db.collection("holidays").get()
+            .addOnSuccessListener{querySnapshot->
+                if(!querySnapshot.isEmpty){
+                    val temp = querySnapshot.documents[0].toObject<Holiday>()
+                    if(dateToLocalDate(temp!!.date!!).year == LocalDate.now().year){
+                        callback(true)
+                    } else{
+                        callback(false)
+                    }
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("CHECKYEARLYMAINTENANCEDONE","checkYearlyMaintenanceDone $exception")
+                callback(null)
+            }
+    }
+
+    fun adminYearlyMaintenance(db: FirebaseFirestore, companyparams: CompanyParams, dates: List<Date>){
+        val map:MutableMap<String,Int> = mutableMapOf<String,Int>()
+        for(i in 1..12){
+            map[i.toString()] = companyparams.toleranceworktime!!
+        }
+        val users = mutableListOf<User>()
+        val holidays = mutableListOf<Holiday>()
+        db.collection("users").get()
+            .addOnSuccessListener{querySnapshot ->
+                if(!querySnapshot.isEmpty){
+                    for(i in querySnapshot){
+                        users.add(i.toObject<User>())
+                    }
+                    db.collection("holidays").get()
+                        .addOnSuccessListener { querySnapshot2 ->
+                            if(!querySnapshot.isEmpty){
+                                for(i in querySnapshot2){
+                                    holidays.add(i.toObject<Holiday>())
+                                }
+                                db.runTransaction{ transaction ->
+                                    for(i in users){
+                                        var leaveamount = 0
+                                        var leaveallow = true
+                                        val userref = db.collection("users").document(i.userid!!)
+                                        if(i.leaveallow == false){
+                                            val joinDate = dateToLocalDate(i.joindate!!)
+                                            val durationworked = calcDurationDays(i.joindate!!,curDateTime())
+                                            leaveallow = durationworked >= companyparams.minimumdaysworked!!
+                                            if(leaveallow) {
+                                                leaveamount += 12
+                                                if(durationworked <= 365){
+                                                    leaveamount += 12 - joinDate.month.value
+                                                }
+                                            }
+                                            else {
+                                                leaveamount += 12 - joinDate.month.value
+                                            }
+                                        } else {
+                                            leaveamount += 12
+                                        }
+                                        var leaveleft = i.leaveleft!! + leaveamount
+                                        if(leaveleft > companyparams.maxtotalleaveleft!!){
+                                            leaveleft = companyparams.maxtotalleaveleft!!
+                                        }
+                                        transaction.update(userref,"monthlytoleranceworktime",map,"leaveallow",leaveallow,"leaveleft",leaveleft)
+                                    }
+                                    for(i in holidays){
+                                        val holidayref = db.collection("holidays").document(i.holidayid!!)
+                                        transaction.delete(holidayref)
+                                    }
+                                    for(i in dates){
+                                        val collection = db.collection("holidays").document()
+                                        val holidaytemp = dateToLocalDate(i)
+                                        val holidaynew = Date.from(LocalDate.of(LocalDate.now().year,holidaytemp.month,holidaytemp.dayOfMonth).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
+                                        val temp = Holiday(collection.id,holidaynew)
+                                        transaction.set(collection,temp)
+                                    }
+
+                                    null
+                                }
+                                .addOnSuccessListener{
+                                    Log.d("YEARLYMAINTENANCE","Successfully performed maintenance")
+                                }
+                                .addOnFailureListener { exception ->
+                                    Log.e("Error Updating Data", "adminYearlyMaintenance $exception")
+                                }
+                            }
+
+                        }
+                        .addOnFailureListener{exception ->
+                            Log.e("Error Updating Data", "adminYearlyMaintenance getHolidays $exception")
+                        }
+                }
+            }
+            .addOnFailureListener{exception ->
+                Log.e("Error Updating Data", "adminYearlyMaintenance getUsers $exception")
+            }
+    }
+
     fun curDateTime(): Date{
         return Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant())
     }

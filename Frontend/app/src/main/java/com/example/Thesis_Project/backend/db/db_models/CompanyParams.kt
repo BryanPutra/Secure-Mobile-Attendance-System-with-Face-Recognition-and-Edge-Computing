@@ -4,7 +4,7 @@ import java.util.Date
 data class CompanyParams(
    var leaveleft: Int? = null,
    var maxtotalleaveleft: Int? =null,
-   var minimummonthsworked: Int? =null,
+   var minimumdaysworked: Int? =null,
    var maxmonthlyleaveleft: Int? = null,
    var wifissid: String? = null,
    var tapintime: String? = null,
