@@ -1,13 +1,11 @@
 package com.example.Thesis_Project.ui.screens.history
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -15,6 +13,7 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.component_item_model.HistoryCardItem
 import com.example.Thesis_Project.ui.components.HistoryCard
 import com.example.Thesis_Project.ui.components.MainHeader
+import com.example.Thesis_Project.viewmodel.MainViewModel
 
 val correctionCardItems =
     listOf(
@@ -60,16 +59,16 @@ val leaveCardItems = listOf(
 )
 
 @Composable
-fun HistoryScreen(navController: NavController) {
-    HistoryContainer(navController)
+fun HistoryScreen(navController: NavController, mainViewModel: MainViewModel) {
+    HistoryContainer(navController, mainViewModel)
 }
 
 @Composable
-fun HistoryContainer(navController: NavController) {
+fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = currentBackStackEntry?.destination?.route
-    var correctionSelected by rememberSaveable { mutableStateOf(true) };
-    var leaveSelected by rememberSaveable { mutableStateOf(false) };
+
+
 
     Column(
         modifier = Modifier
@@ -77,17 +76,12 @@ fun HistoryContainer(navController: NavController) {
     ) {
         MainHeader(
             page = currentRoute,
-            userFullName = "Bryan Putra",
-            correctionSelected = correctionSelected,
-            leaveSelected = leaveSelected,
-            onCorrectionSelected = { newCorrectionState ->
-                correctionSelected = newCorrectionState
-            },
-            onLeaveSelected = { newLeaveState ->
-                leaveSelected = newLeaveState
-            }
+            userFullName = mainViewModel.userData?.name,
+            correctionSelected = mainViewModel.correctionSelected,
+            leaveSelected = mainViewModel.leaveSelected,
+            switchTabs = mainViewModel.switchHistoryTab,
         )
-        if (correctionSelected) {
+        if (mainViewModel.correctionSelected) {
             LazyColumn(
                 modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)

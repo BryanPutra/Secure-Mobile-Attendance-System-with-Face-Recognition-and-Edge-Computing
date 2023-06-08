@@ -35,6 +35,8 @@ import com.example.Thesis_Project.backend.db.db_testing
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
+import com.example.Thesis_Project.ui.utils.formatDateToString
+import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -47,13 +49,14 @@ enum class homeTapState {
 }
 
 @Composable
-fun HomeScreen(navController: NavHostController = rememberNavController()) {
+fun HomeScreen(navController: NavHostController = rememberNavController(), mainViewModel: MainViewModel) {
     Scaffold(
         bottomBar = { BottomNavigationBar(navController = navController, onItemClicked = {})},
         content = { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)){
                 HomeNavGraph(
                     navController = navController,
+                    mainViewModel = mainViewModel
                 )
             }
         })
@@ -131,27 +134,29 @@ fun TapOutCard() {
 }
 
 @Composable
-fun NotesSection() {
+fun NotesSection(mainViewModel: MainViewModel) {
     var isEditing by rememberSaveable { mutableStateOf(false) }
-    val lastUpdatedDate by rememberSaveable { mutableStateOf(Date()) }
-    var notesString by rememberSaveable {
-        mutableStateOf("Meeting at 4PM \nDo Reports \nMeeting in 18th May")
-    }
 
-    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
-    val formattedDate = dateFormat.format(lastUpdatedDate)
+    var notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note)}
 
     val bulletPoint = "\u2022 "
     val annotatedText = buildAnnotatedString {
-        val lines = notesString.trim().split("\n")
-
-        lines.forEachIndexed { index, line ->
+        val lines = mainViewModel.userData?.note?.trim()?.split("\n")
+        lines?.forEachIndexed { index, line ->
             append(bulletPoint)
             append(line)
             if (index < lines.size - 1) {
                 append("\n")
             }
         }
+    }
+
+    fun switchEditing() {
+        isEditing = !isEditing
+    }
+
+    fun submitNote(){
+
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -168,7 +173,7 @@ fun NotesSection() {
     ) {
 
         Card(
-            onClick = { isEditing = !isEditing },
+            onClick = { switchEditing() },
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
@@ -187,10 +192,12 @@ fun NotesSection() {
                 ),
             ) {
                 if (isEditing) {
-                    OutlinedTextField(
-                        modifier = Modifier.fillMaxWidth(1f),
-                        value = notesString,
-                        onValueChange = { newNotes -> notesString = newNotes })
+                    notesValue?.let {
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxWidth(1f),
+                            value = it,
+                            onValueChange = { newNotes -> mainViewModel.userData?.note = newNotes })
+                    }
                 } else {
                     Text(
                         text = annotatedText,
@@ -211,13 +218,13 @@ fun NotesSection() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Last updated: $formattedDate",
+                        text = "Last updated: ${formatDateToString(mainViewModel.userData?.notelastupdated)}",
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     if (isEditing) {
                         Button(
-                            onClick = {},
+                            onClick = { switchEditing() },
                             modifier = Modifier.fillMaxWidth(),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = MaterialTheme.elevation.medium,
@@ -241,20 +248,18 @@ fun NotesSection() {
 }
 
 @Composable
-fun HomeContainer(navController: NavController?) {
+fun HomeContainer(navController: NavController?, mainViewModel: MainViewModel) {
 
-//    val db: FirebaseFirestore = Firebase.firestore
-//
-//    var user:User = User();
-//    db_util.getUser(db, "vMQz8RTu4iR7pJMLlrnN") { data ->
-//        if (data != null) {
-//            user = data;
-//            Log.d("USERDATA",user.userid!!);
-//            db_testing.runTests(db,user.userid!!);
-//        } else {
-//            Log.e("USERDATA", "User not found")
-//        }
-//    }
+    db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN"){data ->
+        if (data != null) {
+            mainViewModel.userData = data;
+            Log.d("USERDATA", mainViewModel.userData!!.userid!!);
+        } else {
+            Log.e("USERDATA", "User not found")
+        }
+    }
+
+    db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
 
     Box(
         modifier = Modifier
@@ -310,16 +315,15 @@ fun HomeContainer(navController: NavController?) {
                     tint = colorResource(id = R.color.gray_50),
                     modifier = Modifier.size(MaterialTheme.spacing.iconExtraLarge)
                 )
-//                user.userid?.let {
-//                    Text(
-//                        text = it,
-//                        style = MaterialTheme.typography.titleLarge,
-//                        fontWeight = FontWeight.Normal
-//                    )
-//                }
+                Text(
+                    text = mainViewModel.userData?.name ?: "",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colorResource(id = R.color.gray_50),
+                    fontWeight = FontWeight.Normal
+                )
             }
             TapInCard(tapInDisabled = false)
-            NotesSection()
+            NotesSection(mainViewModel)
         }
         Box(
             modifier = Modifier

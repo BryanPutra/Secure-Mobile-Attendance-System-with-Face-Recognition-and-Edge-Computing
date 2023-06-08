@@ -7,7 +7,7 @@ data class User(
     val password: String? = null,
     val name: String? = null,
     val adminflag: Boolean? = null,
-    val note: String? = null,
+    var note: String? = null,
     val notelastupdated: Date? = null,
     val embedding: String? = null,
     val leaveleft: Int? = null,

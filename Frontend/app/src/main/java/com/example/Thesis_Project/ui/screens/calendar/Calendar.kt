@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
@@ -23,25 +22,25 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.component_item_model.CalendarStatusItem
+import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
 import com.example.Thesis_Project.ui.components.CalendarStatus
 import com.example.Thesis_Project.ui.components.MainHeader
-import com.example.Thesis_Project.ui.theme.SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme
-import com.example.Thesis_Project.ui.utils.formatMonthYearFromDate
+import com.example.Thesis_Project.ui.utils.*
+import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
-import java.util.*
 
 val daysString = listOf<String>("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
 
@@ -53,50 +52,68 @@ val calendarStatusList = listOf<CalendarStatusItem>(
 )
 
 @Composable
-fun CalendarScreen(navController: NavController? = null) {
-    CalendarContainer(navController)
+fun CalendarScreen(navController: NavController? = null, mainViewModel: MainViewModel) {
+    CalendarContainer(navController, mainViewModel)
 }
 
 @Composable
-fun Calendar() {
+fun Calendar(mainViewModel: MainViewModel) {
     val context = LocalContext.current
-    var selectedDate by rememberSaveable { mutableStateOf(LocalDate.now()) }
-    var monthYear by rememberSaveable { mutableStateOf(formatMonthYearFromDate(selectedDate)) }
-    val _daysInMonth = remember { mutableStateListOf<String>() }
+    var monthYear by rememberSaveable { mutableStateOf(formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)) }
+    val _daysInMonth = remember { mutableStateListOf<DayOfMonthItem>() }
     val daysInMonth = _daysInMonth
 
     fun onNextMonthClicked() {
-        selectedDate = selectedDate.plusMonths(1)
-        monthYear = formatMonthYearFromDate(selectedDate)
+        mainViewModel.calendarSelectedDate = mainViewModel.calendarSelectedDate.plusMonths(1)
+        monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
     }
 
     fun onPreviousMonthClicked() {
-        selectedDate = selectedDate.minusMonths(1)
-        monthYear = formatMonthYearFromDate(selectedDate)
+        mainViewModel.calendarSelectedDate = mainViewModel.calendarSelectedDate.minusMonths(1)
+        monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
     }
 
-    fun onDayClicked(dayOfMonth: String, position: Int) {
+    fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
+
         val scope = CoroutineScope(Dispatchers.Main)
-        if (!dayOfMonth.isEmpty()) {
-            val message = "Position = $position, clickedDay = $dayOfMonth"
+        if (dayOfMonth != null) {
+            dayOfMonth.isSelected = true
+            mainViewModel.calendarSelectedDate = dayOfMonth.date!!
+            val message =
+                "Position = $position, clickedDay = ${dayOfMonth.dateString} " +
+                        "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date} " +
+                        "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
             scope.launch {
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    fun daysInMonthList(date: LocalDate): SnapshotStateList<String> {
-        val daysInMonthList = SnapshotStateList<String>()
+    fun daysInMonthList(date: LocalDate): SnapshotStateList<DayOfMonthItem> {
+        val year = date.year
+        val month = date.month
+        val daysInMonthList = SnapshotStateList<DayOfMonthItem>()
+        val datesInMonthList = mutableListOf<LocalDate>()
         val yearMonth = YearMonth.from(date)
         val daysInMonthAmount = yearMonth.lengthOfMonth()
-        val firstOfMonth = selectedDate.withDayOfMonth(1)
-        val dayOfWeek = firstOfMonth.dayOfWeek.value
+        val firstOfMonth = mainViewModel.calendarSelectedDate.withDayOfMonth(1)
+        val dayOfWeek = firstOfMonth?.dayOfWeek?.value
+
+        for (day in 1..daysInMonthAmount) {
+            datesInMonthList.add(LocalDate.of(year, month, day))
+        }
 
         for (i in 1 until 35) {
-            if (i <= dayOfWeek || i > daysInMonthAmount + dayOfWeek) {
-                daysInMonthList.add("")
+            if (i <= dayOfWeek!! || i > daysInMonthAmount + dayOfWeek) {
+                daysInMonthList.add(DayOfMonthItem(date = null, dateString = "", attendance = null))
             } else {
-                daysInMonthList.add((i - dayOfWeek).toString())
+                daysInMonthList.add(
+                    DayOfMonthItem(
+                        date = datesInMonthList[i - dayOfWeek - 1],
+                        dateString = (i - dayOfWeek).toString(),
+                        attendance = getAttendanceByDay((i - dayOfWeek).toString(), mainViewModel)
+                    )
+                )
             }
         }
         return daysInMonthList
@@ -104,7 +121,7 @@ fun Calendar() {
 
     fun addDaysInMonth() {
         if (!_daysInMonth.isEmpty()) _daysInMonth.clear()
-        for (i in daysInMonthList(selectedDate)) {
+        for (i in daysInMonthList(mainViewModel.calendarSelectedDate)) {
             _daysInMonth.add(i)
         }
     }
@@ -146,7 +163,7 @@ fun Calendar() {
                         modifier = Modifier.size(MaterialTheme.spacing.iconExtraSmall)
                     )
                 }
-                Text(text = monthYear, style = MaterialTheme.typography.titleLarge)
+                Text(text = monthYear ?: "", style = MaterialTheme.typography.titleLarge)
                 OutlinedButton(
                     modifier = Modifier.size(25.dp),
                     onClick = { onNextMonthClicked() },
@@ -182,7 +199,7 @@ fun Calendar() {
                 }
                 itemsIndexed(daysInMonth) { index, dayOfMonth ->
                     Text(
-                        text = dayOfMonth,
+                        text = dayOfMonth.dateString,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.clickable { onDayClicked(dayOfMonth, index) }
                     )
@@ -193,11 +210,36 @@ fun Calendar() {
 }
 
 @Composable
-fun CalendarContainer(navController: NavController? = null) {
-    var date by rememberSaveable { mutableStateOf("") }
+fun CalendarContainer(navController: NavController? = null, mainViewModel: MainViewModel) {
+
+    val firstDateOfMonth = rememberSaveable {
+        mutableStateOf(
+            db_util.firstDateOfMonth(
+                mainViewModel.calendarSelectedDate
+            )
+        )
+    }
+    val lastDateOfMonth = rememberSaveable {
+        mutableStateOf(
+            db_util.lastDateOfMonth(
+                mainViewModel.calendarSelectedDate
+            )
+        )
+    }
+
+    db_util.getAttendance(
+        mainViewModel.db,
+        mainViewModel.userData?.userid,
+        firstDateOfMonth.value,
+        lastDateOfMonth.value,
+        mainViewModel.setAttendanceList
+    )
+
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
-    val destination = currentBackStackEntry?.destination
     val currentRoute = currentBackStackEntry?.destination?.route
+
+    val currentAttendance = getAttendanceByDate(mainViewModel.calendarSelectedDate, mainViewModel)
+
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -207,17 +249,14 @@ fun CalendarContainer(navController: NavController? = null) {
         MainHeader(
             page = currentRoute,
             userFullName = "Bryan Putra",
-            onCorrectionSelected = {
-            },
-            onLeaveSelected = {
-            }
+            switchTabs = mainViewModel.switchHistoryTab
         )
         Column(
             modifier = Modifier
                 .offset(y = (-75).dp)
                 .fillMaxSize()
                 .padding(MaterialTheme.spacing.spaceMedium),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
@@ -230,7 +269,7 @@ fun CalendarContainer(navController: NavController? = null) {
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = MaterialTheme.elevation.medium)
             ) {
-                Calendar()
+                Calendar(mainViewModel)
             }
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -241,16 +280,71 @@ fun CalendarContainer(navController: NavController? = null) {
                     CalendarStatus(calendarStatusItem)
                 }
             }
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+            ) {
+                item {
+                    Text(
+                        text = "Date",
+                        textAlign = TextAlign.Center,
+                        color = colorResource(id = R.color.gray_400)
+                    )
+                }
+                item {
+                    Text(
+                        text = "Tap In",
+                        textAlign = TextAlign.Center,
+                        color = colorResource(id = R.color.gray_400)
+                    )
+                }
+                item {
+                    Text(
+                        text = "Tap Out",
+                        textAlign = TextAlign.Center,
+                        color = colorResource(id = R.color.gray_400)
+                    )
+                }
+                item {
+                    Text(
+                        text = "Duration",
+                        textAlign = TextAlign.Center,
+                        color = colorResource(id = R.color.gray_400)
+                    )
+                }
+                item {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate)
+                                ?: ""
+                        )
+                        Text(
+                            text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate)
+                                ?: ""
+                        )
+                    }
+                }
+                item {
+                    Text(text = formatDateToStringTimeOnly(currentAttendance?.timein) ?: "")
+                }
+                item {
+                    Text(text = formatDateToStringTimeOnly(currentAttendance?.timeout) ?: "")
+                }
+                item {
+                    Text(text = convertTimeIntToString(currentAttendance?.worktime))
+                }
+            }
         }
 
     }
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
-        CalendarContainer()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun DefaultPreview() {
+//    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
+//        CalendarContainer()
+//    }
+//}

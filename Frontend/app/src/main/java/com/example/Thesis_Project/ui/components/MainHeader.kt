@@ -1,6 +1,5 @@
 package com.example.Thesis_Project.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.utils.formatDateToString
+import com.example.Thesis_Project.ui.utils.formatDateToStringWithDay
 import java.util.*
 
 @Composable
@@ -68,27 +67,14 @@ fun HistoryNavButton(
 @Composable
 fun MainHeader(
     page: String?,
-    userFullName: String,
+    userFullName: String?,
     correctionSelected: Boolean? = null,
     leaveSelected: Boolean? = null,
-    onCorrectionSelected: (Boolean) -> Unit,
-    onLeaveSelected: (Boolean) -> Unit
+    switchTabs: () -> Unit,
 ) {
 
     val currentDate by remember { mutableStateOf(Date()) }
-    val currentDateString = formatDateToString(currentDate)
-
-    val setCorrectionSelected = {
-        Log.d("tag", "setCorrectionSelected")
-        onCorrectionSelected(true);
-        onLeaveSelected(false);
-    }
-
-    val setLeaveSelected = {
-        Log.d("tag1", "setLeaveSelected")
-        onLeaveSelected(true);
-        onCorrectionSelected(false);
-    }
+    val currentDateString = formatDateToStringWithDay(currentDate)
 
     Column(
         modifier = Modifier
@@ -104,15 +90,17 @@ fun MainHeader(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = userFullName,
+                text = userFullName ?: "",
                 color = colorResource(id = R.color.gray_50),
                 style = MaterialTheme.typography.bodyLarge
             )
-            Text(
-                text = currentDateString,
-                color = colorResource(id = R.color.gray_50),
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (currentDateString != null) {
+                Text(
+                    text = currentDateString,
+                    color = colorResource(id = R.color.gray_50),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
 
         if (page == BottomNavBarRoutes.HistoryScreen.route) {
@@ -124,12 +112,12 @@ fun MainHeader(
                 HistoryNavButton(
                     isSelected = correctionSelected ?: false,
                     historyType = "Correction",
-                    onClicked = setCorrectionSelected
+                    onClicked = switchTabs
                 )
                 HistoryNavButton(
                     isSelected = leaveSelected ?: false,
                     historyType = "Leave",
-                    onClicked = setLeaveSelected
+                    onClicked = switchTabs
                 )
             }
         }

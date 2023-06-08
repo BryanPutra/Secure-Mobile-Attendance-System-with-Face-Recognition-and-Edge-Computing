@@ -368,6 +368,10 @@ object db_util {
         return Duration.between(datestart.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), dateend.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()).toDays().toInt()
     }
 
+    fun localDateToDate(localDate: LocalDate): Date{
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+    }
+
     fun dateToLocalDate(date: Date): LocalDate{
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
     }

@@ -1,21 +1,51 @@
 package com.example.Thesis_Project.ui.utils
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+fun convertTimeIntToString(time: Int?): String{
+    if (time != null){
+        val hours = time / 60
+        val minutes = time % 60
+        return "$hours h $minutes m"
+    }
+    return ""
+}
+
 fun convertHexToComposeColor (colorString: String): Color {
     return Color(android.graphics.Color.parseColor("#" + colorString))
 }
-fun formatDateToString (date: Date): String {
+fun formatDateToString (date: Date?): String? {
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
+    return date?.let { dateFormat.format(it) }
+}
+fun formatDateToStringWithDay (date: Date?): String? {
     val dateFormat = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.ENGLISH)
-    return dateFormat.format(date)
+    return date?.let { dateFormat.format(it) }
 }
 
-fun formatMonthYearFromDate (date: LocalDate): String {
+fun formatDateToStringTimeOnly (date: Date?): String? {
+    val dateFormat = SimpleDateFormat("mm:ss", Locale.ENGLISH)
+    return date?.let { dateFormat.format(it) }
+}
+
+fun formatLocalDateToStringDateOnly(date: LocalDate): String{
+    val dateFormat = DateTimeFormatter.ofPattern("dd", Locale.ENGLISH)
+    return date.format(dateFormat)
+}
+
+fun formatLocalDateToStringDayOnly(date: LocalDate): String{
+    val dateFormat = DateTimeFormatter.ofPattern("EEE", Locale.ENGLISH)
+    return date.format(dateFormat)
+}
+
+fun formatMonthYearFromLocalDate (date: LocalDate?): String? {
     val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)
-    return date.format(formatter)
+    if (date != null) {
+        return date.format(formatter)
+    }
+    return ""
 }
