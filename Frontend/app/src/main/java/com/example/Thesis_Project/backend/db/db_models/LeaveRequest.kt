@@ -7,6 +7,7 @@ data class LeaveRequest(
     val userid: String? = null,
     val leavestart: Date? = null,
     val leaveend: Date? = null,
+    var duration: Int? = null,
     val permissionflag: Boolean? = null,
     val reason: String? = null,
     val approvedflag: Boolean? = null,
