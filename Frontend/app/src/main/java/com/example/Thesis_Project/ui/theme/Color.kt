@@ -1,10 +1,13 @@
 package com.example.Thesis_Project.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import com.example.Thesis_Project.R
 
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
+
+val Blue = Color(R.color.blue_500)
 
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)

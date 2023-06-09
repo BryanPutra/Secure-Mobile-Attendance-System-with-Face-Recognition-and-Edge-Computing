@@ -63,6 +63,7 @@ fun BottomNavigationBar(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
+                        tint = colorResource(id = R.color.blue_500)
                     )
                 },
                 label = { Text(text = item.title) },

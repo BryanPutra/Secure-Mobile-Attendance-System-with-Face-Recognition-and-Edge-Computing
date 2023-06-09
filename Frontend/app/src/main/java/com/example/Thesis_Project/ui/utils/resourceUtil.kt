@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.utils
 
+import androidx.compose.material3.CheckboxColors
 import androidx.compose.ui.graphics.Color
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -10,7 +11,7 @@ fun convertTimeIntToString(time: Int?): String{
     if (time != null){
         val hours = time / 60
         val minutes = time % 60
-        return "$hours h $minutes m"
+        return "${hours}h ${minutes}m"
     }
     return ""
 }

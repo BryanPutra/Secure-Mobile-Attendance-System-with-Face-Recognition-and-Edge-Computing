@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
@@ -17,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
@@ -27,11 +30,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.component_item_model.CalendarStatusItem
 import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
+import com.example.Thesis_Project.ui.components.ButtonHalfWidth
 import com.example.Thesis_Project.ui.components.CalendarStatus
 import com.example.Thesis_Project.ui.components.MainHeader
 import com.example.Thesis_Project.ui.utils.*
@@ -63,6 +68,58 @@ fun Calendar(mainViewModel: MainViewModel) {
     val _daysInMonth = remember { mutableStateListOf<DayOfMonthItem>() }
     val daysInMonth = _daysInMonth
 
+    fun checkIsSelected(dayOfMonth: DayOfMonthItem): Boolean {
+        return mainViewModel.calendarSelectedDate == dayOfMonth.date
+    }
+
+    fun checkIsAttended(dayOfMonth: DayOfMonthItem): Boolean {
+        if (dayOfMonth.date == null) {
+            return false
+        }
+        val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
+        if (tempAttendance != null) {
+            return tempAttendance.timeout != null
+        }
+        return false
+    }
+
+    fun checkIsAbsent(dayOfMonth: DayOfMonthItem): Boolean {
+        if (dayOfMonth.date == null) {
+            return false
+        }
+        val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
+        if (tempAttendance != null) {
+            return tempAttendance.absentflag == true
+        }
+        return false
+    }
+
+    fun checkIsLeaveOrPermission(dayOfMonth: DayOfMonthItem): Boolean {
+        if (dayOfMonth.date == null) {
+            return false
+        }
+        val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
+        if (tempAttendance != null) {
+            return tempAttendance.leaveflag == true || tempAttendance.permissionflag == true
+        }
+        return false
+    }
+
+    fun setDateTextColor(
+        isSelected: Boolean,
+        isAttended: Boolean,
+        isAbsent: Boolean,
+        isLeave: Boolean
+    ): Int {
+        return when {
+            isSelected -> R.color.white
+            isAttended -> R.color.teal_600
+            isAbsent -> R.color.red_800
+            isLeave -> R.color.light_orange_300
+            else -> R.color.black
+        }
+    }
+
     fun onNextMonthClicked() {
         mainViewModel.calendarSelectedDate = mainViewModel.calendarSelectedDate.plusMonths(1)
         monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
@@ -80,11 +137,9 @@ fun Calendar(mainViewModel: MainViewModel) {
             dayOfMonth.isSelected = true
             mainViewModel.calendarSelectedDate = dayOfMonth.date!!
             val message =
-                "Position = $position, clickedDay = ${dayOfMonth.dateString} " +
-                        "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date} " +
-                        "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
+                "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date == mainViewModel.calendarSelectedDate} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
             scope.launch {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -130,36 +185,28 @@ fun Calendar(mainViewModel: MainViewModel) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(MaterialTheme.spacing.spaceLarge),
-        contentAlignment = Alignment.CenterStart
+            .padding(MaterialTheme.spacing.spaceLarge), contentAlignment = Alignment.CenterStart
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OutlinedButton(
-                    modifier = Modifier
-                        .size(25.dp),
+                    modifier = Modifier.size(25.dp),
                     onClick = { onPreviousMonthClicked() },
-                    border = BorderStroke(
-                        2.dp, colorResource(
-                            id = R.color.black
-                        )
-                    ),
+                    border = BorderStroke(2.dp, colorResource(id = R.color.black)),
                     shape = CircleShape,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack, contentDescription = null,
-                        tint = colorResource(
-                            id = R.color.black
-                        ),
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = null,
+                        tint = colorResource(id = R.color.black),
                         modifier = Modifier.size(MaterialTheme.spacing.iconExtraSmall)
                     )
                 }
@@ -167,24 +214,20 @@ fun Calendar(mainViewModel: MainViewModel) {
                 OutlinedButton(
                     modifier = Modifier.size(25.dp),
                     onClick = { onNextMonthClicked() },
-                    border = BorderStroke(
-                        2.dp, colorResource(
-                            id = R.color.black
-                        )
-                    ),
+                    border = BorderStroke(2.dp, colorResource(id = R.color.black)),
                     shape = CircleShape,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowForward, contentDescription = null,
-                        tint = colorResource(
-                            id = R.color.black
-                        ),
+                        imageVector = Icons.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = colorResource(id = R.color.black),
                         modifier = Modifier.size(MaterialTheme.spacing.iconExtraSmall)
                     )
                 }
             }
             LazyVerticalGrid(
+                modifier = Modifier.height(250.dp),
                 columns = GridCells.Fixed(7),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
@@ -201,8 +244,25 @@ fun Calendar(mainViewModel: MainViewModel) {
                     Text(
                         text = dayOfMonth.dateString,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.clickable { onDayClicked(dayOfMonth, index) }
-                    )
+                        color = colorResource(
+                            setDateTextColor(
+                                checkIsSelected(dayOfMonth),
+                                checkIsAttended(dayOfMonth),
+                                checkIsAbsent(dayOfMonth),
+                                checkIsLeaveOrPermission(dayOfMonth)
+                            )
+                        ),
+                        modifier = Modifier
+                            .clickable { onDayClicked(dayOfMonth, index) }
+                            .padding(MaterialTheme.spacing.spaceExtraSmall)
+                            .drawBehind {
+                                if (mainViewModel.calendarSelectedDate == dayOfMonth.date) {
+                                    drawCircle(
+                                        color = convertHexToComposeColor("1e90ff"),
+                                        radius = this.size.maxDimension / 2
+                                    )
+                                }
+                            })
                 }
             }
         }
@@ -213,18 +273,10 @@ fun Calendar(mainViewModel: MainViewModel) {
 fun CalendarContainer(navController: NavController? = null, mainViewModel: MainViewModel) {
 
     val firstDateOfMonth = rememberSaveable {
-        mutableStateOf(
-            db_util.firstDateOfMonth(
-                mainViewModel.calendarSelectedDate
-            )
-        )
+        mutableStateOf(db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate))
     }
     val lastDateOfMonth = rememberSaveable {
-        mutableStateOf(
-            db_util.lastDateOfMonth(
-                mainViewModel.calendarSelectedDate
-            )
-        )
+        mutableStateOf(db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate))
     }
 
     db_util.getAttendance(
@@ -238,10 +290,12 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
     val currentRoute = currentBackStackEntry?.destination?.route
 
-    val currentAttendance = getAttendanceByDate(mainViewModel.calendarSelectedDate, mainViewModel)
+    val currentAttendance =
+        getAttendanceByDate(mainViewModel.calendarSelectedDate, mainViewModel)
 
     Column(
         modifier = Modifier
+            .verticalScroll(rememberScrollState())
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -260,13 +314,8 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = colorResource(
-                        id = R.color.white
-                    )
-                ),
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = colorResource(id = R.color.white)),
                 elevation = CardDefaults.cardElevation(defaultElevation = MaterialTheme.elevation.medium)
             ) {
                 Calendar(mainViewModel)
@@ -281,6 +330,9 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                 }
             }
             LazyVerticalGrid(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),
                 columns = GridCells.Fixed(4),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
@@ -314,25 +366,57 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     )
                 }
                 item {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate)
-                                ?: ""
-                        )
-                        Text(
-                            text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate)
-                                ?: ""
-                        )
+                    Box(contentAlignment = Alignment.Center){
+                        Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceXXSmall)) {
+                            Text(
+                                text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate) ?: "",
+                                textAlign = TextAlign.Center,
+                            )
+                            Text(
+                                text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate) ?: "",
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 }
                 item {
-                    Text(text = formatDateToStringTimeOnly(currentAttendance?.timein) ?: "")
+                    Text(
+                        text = formatDateToStringTimeOnly(currentAttendance?.timein) ?: "",
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
                 item {
-                    Text(text = formatDateToStringTimeOnly(currentAttendance?.timeout) ?: "")
+                    Text(
+                        text = formatDateToStringTimeOnly(currentAttendance?.timeout) ?: "",
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
                 item {
-                    Text(text = convertTimeIntToString(currentAttendance?.worktime))
+                    Text(
+                        text = convertTimeIntToString(currentAttendance?.worktime),
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(0.5f)) {
+                    ButtonHalfWidth(
+                        onClickCallback = { /*TODO*/ },
+                        buttonText = "Request Leave"
+                    )
+                }
+                Box(modifier = Modifier.weight(0.5f)) {
+                    ButtonHalfWidth(
+                        onClickCallback = { /*TODO*/ },
+                        buttonText = "Request Correction"
+                    )
                 }
             }
         }
