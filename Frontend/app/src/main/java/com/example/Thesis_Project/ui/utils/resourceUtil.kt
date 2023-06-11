@@ -33,6 +33,10 @@ fun formatDateToStringTimeOnly (date: Date?): String? {
     return date?.let { dateFormat.format(it) }
 }
 
+fun formatLocalDateToString(date: LocalDate): String{
+    val dateFormat = DateTimeFormatter.ofPattern("dd/MM//yyyy", Locale.ENGLISH)
+    return date.format(dateFormat)
+}
 fun formatLocalDateToStringDateOnly(date: LocalDate): String{
     val dateFormat = DateTimeFormatter.ofPattern("dd", Locale.ENGLISH)
     return date.format(dateFormat)

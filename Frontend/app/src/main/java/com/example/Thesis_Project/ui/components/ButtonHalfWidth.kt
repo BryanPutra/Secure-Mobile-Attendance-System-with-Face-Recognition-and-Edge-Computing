@@ -18,13 +18,15 @@ import com.example.Thesis_Project.R
 
 @Composable
 fun ButtonHalfWidth(
-    onClickCallback: () -> Unit,
+    onClick: () -> Unit,
     buttonText: String,
+    isEnabled: Boolean = true
 ) {
     Button(
         onClick = {
-            onClickCallback()
+            onClick()
         },
+        enabled = isEnabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp),

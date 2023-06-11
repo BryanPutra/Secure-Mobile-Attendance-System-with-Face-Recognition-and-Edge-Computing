@@ -36,9 +36,7 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.component_item_model.CalendarStatusItem
 import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
-import com.example.Thesis_Project.ui.components.ButtonHalfWidth
-import com.example.Thesis_Project.ui.components.CalendarStatus
-import com.example.Thesis_Project.ui.components.MainHeader
+import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -68,58 +66,6 @@ fun Calendar(mainViewModel: MainViewModel) {
     val _daysInMonth = remember { mutableStateListOf<DayOfMonthItem>() }
     val daysInMonth = _daysInMonth
 
-    fun checkIsSelected(dayOfMonth: DayOfMonthItem): Boolean {
-        return mainViewModel.calendarSelectedDate == dayOfMonth.date
-    }
-
-    fun checkIsAttended(dayOfMonth: DayOfMonthItem): Boolean {
-        if (dayOfMonth.date == null) {
-            return false
-        }
-        val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
-        if (tempAttendance != null) {
-            return tempAttendance.timeout != null
-        }
-        return false
-    }
-
-    fun checkIsAbsent(dayOfMonth: DayOfMonthItem): Boolean {
-        if (dayOfMonth.date == null) {
-            return false
-        }
-        val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
-        if (tempAttendance != null) {
-            return tempAttendance.absentflag == true
-        }
-        return false
-    }
-
-    fun checkIsLeaveOrPermission(dayOfMonth: DayOfMonthItem): Boolean {
-        if (dayOfMonth.date == null) {
-            return false
-        }
-        val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
-        if (tempAttendance != null) {
-            return tempAttendance.leaveflag == true || tempAttendance.permissionflag == true
-        }
-        return false
-    }
-
-    fun setDateTextColor(
-        isSelected: Boolean,
-        isAttended: Boolean,
-        isAbsent: Boolean,
-        isLeave: Boolean
-    ): Int {
-        return when {
-            isSelected -> R.color.white
-            isAttended -> R.color.teal_600
-            isAbsent -> R.color.red_800
-            isLeave -> R.color.light_orange_300
-            else -> R.color.black
-        }
-    }
-
     fun onNextMonthClicked() {
         mainViewModel.calendarSelectedDate = mainViewModel.calendarSelectedDate.plusMonths(1)
         monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
@@ -131,7 +77,6 @@ fun Calendar(mainViewModel: MainViewModel) {
     }
 
     fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
-
         val scope = CoroutineScope(Dispatchers.Main)
         if (dayOfMonth != null) {
             dayOfMonth.isSelected = true
@@ -180,6 +125,7 @@ fun Calendar(mainViewModel: MainViewModel) {
             _daysInMonth.add(i)
         }
     }
+
     addDaysInMonth()
 
     Box(
@@ -246,10 +192,10 @@ fun Calendar(mainViewModel: MainViewModel) {
                         textAlign = TextAlign.Center,
                         color = colorResource(
                             setDateTextColor(
-                                checkIsSelected(dayOfMonth),
-                                checkIsAttended(dayOfMonth),
-                                checkIsAbsent(dayOfMonth),
-                                checkIsLeaveOrPermission(dayOfMonth)
+                                checkIsSelected(dayOfMonth, mainViewModel),
+                                checkIsAttended(dayOfMonth, mainViewModel),
+                                checkIsAbsent(dayOfMonth, mainViewModel),
+                                checkIsLeaveOrPermission(dayOfMonth, mainViewModel)
                             )
                         ),
                         modifier = Modifier
@@ -287,9 +233,20 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         mainViewModel.setAttendanceList
     )
 
+//    db_util.getLeaveRequest(
+//        mainViewModel.db,
+//        mainViewModel.userData?.userid,
+//        mainViewModel.setLeaveRequestList
+//    )
+//
+//    db_util.getCorrectionRequest(
+//        mainViewModel.db,
+//        mainViewModel.userData?.userid,
+//        mainViewModel.setCorrectionRequestList
+//    )
+
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
     val currentRoute = currentBackStackEntry?.destination?.route
-
     val currentAttendance =
         getAttendanceByDate(mainViewModel.calendarSelectedDate, mainViewModel)
 
@@ -408,19 +365,24 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
             ) {
                 Box(modifier = Modifier.weight(0.5f)) {
                     ButtonHalfWidth(
-                        onClickCallback = { /*TODO*/ },
+                        onClick = { mainViewModel.onRequestLeaveClicked() },
                         buttonText = "Request Leave"
                     )
                 }
                 Box(modifier = Modifier.weight(0.5f)) {
                     ButtonHalfWidth(
-                        onClickCallback = { /*TODO*/ },
+                        onClick = { mainViewModel.onRequestCorrectionClicked() },
                         buttonText = "Request Correction"
                     )
                 }
             }
         }
-
+    }
+    if (mainViewModel.isRequestLeaveDialogShown){
+        LeaveRequestDialog(mainViewModel = mainViewModel)
+    }
+    if (mainViewModel.isCorrectionLeaveDialogShown){
+        CorrectionRequestDialog(mainViewModel = mainViewModel, currentAttendance)
     }
 }
 
