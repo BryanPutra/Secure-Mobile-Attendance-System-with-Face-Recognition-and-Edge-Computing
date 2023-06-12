@@ -37,6 +37,7 @@ object db_testing {
 //        db_util.deleteHolidayManual(db,"hgMirIxqZZ6cCPvDZsnc")
 
 //        testCreateLeaveRequest(db,user)
+
 //        db_util.getAttendance(db,user.userid,db_util.startOfDay(LocalDate.now().minusDays(0)),db_util.endOfDay(LocalDate.now().minusDays(0))){ data ->
 //            if(data!= null && data.isNotEmpty()){
 //                testCreateCorrectionRequest(db,user,data[0])
@@ -194,43 +195,53 @@ object db_testing {
             reason="testing");
         // Need to calculate duration of leaverequest after declaring, alternatively can calculate from frontend before creating LeaveRequest object (up to you)
         temp_leave.duration = db_util.calcDurationDays(temp_leave.leavestart!!,temp_leave.leaveend!!)
-        db_util.checkPendingRequestDuration(db,user.userid!!,temp_leave.leavestart){leaveamt, permamt->
-            if(leaveamt != null){
-                // Frontend should probably get company params and save it to ViewModel or somewhere so don't have to keep calling getCompanyParams
-                db_util.getCompanyParams(db){companyParams->
-                    if(companyParams != null) {
-                        if (temp_leave.permissionflag!!) {
-                            db_util.getTotalPermissionThisYear(db, user.userid) { data ->
-                                if (data != null) {
-                                    if (temp_leave.duration!! + data + permamt!! > companyParams.maxpermissionsleft!!) {
-                                        // Put popup permissions left not enough, can create but will deduct leave left
-                                        // If leaveleft not enough will count as absent
-                                        // If user agrees run createLeaveRequest
-                                        db_util.createLeaveRequest(db, temp_leave)
+        db_util.checkValidLeaveRequestDate(db,user.userid!!,temp_leave.leavestart,temp_leave.duration!!){valid->
+            if(valid != null){
+                if(valid == false){
+                    // Popup here
+                    Log.e("CREATELEAVEREQUEST","Selected leave request range overlaps with an existing attendance/request")
+                }
+                else{
+                    db_util.checkPendingRequestDuration(db,user.userid!!,temp_leave.leavestart){leaveamt, permamt->
+                        if(leaveamt != null){
+                            // Frontend should probably get company params and save it to ViewModel or somewhere so don't have to keep calling getCompanyParams
+                            db_util.getCompanyParams(db){companyParams->
+                                if(companyParams != null) {
+                                    if (temp_leave.permissionflag!!) {
+                                        db_util.getTotalPermissionThisYear(db, user.userid) { data ->
+                                            if (data != null) {
+                                                if (temp_leave.duration!! + data + permamt!! > companyParams.maxpermissionsleft!!) {
+                                                    // Put popup permissions left not enough, can create but will deduct leave left
+                                                    // If leaveleft not enough will count as absent
+                                                    // If user agrees run createLeaveRequest
+                                                    db_util.createLeaveRequest(db, temp_leave)
 
-                                        // If user disagrees close popup and do nothing
+                                                    // If user disagrees close popup and do nothing
+                                                } else {
+                                                    db_util.createLeaveRequest(db, temp_leave)
+                                                }
+                                            }
+                                        }
                                     } else {
-                                        db_util.createLeaveRequest(db, temp_leave)
-                                    }
-                                }
-                            }
-                        } else {
-                            db_util.getTotalLeaveThisMonth(db, user.userid) { data ->
-                                if (data != null) {
-                                    if (temp_leave.duration!! + data + leaveamt!! > companyParams.maxmonthlyleaveleft!!) {
-                                        // Put error popup here on frontend
-                                        Log.e(
-                                            "CREATELEAVEREQUEST",
-                                            "Leave request exceeds monthly quota"
-                                        )
-                                    } else if (temp_leave.duration!! + leaveamt!! > user.leaveleft!!) {
-                                        // Put error popup here on frontend
-                                        Log.e(
-                                            "CREATELEAVEREQUEST",
-                                            "Not enough leave left to create request"
-                                        )
-                                    } else {
-                                        db_util.createLeaveRequest(db, temp_leave)
+                                        db_util.getTotalLeaveThisMonth(db, user.userid) { data ->
+                                            if (data != null) {
+                                                if (temp_leave.duration!! + data + leaveamt!! > companyParams.maxmonthlyleaveleft!!) {
+                                                    // Put error popup here on frontend
+                                                    Log.e(
+                                                        "CREATELEAVEREQUEST",
+                                                        "Leave request exceeds monthly quota"
+                                                         )
+                                                } else if (temp_leave.duration!! + leaveamt!! > user.leaveleft!!) {
+                                                    // Put error popup here on frontend
+                                                    Log.e(
+                                                        "CREATELEAVEREQUEST",
+                                                        "Not enough leave left to create request"
+                                                         )
+                                                } else {
+                                                    db_util.createLeaveRequest(db, temp_leave)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -312,13 +323,11 @@ object db_testing {
                                         db_util.createCorrectionRequest(db, temp_correction)
                                     } else {
                                         if (attendance.permissionflag!! || attendance.leaveflag!!) {
-                                            db_util.getAttendance(db, user.userid, db_util.startOfDay(
-                                                db_util.dateToLocalDate(temp_correction.timein!!)),
-                                                db_util.endOfDay(db_util.dateToLocalDate(temp_correction.timeout!!))) { attendances ->
-                                                if (attendances != null) {
-                                                    if (attendances.isNotEmpty()) {
+                                            db_util.checkValidCorrectionRequestDate(db, user.userid, temp_correction.timein){ valid ->
+                                                if (valid != null) {
+                                                    if (valid == false) {
                                                         // Put error popup here on frontend
-                                                        Log.e("CREATECORRECTIONREQUEST", "New selected date overlaps with an existing attendance")
+                                                        Log.e("CREATECORRECTIONREQUEST", "New selected date overlaps with an existing attendance/request")
                                                     } else {
                                                         db_util.createCorrectionRequest(db, temp_correction)
                                                     }
