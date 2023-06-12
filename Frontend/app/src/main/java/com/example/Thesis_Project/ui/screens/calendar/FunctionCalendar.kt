@@ -2,28 +2,39 @@ package com.example.Thesis_Project.ui.screens.calendar
 
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.Attendance
+import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import java.time.LocalDate
 
-fun getAttendanceByDay(day: String, viewModel: MainViewModel): Attendance? {
+fun getAttendanceByDay(day: String, mainViewModel: MainViewModel): Attendance? {
     if (day.isEmpty()) {
         return null
     }
     var tempAttendance: Attendance? = null
-    tempAttendance = viewModel.attendanceList?.find { attendance ->
+    tempAttendance = mainViewModel.attendanceList?.find { attendance ->
         db_util.dateToLocalDate(attendance.timein!!).toString() == day
     }
     return tempAttendance
 }
 
-fun getAttendanceByDate(date: LocalDate, viewModel: MainViewModel): Attendance? {
+fun getAttendanceByDate(date: LocalDate, mainViewModel: MainViewModel): Attendance? {
     var tempAttendance: Attendance? = null
-    tempAttendance = viewModel.attendanceList?.find { attendance ->
+    tempAttendance = mainViewModel.attendanceList?.find { attendance ->
         db_util.dateToLocalDate(attendance.timein!!) == date
     }
     return tempAttendance
+}
+
+fun checkIfDAttendanceOnCorrectionPending(attendance: Attendance?, mainViewModel: MainViewModel): Boolean {
+    var tempCorrectionRequest: CorrectionRequest? = null
+    if (attendance != null) {
+        tempCorrectionRequest = mainViewModel.correctionRequestList?.find { correctionRequest ->
+            correctionRequest.attendanceid == attendance.attendanceid && (correctionRequest.approvedflag == false || correctionRequest.rejectedflag == false)
+        }
+    }
+    return tempCorrectionRequest != null
 }
 
 fun checkIsSelected(dayOfMonth: DayOfMonthItem, mainViewModel: MainViewModel): Boolean {

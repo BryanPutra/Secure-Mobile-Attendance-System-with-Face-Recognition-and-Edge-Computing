@@ -45,12 +45,15 @@ class MainViewModel : ViewModel() {
         Log.d("Get attendance list", "Company Variables: $attendanceList")
     }
 
+    var isRequestLeaveButtonEnabled: Boolean by mutableStateOf(true)
+    var isRequestCorrectionButtonEnabled: Boolean by mutableStateOf(true)
+
     //leave & correction request
     var leaveRequestList: List<LeaveRequest>? by mutableStateOf(null)
     var correctionRequestList: List<CorrectionRequest>? by mutableStateOf(null)
 
-    var isRequestLeaveDialogShown by mutableStateOf(false)
-    var isCorrectionLeaveDialogShown by mutableStateOf(false)
+    var isRequestLeaveDialogShown: Boolean by mutableStateOf(false)
+    var isCorrectionLeaveDialogShown: Boolean by mutableStateOf(false)
 
     val setLeaveRequestList: (List<LeaveRequest>?) -> Unit = { newLeaveRequest ->
         if (newLeaveRequest != null) {

@@ -62,6 +62,7 @@ fun CalendarScreen(navController: NavController? = null, mainViewModel: MainView
 @Composable
 fun Calendar(mainViewModel: MainViewModel) {
     val context = LocalContext.current
+    val currentDate = LocalDate.now()
     var monthYear by rememberSaveable { mutableStateOf(formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)) }
     val _daysInMonth = remember { mutableStateListOf<DayOfMonthItem>() }
     val daysInMonth = _daysInMonth
@@ -78,15 +79,25 @@ fun Calendar(mainViewModel: MainViewModel) {
 
     fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
         val scope = CoroutineScope(Dispatchers.Main)
-        if (dayOfMonth != null) {
-            dayOfMonth.isSelected = true
-            mainViewModel.calendarSelectedDate = dayOfMonth.date!!
-            val message =
-                "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date == mainViewModel.calendarSelectedDate} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
-            scope.launch {
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-            }
+        if (dayOfMonth == null) {
+            return
         }
+        dayOfMonth.isSelected = true
+        mainViewModel.calendarSelectedDate = dayOfMonth.date!!
+        val message =
+            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date == mainViewModel.calendarSelectedDate} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
+        scope.launch {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+
+        mainViewModel.isRequestCorrectionButtonEnabled =
+            !(dayOfMonth.date.isAfter(currentDate) || checkIfDAttendanceOnCorrectionPending(
+                dayOfMonth.attendance,
+                mainViewModel
+            ))
+
+        mainViewModel.isRequestLeaveButtonEnabled =
+            !currentDate.isAfter(mainViewModel.calendarSelectedDate)
     }
 
     fun daysInMonthList(date: LocalDate): SnapshotStateList<DayOfMonthItem> {
@@ -233,16 +244,16 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         mainViewModel.setAttendanceList
     )
 
+    db_util.getCorrectionRequest(
+        mainViewModel.db,
+        mainViewModel.userData?.userid,
+        mainViewModel.setCorrectionRequestList
+    )
+
 //    db_util.getLeaveRequest(
 //        mainViewModel.db,
 //        mainViewModel.userData?.userid,
 //        mainViewModel.setLeaveRequestList
-//    )
-//
-//    db_util.getCorrectionRequest(
-//        mainViewModel.db,
-//        mainViewModel.userData?.userid,
-//        mainViewModel.setCorrectionRequestList
 //    )
 
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
@@ -323,7 +334,7 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     )
                 }
                 item {
-                    Box(contentAlignment = Alignment.Center){
+                    Box(contentAlignment = Alignment.Center) {
                         Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceXXSmall)) {
                             Text(
                                 text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate) ?: "",
@@ -366,22 +377,24 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                 Box(modifier = Modifier.weight(0.5f)) {
                     ButtonHalfWidth(
                         onClick = { mainViewModel.onRequestLeaveClicked() },
-                        buttonText = "Request Leave"
+                        buttonText = "Request Leave",
+                        isEnabled = mainViewModel.isRequestLeaveButtonEnabled
                     )
                 }
                 Box(modifier = Modifier.weight(0.5f)) {
                     ButtonHalfWidth(
                         onClick = { mainViewModel.onRequestCorrectionClicked() },
-                        buttonText = "Request Correction"
+                        buttonText = "Request Correction",
+                        isEnabled = mainViewModel.isRequestCorrectionButtonEnabled
                     )
                 }
             }
         }
     }
-    if (mainViewModel.isRequestLeaveDialogShown){
+    if (mainViewModel.isRequestLeaveDialogShown) {
         LeaveRequestDialog(mainViewModel = mainViewModel)
     }
-    if (mainViewModel.isCorrectionLeaveDialogShown){
+    if (mainViewModel.isCorrectionLeaveDialogShown) {
         CorrectionRequestDialog(mainViewModel = mainViewModel, currentAttendance)
     }
 }
