@@ -509,6 +509,73 @@ object db_util {
             }
     }
 
+    fun checkValidLeaveRequestDate(db:FirebaseFirestore, userid: String, date:Date, duration: Int, callback:(Boolean?)->Unit){
+        getAttendance(db, userid, startOfDay(dateToLocalDate(date)),endOfDay(dateToLocalDate(date).plusDays(duration -1 .toLong()))){ attendance ->
+            if(attendance!= null){
+                if(attendance.isEmpty()){
+                    getPendingRequestDates(db,userid){dates ->
+                        if(dates != null){
+                            var flag = true
+                            val temp = mutableListOf<Date>()
+                            for(i in 0 until duration){
+                                temp.add(localDateToDate(dateToLocalDate(date).plusDays(i.toLong())))
+                            }
+                            for(i in dates){
+                                for(j in temp){
+                                    if(dateToLocalDate(i) == dateToLocalDate(j)){
+                                        flag = false
+                                        break
+                                    }
+                                }
+                                if(!flag){
+                                    break
+                                }
+                            }
+                            callback(flag)
+                        }
+                        else{
+                            callback(null)
+                        }
+                    }
+                }
+                else{
+                    callback(false)
+                }
+            }
+            else{
+                callback(null)
+            }
+        }
+    }
+    fun checkValidCorrectionRequestDate(db:FirebaseFirestore, userid: String, date: Date, callback: (Boolean?) -> Unit){
+        getAttendance(db, userid, startOfDay(dateToLocalDate(date)), endOfDay(dateToLocalDate(date))){ attendance->
+            if(attendance!=null){
+                if(attendance.isEmpty()){
+                    getPendingRequestDates(db,userid){dates ->
+                        if(dates != null){
+                            var flag = true
+                            for(i in dates){
+                                if(dateToLocalDate(i) == dateToLocalDate(date)){
+                                    flag = false
+                                    break
+                                }
+                            }
+                            callback(flag)
+                        }
+                        else{
+                            callback(null)
+                        }
+                    }
+                }
+                else{
+                    callback(false)
+                }
+            }
+            else{
+                callback(null)
+            }
+        }
+    }
     // False -> User not yet tap in, True -> User already tap in (need to tap out)
     fun checkTapOutStatus(db: FirebaseFirestore, userid: String, callback: (Boolean?) -> Unit){
         db.collection("attendances")
