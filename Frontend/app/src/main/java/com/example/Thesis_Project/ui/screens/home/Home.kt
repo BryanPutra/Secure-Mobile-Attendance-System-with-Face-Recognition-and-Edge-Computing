@@ -8,7 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Today
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
@@ -29,17 +31,11 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
-import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
-import com.example.Thesis_Project.backend.db.db_models.User
-import com.example.Thesis_Project.backend.db.db_testing
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -293,7 +289,7 @@ fun HomeContainer(navController: NavController?, mainViewModel: MainViewModel) {
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Settings,
+                        imageVector = Icons.Outlined.Info,
                         contentDescription = null,
                         tint = colorResource(
                             id = R.color.gray_50
@@ -313,7 +309,7 @@ fun HomeContainer(navController: NavController?, mainViewModel: MainViewModel) {
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = null,
                     tint = colorResource(id = R.color.gray_50),
-                    modifier = Modifier.size(MaterialTheme.spacing.iconExtraLarge)
+                    modifier = Modifier.size(MaterialTheme.spacing.iconXXLarge)
                 )
                 Text(
                     text = mainViewModel.userData?.name ?: "",

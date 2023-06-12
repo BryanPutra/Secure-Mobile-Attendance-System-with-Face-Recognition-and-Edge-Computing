@@ -16,7 +16,7 @@ data class Spacing(
     val spaceMedium: Dp = 16.dp,
     val spaceLarge: Dp = 24.dp,
     val spaceExtraLarge: Dp = 32.dp,
-    val spaceXXLarge: Dp = 64.dp,
+    val spaceXXLarge: Dp = 42.dp,
     val spaceXXXLarge: Dp = 128.dp,
 
     val borderRadiusDefault: Dp = 0.dp,
@@ -24,12 +24,14 @@ data class Spacing(
     val borderRadiusMedium: Dp = 12.dp,
     val borderRadiusLarge: Dp = 24.dp,
     val borderRadiusExtraLarge: Dp = 60.dp,
+    val borderRadiusXXLarge: Dp = 192.dp,
 
     val iconExtraSmall: Dp = 18.dp,
     val iconSmall: Dp = 24.dp,
     val iconMedium: Dp = 28.dp,
-    val iconLarge: Dp = 32.dp,
-    val iconExtraLarge: Dp = 160.dp,
+    val iconLarge: Dp = 36.dp,
+    val iconExtraLarge: Dp = 128.dp,
+    val iconXXLarge: Dp = 160.dp,
     )
 
 val LocalSpacing = compositionLocalOf { Spacing() }
