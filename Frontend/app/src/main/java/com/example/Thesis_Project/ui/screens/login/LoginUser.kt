@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.login
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -14,6 +15,7 @@ import androidx.navigation.NavController
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.routes.AuthScreenRoutes
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 
@@ -65,16 +67,21 @@ fun LoginUserHeader() {
 @Composable
 fun LoginUserInputs(navController: NavController) {
 
-    fun onSubmitLogin(){
-        navController.popBackStack()
-        navController.navigate(NavGraphs.HOME)
-    }
-
     var username by rememberSaveable {
         mutableStateOf("")
     }
     var password by rememberSaveable {
         mutableStateOf("")
+    }
+
+    val onSubmitLogin = {
+        navController.navigate(NavGraphs.HOME){
+            popUpTo(AuthScreenRoutes.LoginUserScreen.route) {inclusive = true}
+        }
+    }
+
+    for (entry in navController.backQueue){
+        entry.destination.route?.let { Log.d("BackStackEntry", it) }
     }
     Column(
         verticalArrangement = Arrangement.spacedBy(

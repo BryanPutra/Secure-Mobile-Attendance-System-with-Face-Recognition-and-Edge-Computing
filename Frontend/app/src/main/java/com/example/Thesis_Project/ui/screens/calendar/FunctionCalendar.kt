@@ -5,6 +5,7 @@ import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
+import com.example.Thesis_Project.ui.utils.isAttended
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import java.time.LocalDate
 
@@ -27,7 +28,10 @@ fun getAttendanceByDate(date: LocalDate, mainViewModel: MainViewModel): Attendan
     return tempAttendance
 }
 
-fun checkIfDAttendanceOnCorrectionPending(attendance: Attendance?, mainViewModel: MainViewModel): Boolean {
+fun checkIfDAttendanceOnCorrectionPending(
+    attendance: Attendance?,
+    mainViewModel: MainViewModel
+): Boolean {
     var tempCorrectionRequest: CorrectionRequest? = null
     if (attendance != null) {
         tempCorrectionRequest = mainViewModel.correctionRequestList?.find { correctionRequest ->
@@ -47,7 +51,7 @@ fun checkIsAttended(dayOfMonth: DayOfMonthItem, mainViewModel: MainViewModel): B
     }
     val tempAttendance: Attendance? = getAttendanceByDate(dayOfMonth.date, mainViewModel)
     if (tempAttendance != null) {
-        return tempAttendance.timeout != null
+        return isAttended(tempAttendance)
     }
     return false
 }

@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.calendar
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -236,25 +237,20 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         mutableStateOf(db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate))
     }
 
-    db_util.getAttendance(
-        mainViewModel.db,
-        mainViewModel.userData?.userid,
-        firstDateOfMonth.value,
-        lastDateOfMonth.value,
-        mainViewModel.setAttendanceList
-    )
-
-    db_util.getCorrectionRequest(
-        mainViewModel.db,
-        mainViewModel.userData?.userid,
-        mainViewModel.setCorrectionRequestList
-    )
-
-//    db_util.getLeaveRequest(
-//        mainViewModel.db,
-//        mainViewModel.userData?.userid,
-//        mainViewModel.setLeaveRequestList
-//    )
+    LaunchedEffect(Unit) {
+        db_util.getAttendance(
+            mainViewModel.db,
+            mainViewModel.userData?.userid,
+            firstDateOfMonth.value,
+            lastDateOfMonth.value,
+            mainViewModel.setAttendanceList
+        )
+        db_util.getCorrectionRequest(
+            mainViewModel.db,
+            mainViewModel.userData?.userid,
+            mainViewModel.setCorrectionRequestList
+        )
+    }
 
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value
     val currentRoute = currentBackStackEntry?.destination?.route
@@ -271,7 +267,8 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         MainHeader(
             page = currentRoute,
             userFullName = "Bryan Putra",
-            switchTabs = mainViewModel.switchHistoryTab
+            switchTabs = mainViewModel.switchHistoryTab,
+            mainViewModel = mainViewModel
         )
         Column(
             modifier = Modifier

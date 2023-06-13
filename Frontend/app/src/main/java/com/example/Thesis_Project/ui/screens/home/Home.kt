@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.screens.home
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +33,7 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
+import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.utils.formatDateToString
@@ -132,8 +134,7 @@ fun TapOutCard() {
 @Composable
 fun NotesSection(mainViewModel: MainViewModel) {
     var isEditing by rememberSaveable { mutableStateOf(false) }
-
-    var notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note)}
+    val notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note)}
 
     val bulletPoint = "\u2022 "
     val annotatedText = buildAnnotatedString {
@@ -244,18 +245,24 @@ fun NotesSection(mainViewModel: MainViewModel) {
 }
 
 @Composable
-fun HomeContainer(navController: NavController?, mainViewModel: MainViewModel) {
+fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
 
-    db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN"){data ->
-        if (data != null) {
-            mainViewModel.userData = data;
-            Log.d("USERDATA", mainViewModel.userData!!.userid!!);
-        } else {
-            Log.e("USERDATA", "User not found")
-        }
+    for (entry in navController.backQueue){
+        entry.destination.route?.let { Log.d("BackStackEntryHome", it) }
     }
 
-    db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+    LaunchedEffect(Unit) {
+        db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN"){data ->
+            if (data != null) {
+                mainViewModel.userData = data;
+                Log.d("USERDATA", mainViewModel.userData!!.userid!!);
+            } else {
+                Log.e("USERDATA", "User not found")
+            }
+        }
+        db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+    }
+
 
     Box(
         modifier = Modifier
@@ -294,7 +301,9 @@ fun HomeContainer(navController: NavController?, mainViewModel: MainViewModel) {
                         tint = colorResource(
                             id = R.color.gray_50
                         ),
-                        modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
+                        modifier = Modifier.size(MaterialTheme.spacing.iconMedium).clickable {
+                            navController.navigate(HomeSubGraphRoutes.CompanyVarScreen.route)
+                        }
                     )
                     Icon(
                         imageVector = Icons.Rounded.Logout,

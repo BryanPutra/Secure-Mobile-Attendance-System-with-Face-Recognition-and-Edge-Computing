@@ -68,8 +68,6 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = currentBackStackEntry?.destination?.route
 
-
-
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -80,6 +78,7 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
             correctionSelected = mainViewModel.correctionSelected,
             leaveSelected = mainViewModel.leaveSelected,
             switchTabs = mainViewModel.switchHistoryTab,
+            mainViewModel = mainViewModel
         )
         if (mainViewModel.correctionSelected) {
             LazyColumn(

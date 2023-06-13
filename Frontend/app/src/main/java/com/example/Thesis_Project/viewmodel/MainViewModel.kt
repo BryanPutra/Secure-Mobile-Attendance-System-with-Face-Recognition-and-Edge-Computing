@@ -42,7 +42,7 @@ class MainViewModel : ViewModel() {
         if (newAttendance != null) {
             attendanceList = newAttendance
         }
-        Log.d("Get attendance list", "Company Variables: $attendanceList")
+        Log.d("Get attendance list", "Attendance List: $attendanceList")
     }
 
     var isRequestLeaveButtonEnabled: Boolean by mutableStateOf(true)
@@ -59,13 +59,13 @@ class MainViewModel : ViewModel() {
         if (newLeaveRequest != null) {
             leaveRequestList = newLeaveRequest
         }
-        Log.d("Get Leave Request list", "Company Variables: $leaveRequestList")
+        Log.d("Get Leave Request list", "Leave Request: $leaveRequestList")
     }
     val setCorrectionRequestList: (List<CorrectionRequest>?) -> Unit = { newCorrectionRequest ->
         if (newCorrectionRequest != null) {
             correctionRequestList = newCorrectionRequest
         }
-        Log.d("Get Correction Request list", "Company Variables: $correctionRequestList")
+        Log.d("Get Correction Request list", "Correction Request: $correctionRequestList")
     }
     fun onRequestLeaveClicked() {
         isRequestLeaveDialogShown = true

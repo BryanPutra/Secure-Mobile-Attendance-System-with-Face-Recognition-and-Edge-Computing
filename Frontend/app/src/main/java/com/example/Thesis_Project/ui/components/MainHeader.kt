@@ -19,6 +19,7 @@ import com.example.Thesis_Project.R
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithDay
+import com.example.Thesis_Project.viewmodel.MainViewModel
 import java.util.*
 
 @Composable
@@ -71,10 +72,11 @@ fun MainHeader(
     correctionSelected: Boolean? = null,
     leaveSelected: Boolean? = null,
     switchTabs: () -> Unit,
+    mainViewModel: MainViewModel
 ) {
 
     val currentDate by remember { mutableStateOf(Date()) }
-    val currentDateString = formatDateToStringWithDay(currentDate)
+    val currentDateString = if (page == BottomNavBarRoutes.HistoryScreen.route) formatDateToStringWithDay(currentDate) else "Leave Left: ${mainViewModel.userData?.leaveleft ?: 0} Days"
 
     Column(
         modifier = Modifier
