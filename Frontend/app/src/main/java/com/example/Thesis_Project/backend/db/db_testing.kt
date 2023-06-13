@@ -5,7 +5,6 @@ import com.example.Thesis_Project.backend.db.db_models.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
