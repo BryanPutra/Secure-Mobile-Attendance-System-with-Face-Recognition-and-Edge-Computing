@@ -38,8 +38,6 @@ import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
-import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 
 enum class homeTapState {
