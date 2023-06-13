@@ -495,6 +495,8 @@ object db_util {
 
     fun checkCorrectionRequestExist(db:FirebaseFirestore, attendanceid: String, callback: (Boolean?) -> Unit){
         db.collection("correction_requests").whereEqualTo("attendanceid",attendanceid)
+            .whereEqualTo("rejectedby",null)
+            .whereEqualTo("approvedby",null)
             .get()
             .addOnSuccessListener { querySnapshot->
                 if(querySnapshot.isEmpty){
