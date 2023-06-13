@@ -2,9 +2,6 @@ package com.example.Thesis_Project.backend.db
 
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
-import com.example.Thesis_Project.backend.db.db_util.getAttendance
-import com.example.Thesis_Project.backend.db.db_util.getHolidays
-import com.example.Thesis_Project.backend.db.db_util.localDateTimeToDate
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -620,23 +617,29 @@ object db_util {
 
     }
 
-    fun getHolidays(db:FirebaseFirestore, callback: (List<Holiday>?)-> Unit){
-        db.collection("holidays").get()
-            .addOnSuccessListener { snapshot->
-                val holidays = mutableListOf<Holiday>()
-                if(!snapshot.isEmpty){
-                    for(i in snapshot){
-                        val temp = i.toObject<Holiday>()
-                        temp.date = Date.from(dateToLocalDate(temp.date!!).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
-                        holidays.add(temp)
-                    }
+    fun getHolidays(db:FirebaseFirestore, duration: Int? = null,callback: (List<Holiday>?)-> Unit){
+        val col = db.collection("holidays")
+        var query: Query = col
+        if(duration != null){
+            query = query.whereGreaterThanOrEqualTo("date", localDateToDate(LocalDate.now().minusDays(duration.toLong())))
+                .whereLessThanOrEqualTo("date",endOfDay(LocalDate.now()))
+        }
+        query.get()
+        .addOnSuccessListener { snapshot->
+            val holidays = mutableListOf<Holiday>()
+            if(!snapshot.isEmpty){
+                for(i in snapshot){
+                    val temp = i.toObject<Holiday>()
+                    temp.date = Date.from(dateToLocalDate(temp.date!!).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant())
+                    holidays.add(temp)
                 }
-                    callback(holidays)
             }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetch Data", "getHolidays $exception")
-                callback(null)
-            }
+                callback(holidays)
+        }
+        .addOnFailureListener { exception ->
+            Log.e("Error Fetch Data", "getHolidays $exception")
+            callback(null)
+        }
     }
 
     fun getPendingRequestDates(db: FirebaseFirestore,userid: String, callback: (List<Date>?) -> Unit){
@@ -723,7 +726,7 @@ object db_util {
         var popupflag = false
         getAttendance(db, user.userid, Date.from(LocalDate.now().atStartOfDay().minusDays(14).atZone(ZoneId.systemDefault()).toInstant()), curDateTime()){ attendances->
             if(attendances != null){
-                getHolidays(db){ holidays ->
+                getHolidays(db,14){ holidays ->
                     if(holidays != null){
                         getPendingRequestDates(db, user.userid!!){ dates ->
                             if(dates != null){
@@ -835,6 +838,7 @@ object db_util {
             }
     }
 
+    // dates is list of static holiday dates (new year, christmas eve, etc)
     fun adminYearlyMaintenance(db: FirebaseFirestore, companyparams: CompanyParams, dates: List<Date>){
         val map:MutableMap<String,Int> = mutableMapOf<String,Int>()
         for(i in 1..12){
@@ -864,7 +868,7 @@ object db_util {
                                             val durationworked = calcDurationDays(i.joindate!!,curDateTime())
                                             leaveallow = durationworked >= companyparams.minimumdaysworked!!
                                             if(leaveallow) {
-                                                leaveamount += 12
+                                                leaveamount += companyparams.leaveleft!!
                                                 if(durationworked <= 365){
                                                     leaveamount += 12 - joinDate.month.value
                                                 }
@@ -873,7 +877,7 @@ object db_util {
                                                 leaveamount += 12 - joinDate.month.value
                                             }
                                         } else {
-                                            leaveamount += 12
+                                            leaveamount += companyparams.leaveleft!!
                                         }
                                         var leaveleft = i.leaveleft!! + leaveamount
                                         if(leaveleft > companyparams.maxtotalleaveleft!!){
@@ -911,6 +915,17 @@ object db_util {
             }
             .addOnFailureListener{exception ->
                 Log.e("Error Updating Data", "adminYearlyMaintenance getUsers $exception")
+            }
+    }
+
+    fun updateCompanyParams(db:FirebaseFirestore, companyParams: CompanyParams){
+        companyParams.companyworktime = Duration.between(LocalDateTime.now().withHour(companyParams.tapintime!!.split(":")[0].toInt()).withMinute(companyParams.tapintime!!.split(":")[1].toInt()), LocalDateTime.now().withHour(companyParams.tapouttime!!.split(":")[0].toInt()).withMinute(companyParams.tapouttime!!.split(":")[1].toInt())).toMinutes().toInt()
+        db.collection("company_params").document("COMPANYPARAMS").set(companyParams)
+            .addOnSuccessListener {
+                Log.d("UPDATECOMPANYPARAMS","Successfully updated company parameters")
+            }
+            .addOnFailureListener { exception->
+                Log.e("Error Updating Data", "updateCompanyParams $exception")
             }
     }
 
