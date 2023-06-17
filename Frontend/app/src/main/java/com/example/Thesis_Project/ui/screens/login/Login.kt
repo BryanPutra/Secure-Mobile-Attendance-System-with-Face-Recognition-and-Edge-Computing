@@ -61,6 +61,7 @@ fun Login(role: String, imageId: Int, navController: NavController) {
                         ignoreCase = true
                     )
                 ) navController.navigate(AuthScreenRoutes.LoginUserScreen.route)
+                else navController.navigate(AuthScreenRoutes.LoginAdminScreen.route)
             },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

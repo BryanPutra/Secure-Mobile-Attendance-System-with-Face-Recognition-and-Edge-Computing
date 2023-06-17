@@ -33,9 +33,12 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
+import com.example.Thesis_Project.routes.AuthScreenRoutes
+import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
+import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
@@ -47,11 +50,14 @@ enum class homeTapState {
 }
 
 @Composable
-fun HomeScreen(navController: NavHostController = rememberNavController(), mainViewModel: MainViewModel) {
+fun HomeScreen(
+    navController: NavHostController = rememberNavController(),
+    mainViewModel: MainViewModel
+) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController, onItemClicked = {})},
+        bottomBar = { BottomNavigationBar(navController = navController) },
         content = { paddingValues ->
-            Box(modifier = Modifier.padding(paddingValues)){
+            Box(modifier = Modifier.padding(paddingValues)) {
                 HomeNavGraph(
                     navController = navController,
                     mainViewModel = mainViewModel
@@ -134,7 +140,7 @@ fun TapOutCard() {
 @Composable
 fun NotesSection(mainViewModel: MainViewModel) {
     var isEditing by rememberSaveable { mutableStateOf(false) }
-    val notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note)}
+    val notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note) }
 
     val bulletPoint = "\u2022 "
     val annotatedText = buildAnnotatedString {
@@ -152,7 +158,7 @@ fun NotesSection(mainViewModel: MainViewModel) {
         isEditing = !isEditing
     }
 
-    fun submitNote(){
+    fun submitNote() {
 
     }
 
@@ -247,12 +253,12 @@ fun NotesSection(mainViewModel: MainViewModel) {
 @Composable
 fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
 
-    for (entry in navController.backQueue){
+    for (entry in navController.backQueue) {
         entry.destination.route?.let { Log.d("BackStackEntryHome", it) }
     }
 
     LaunchedEffect(Unit) {
-        db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN"){data ->
+        db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN") { data ->
             if (data != null) {
                 mainViewModel.userData = data;
                 Log.d("USERDATA", mainViewModel.userData!!.userid!!);
@@ -263,6 +269,35 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
         db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
     }
 
+    var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
+
+    if (logoutConfirmDialogShown) {
+        AlertDialog(
+            onDismissRequest = { logoutConfirmDialogShown = false },
+            title = { Text(text = "Logout") },
+            text = { Text(text = "Are you sure you want to log out?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        logoutConfirmDialogShown = false
+                        mainViewModel.signOut()
+                        navController.navigate(NavGraphs.AUTH) {
+                            popUpTo(BottomNavBarRoutes.HomeScreen.route) { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text(text = "Logout")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { logoutConfirmDialogShown = false }
+                ) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -301,9 +336,11 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
                         tint = colorResource(
                             id = R.color.gray_50
                         ),
-                        modifier = Modifier.size(MaterialTheme.spacing.iconMedium).clickable {
-                            navController.navigate(HomeSubGraphRoutes.CompanyVarScreen.route)
-                        }
+                        modifier = Modifier
+                            .size(MaterialTheme.spacing.iconMedium)
+                            .clickable {
+                                navController.navigate(HomeSubGraphRoutes.CompanyVarScreen.route)
+                            }
                     )
                     Icon(
                         imageVector = Icons.Rounded.Logout,
@@ -311,7 +348,11 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
                         tint = colorResource(
                             id = R.color.gray_50
                         ),
-                        modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
+                        modifier = Modifier
+                            .size(MaterialTheme.spacing.iconMedium)
+                            .clickable {
+                                logoutConfirmDialogShown = true
+                            }
                     )
                 }
                 Icon(

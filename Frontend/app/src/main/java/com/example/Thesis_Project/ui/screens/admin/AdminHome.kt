@@ -1,5 +1,6 @@
-package com.example.Thesis_Project.ui.screens.companyvariable
+package com.example.Thesis_Project.ui.screens.admin
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -22,36 +24,53 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.Thesis_Project.R
-import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
+import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
+import com.example.Thesis_Project.ui.components.AdminBottomNavigationBar
 import com.example.Thesis_Project.ui.components.CompanyQuotasRow
+import com.example.Thesis_Project.ui.navgraphs.AdminNavGraph
 import com.example.Thesis_Project.ui.utils.convertTimeIntToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
-import com.example.Thesis_Project.ui.utils.getListOfAttendancesByMonth
-import com.example.Thesis_Project.viewmodel.MainViewModel
+import com.example.Thesis_Project.viewmodel.AdminViewModel
 import java.time.LocalDate
 
 @Composable
-fun CompanyVariableScreen(navController: NavController, mainViewModel: MainViewModel) {
-    CompanyVariableContainer(navController, mainViewModel)
+fun AdminHomeScreen(
+    navController: NavHostController = rememberNavController(),
+    adminViewModel: AdminViewModel
+) {
+    Scaffold(
+        bottomBar = { AdminBottomNavigationBar(navController = navController) },
+        content = { paddingValues ->
+            Box(modifier = Modifier.padding(paddingValues)) {
+                AdminNavGraph(
+                    navController = navController,
+                    adminViewModel = adminViewModel
+                )
+            }
+        })
+    AdminHomeContainer(navController, adminViewModel)
 }
+
 @Composable
-fun CompanyVariableContainer(navController: NavController, mainViewModel: MainViewModel) {
+fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewModel) {
 
     val currentMonthInt = LocalDate.now().monthValue
 
-    fun getPermissionTotal(): Int {
-        if (mainViewModel.leaveRequestList == null){
-            return mainViewModel.companyVariable?.maxpermissionsleft ?: 12
+    LaunchedEffect(Unit) {
+        db_util.getUser(adminViewModel.db, adminViewModel.currentUser!!.uid) { data ->
+            if (data != null) {
+                adminViewModel.userData = data;
+                Log.d("USERADMINDATA", adminViewModel.userData!!.userid!!);
+            } else {
+                Log.e("USERADMINDATA", "Admin not found")
+            }
         }
-        val tempLeaveRequestList = mutableListOf<LeaveRequest>()
-        for(i in mainViewModel.leaveRequestList!!){
-            tempLeaveRequestList.add(i)
-        }
-        val tempPermissionRequestList = tempLeaveRequestList.filter { it.permissionflag == true }
-        return mainViewModel.companyVariable?.maxpermissionsleft?.minus(tempPermissionRequestList.size) ?: 12
+        db_util.getCompanyParams(adminViewModel.db, adminViewModel.setCompanyVariable)
     }
 
     Box(
@@ -78,7 +97,9 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                     tint = colorResource(
                         id = R.color.gray_50
                     ),
-                    modifier = Modifier.size(MaterialTheme.spacing.iconLarge).clickable { navController.popBackStack() },
+                    modifier = Modifier
+                        .size(MaterialTheme.spacing.iconLarge)
+                        .clickable { navController.popBackStack() },
                 )
                 Text(
                     text = "Profile",
@@ -100,7 +121,7 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceExtraSmall)) {
                     Text(
-                        text = mainViewModel.userData?.name ?: "",
+                        text = adminViewModel.userData?.name ?: "",
                         color = colorResource(id = R.color.gray_50),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
@@ -116,7 +137,7 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                             modifier = Modifier.size(MaterialTheme.spacing.iconSmall)
                         )
                         Text(
-                            text = mainViewModel.userData?.email ?: "",
+                            text = adminViewModel.userData?.email ?: "",
                             color = colorResource(id = R.color.gray_50),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Normal
@@ -133,7 +154,7 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                             modifier = Modifier.size(MaterialTheme.spacing.iconSmall)
                         )
                         Text(
-                            text = formatDateToStringWithOrdinal(mainViewModel.userData?.joindate) ?: "",
+                            text = formatDateToStringWithOrdinal(adminViewModel.userData?.joindate) ?: "",
                             color = colorResource(id = R.color.gray_50),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Normal
@@ -141,9 +162,13 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                     }
                 }
             }
-            Box(modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.spacing.spaceXXLarge)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.spacing.spaceXXLarge)
+            ) {
                 Text(
-                    "Your Quotas",
+                    "Company Quotas",
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.align(Alignment.CenterStart)
                 )
@@ -166,15 +191,53 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                         alignment = Alignment.CenterVertically
                     )
                 ) {
-                    CompanyQuotasRow(name = "Leave left", value = "${mainViewModel.userData?.leaveleft ?: 0} Days")
-                    CompanyQuotasRow(name = "Permission left", value = "${getPermissionTotal()} Days")
-                    CompanyQuotasRow(name = "Tolerance work time ", value = convertTimeIntToString(
-                        mainViewModel.userData?.monthlytoleranceworktime?.get("$currentMonthInt")
-                    ) ?: "")
-                    CompanyQuotasRow(name = "Attended this month", value = " ${mainViewModel.attendanceList?.let {
-                        getListOfAttendancesByMonth(
-                            it, currentMonthInt)?.size ?: 0
-                    } ?: 0} Days", isUnderlined = false)
+                    CompanyQuotasRow(
+                        name = "Total max leave per user",
+                        value = "${adminViewModel.companyVariable?.maxtotalleaveleft} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Leave per year",
+                        value = "${adminViewModel.companyVariable?.leaveleft} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Leave usage per month",
+                        value = "${adminViewModel.companyVariable?.maxmonthlyleaveleft ?: 0} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Minimum days for leave",
+                        value = "${adminViewModel.companyVariable?.minimumdaysworked ?: 0} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Permission per year",
+                        value = "${adminViewModel.companyVariable?.maxpermissionsleft ?: 0} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Company tap in time",
+                        value = "${adminViewModel.companyVariable?.tapintime ?: 0} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Company tap out time",
+                        value = "${adminViewModel.companyVariable?.tapouttime ?: 0} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Tolerance work time", value = convertTimeIntToString(
+                            adminViewModel.companyVariable?.toleranceworktime
+                        )
+                    )
+                    CompanyQuotasRow(
+                        name = "Company work time", value = convertTimeIntToString(
+                            adminViewModel.companyVariable?.companyworktime
+                        )
+                    )
+                    CompanyQuotasRow(
+                        name = "Compensate work time", value = convertTimeIntToString(
+                            adminViewModel.companyVariable?.maxcompensatetime
+                        )
+                    )
+                    adminViewModel.companyVariable?.wifissid?.let {
+                        CompanyQuotasRow(
+                            name = "Wifi SSID", value = it, isUnderlined = false)
+                    }
                 }
             }
         }
@@ -203,7 +266,7 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
 //fun DefaultPreview() {
 //    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
 //        Box(modifier = Modifier.fillMaxSize()) {
-//            CompanyVariable()
+//            AdminHome()
 //        }
 //    }
 //}

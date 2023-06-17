@@ -24,19 +24,20 @@ import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.AuthScreenRoutes
-import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.isValidEmail
 import com.example.Thesis_Project.ui.utils.isValidPassword
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
-fun LoginUserScreen(navController: NavController, mainViewModel: MainViewModel) {
-    LoginUserContainer(navController, mainViewModel)
+fun LoginAdminScreen(navController: NavController, mainViewModel: MainViewModel) {
+    LoginAdminContainer(navController, mainViewModel)
 }
 
 @Composable
-fun LoginUserContainer(navController: NavController, mainViewModel: MainViewModel) {
+fun LoginAdminContainer(navController: NavController, mainViewModel: MainViewModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -48,13 +49,13 @@ fun LoginUserContainer(navController: NavController, mainViewModel: MainViewMode
         ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        LoginUserHeader()
-        LoginUserInputs(navController, mainViewModel)
+        LoginAdminHeader()
+        LoginAdminInputs(navController, mainViewModel)
     }
 }
 
 @Composable
-fun LoginUserHeader() {
+fun LoginAdminHeader() {
     Column(
         verticalArrangement = Arrangement.spacedBy(
             space = MaterialTheme.spacing.spaceLarge,
@@ -62,21 +63,21 @@ fun LoginUserHeader() {
         ),
     ) {
         Image(
-            painter = painterResource(id = R.drawable.user),
+            painter = painterResource(id = R.drawable.admin),
             contentDescription = null,
             contentScale = ContentScale.FillWidth,
             modifier = Modifier
                 .fillMaxWidth()
         )
         Text(
-            "Login as User",
+            "Login as Admin",
             style = MaterialTheme.typography.headlineSmall
         )
     }
 }
 
 @Composable
-fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) {
+fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel) {
 
     var email by rememberSaveable {
         mutableStateOf("")
@@ -108,21 +109,25 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
         }
 
         mainViewModel.signIn(email, password, {
+
             db_util.checkUserIsAdmin(
                 mainViewModel.db,
-                mainViewModel.currentUser!!.uid,
-                mainViewModel.setUserAdmin
-            )
-            if (!mainViewModel.isUserAdmin) {
-                navController.navigate(NavGraphs.HOME) {
-                    popUpTo(AuthScreenRoutes.LoginUserScreen.route) { inclusive = true }
+                mainViewModel.currentUser!!.uid
+            ) { isAdmin ->
+                if (isAdmin != null) {
+                    mainViewModel.isUserAdmin = isAdmin
                 }
-            } else {
-                mainViewModel.signOut()
-                errorText =
-                    "The inputted user is an admin, please login as admin in the admin login page"
+                if (mainViewModel.isUserAdmin) {
+                    navController.navigate(NavGraphs.ADMIN) {
+                        popUpTo(AuthScreenRoutes.LoginAdminScreen.route) { inclusive = true }
+                    }
+                } else {
+                    mainViewModel.signOut()
+                    errorText =
+                        "The inputted user is a user, please login as user in the user login page"
+                }
+                Log.d("check admin", "admin: ${mainViewModel.isUserAdmin}")
             }
-
         }, { errorMessage -> errorText = errorMessage })
     }
 
@@ -196,6 +201,6 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
 //@Composable
 //fun DefaultPreview() {
 //    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
-//        LoginUserScreen()
+//        LoginAdminScreen()
 //    }
 //}

@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.WorkHistory
 import androidx.compose.material3.*
@@ -26,19 +27,14 @@ private val bottomNavItems =
             icon = Icons.Outlined.Home
         ),
         BottomNavItem(
-            title = "Calendar",
+            title = "Users",
             route = BottomNavBarRoutes.CalendarScreen.route,
-            icon = Icons.Outlined.CalendarMonth
-        ),
-        BottomNavItem(
-            title = "History",
-            route = BottomNavBarRoutes.HistoryScreen.route,
-            icon = Icons.Outlined.WorkHistory
+            icon = Icons.Outlined.Group
         ),
     )
 
 @Composable
-fun BottomNavigationBar(
+fun AdminBottomNavigationBar(
     navController: NavHostController,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()

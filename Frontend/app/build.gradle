@@ -1,7 +1,10 @@
 plugins {
     id 'com.android.application'
+    id 'com.android.library' apply false
     id 'kotlin-android'
+    id 'kotlin-kapt'
     id 'com.google.gms.google-services'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -52,26 +55,30 @@ android {
 }
 
 dependencies {
-    def nav_version = "2.5.3"
-    def activity_version = "1.7.2"
-    def composeBom = platform("androidx.compose:compose-bom:2023.04.01")
-    def composeDialog_version = "1.2.0"
+    def composeBom = platform("androidx.compose:compose-bom:$composebom_version")
     implementation(composeBom)
     androidTestImplementation(composeBom)
-    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1"
+    kapt "androidx.lifecycle:lifecycle-compiler:2.6.1"
     implementation "androidx.activity:activity-ktx:$activity_version"
     implementation "androidx.activity:activity-compose:$activity_version"
     implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation "androidx.compose.material:material-icons-extended:$compose_version"
-    implementation 'androidx.compose.material3:material3:1.0.0-alpha11'
+    implementation 'androidx.compose.material3:material3:1.2.0-alpha02'
     implementation 'androidx.compose.foundation:foundation'
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
+    implementation "androidx.hilt:hilt-navigation-compose:$hilt_navigation_compose_version"
+//    implementation 'com.google.android.gms:play-services-ads:22.1.0'
     implementation "com.maxkeppeler.sheets-compose-dialogs:core:1.2.0"
     implementation "com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.0"
     implementation "com.maxkeppeler.sheets-compose-dialogs:clock:1.2.0"
@@ -82,6 +89,7 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
     implementation platform('com.google.firebase:firebase-bom:32.1.0')
+    implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-firestore-ktx'
 }
