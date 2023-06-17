@@ -801,12 +801,34 @@ object db_util {
     fun addHolidayManual(db: FirebaseFirestore, date: Date){
         val document = db.collection("holidays").document()
         val temp = Holiday(document.id, date)
-        db.collection("holidays").document(document.id).set(temp)
-            .addOnSuccessListener {
-                Log.d("ADDHOLIDAYMANUAL","Holiday successfully added with id ${document.id}")
+        val deleteAttendances = mutableListOf<Attendance>()
+        db.collection("attendances").whereGreaterThanOrEqualTo("timein",localDateTimeToDate(dateToLocalDate(date).atStartOfDay()))
+            .whereLessThanOrEqualTo("timein",localDateTimeToDate(dateToLocalDate(date).atTime(LocalTime.MAX)))
+            .whereEqualTo("absentflag",true)
+            .get()
+            .addOnSuccessListener { snapshot->
+                if(!snapshot.isEmpty){
+                    for(i in snapshot){
+                        deleteAttendances.add(i.toObject<Attendance>())
+                    }
+                }
+                db.runTransaction{transaction ->
+                    transaction.set(document,temp)
+                    for(i in deleteAttendances){
+                        val attRef = db.collection("attendances").document(i.attendanceid!!)
+                        transaction.delete(attRef)
+                    }
+                    null
+                }
+                    .addOnSuccessListener {
+                        Log.d("ADDHOLIDAYMANUAL","Holiday successfully added")
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.e("Error Updating Data", "addHolidayManual $exception")
+                    }
             }
-            .addOnFailureListener {exception ->
-                Log.e("Error Create Data", "addHolidayManual $exception")
+            .addOnFailureListener { exception->
+                Log.e("Error Fetch Data","addHolidayManual $exception")
             }
     }
 
