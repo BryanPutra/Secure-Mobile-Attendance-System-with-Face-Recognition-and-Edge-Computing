@@ -28,8 +28,6 @@ import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.isValidEmail
 import com.example.Thesis_Project.ui.utils.isValidPassword
 import com.example.Thesis_Project.viewmodel.MainViewModel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @Composable
 fun LoginAdminScreen(navController: NavController, mainViewModel: MainViewModel) {
@@ -122,7 +120,7 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
                         popUpTo(AuthScreenRoutes.LoginAdminScreen.route) { inclusive = true }
                     }
                 } else {
-                    mainViewModel.signOut()
+                    mainViewModel.signOutFromUser()
                     errorText =
                         "The inputted user is a user, please login as user in the user login page"
                 }

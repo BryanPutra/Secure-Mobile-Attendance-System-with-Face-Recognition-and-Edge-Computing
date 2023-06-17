@@ -11,9 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Today
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Logout
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,7 +31,6 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
-import com.example.Thesis_Project.routes.AuthScreenRoutes
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
@@ -257,6 +254,8 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
         entry.destination.route?.let { Log.d("BackStackEntryHome", it) }
     }
 
+    var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN") { data ->
             if (data != null) {
@@ -269,8 +268,6 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
         db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
     }
 
-    var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
-
     if (logoutConfirmDialogShown) {
         AlertDialog(
             onDismissRequest = { logoutConfirmDialogShown = false },
@@ -280,7 +277,7 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
                 Button(
                     onClick = {
                         logoutConfirmDialogShown = false
-                        mainViewModel.signOut()
+                        mainViewModel.signOutFromUser()
                         navController.navigate(NavGraphs.AUTH) {
                             popUpTo(BottomNavBarRoutes.HomeScreen.route) { inclusive = true }
                         }

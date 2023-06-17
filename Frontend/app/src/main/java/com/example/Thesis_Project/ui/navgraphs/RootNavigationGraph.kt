@@ -1,20 +1,16 @@
 package com.example.Thesis_Project.ui.navgraphs
 
 import android.util.Log
-import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.Thesis_Project.ui.screens.admin.AdminHomeScreen
 import com.example.Thesis_Project.ui.screens.home.HomeScreen
-import com.example.Thesis_Project.viewmodel.AdminViewModel
 import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
-fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainViewModel, adminViewModel: AdminViewModel) {
+fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainViewModel) {
     Log.d("Print user auth", "isAuthenticated: ${mainViewModel.checkAuth()}")
     fun setStartDestination(): String {
         if (!mainViewModel.checkAuth()) return NavGraphs.AUTH
@@ -31,7 +27,7 @@ fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainVie
             HomeScreen(mainViewModel = mainViewModel)
         }
         composable(route = NavGraphs.ADMIN) {
-            AdminHomeScreen(adminViewModel = adminViewModel)
+            AdminHomeScreen(mainViewModel = mainViewModel)
         }
     }
 }

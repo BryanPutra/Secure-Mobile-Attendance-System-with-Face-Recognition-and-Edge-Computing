@@ -9,12 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -29,19 +29,23 @@ import androidx.navigation.compose.rememberNavController
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
+import com.example.Thesis_Project.routes.AdminBottomNavBarRoutes
+import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.AdminBottomNavigationBar
+import com.example.Thesis_Project.ui.components.AdminEditCompanyParamsDialog
+import com.example.Thesis_Project.ui.components.ButtonHalfWidth
 import com.example.Thesis_Project.ui.components.CompanyQuotasRow
 import com.example.Thesis_Project.ui.navgraphs.AdminNavGraph
+import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.convertTimeIntToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
-import com.example.Thesis_Project.viewmodel.AdminViewModel
-import java.time.LocalDate
+import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
 fun AdminHomeScreen(
     navController: NavHostController = rememberNavController(),
-    adminViewModel: AdminViewModel
+    mainViewModel: MainViewModel
 ) {
     Scaffold(
         bottomBar = { AdminBottomNavigationBar(navController = navController) },
@@ -49,28 +53,27 @@ fun AdminHomeScreen(
             Box(modifier = Modifier.padding(paddingValues)) {
                 AdminNavGraph(
                     navController = navController,
-                    adminViewModel = adminViewModel
+                    mainViewModel = mainViewModel
                 )
             }
         })
-    AdminHomeContainer(navController, adminViewModel)
 }
 
 @Composable
-fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewModel) {
+fun AdminHomeContainer(navController: NavController, mainViewModel: MainViewModel) {
 
-    val currentMonthInt = LocalDate.now().monthValue
+    var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        db_util.getUser(adminViewModel.db, adminViewModel.currentUser!!.uid) { data ->
+        db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid) { data ->
             if (data != null) {
-                adminViewModel.userData = data;
-                Log.d("USERADMINDATA", adminViewModel.userData!!.userid!!);
+                mainViewModel.userData = data;
+                Log.d("USERADMINDATA", mainViewModel.userData!!.userid!!);
             } else {
                 Log.e("USERADMINDATA", "Admin not found")
             }
         }
-        db_util.getCompanyParams(adminViewModel.db, adminViewModel.setCompanyVariable)
+        db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
     }
 
     Box(
@@ -88,25 +91,27 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
             ),
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(space = MaterialTheme.spacing.spaceMedium),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.ArrowBack,
-                    contentDescription = null,
-                    tint = colorResource(
-                        id = R.color.gray_50
-                    ),
-                    modifier = Modifier
-                        .size(MaterialTheme.spacing.iconLarge)
-                        .clickable { navController.popBackStack() },
-                )
                 Text(
                     text = "Profile",
                     color = colorResource(id = R.color.gray_50),
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Normal
+                )
+                Icon(
+                    imageVector = Icons.Rounded.Logout,
+                    contentDescription = null,
+                    tint = colorResource(
+                        id = R.color.gray_50
+                    ),
+                    modifier = Modifier
+                        .size(MaterialTheme.spacing.iconMedium)
+                        .clickable {
+                            logoutConfirmDialogShown = true
+                        }
                 )
             }
             Row(
@@ -121,7 +126,7 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceExtraSmall)) {
                     Text(
-                        text = adminViewModel.userData?.name ?: "",
+                        text = mainViewModel.userData?.name ?: "",
                         color = colorResource(id = R.color.gray_50),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
@@ -137,7 +142,7 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
                             modifier = Modifier.size(MaterialTheme.spacing.iconSmall)
                         )
                         Text(
-                            text = adminViewModel.userData?.email ?: "",
+                            text = mainViewModel.userData?.email ?: "",
                             color = colorResource(id = R.color.gray_50),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Normal
@@ -154,7 +159,7 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
                             modifier = Modifier.size(MaterialTheme.spacing.iconSmall)
                         )
                         Text(
-                            text = formatDateToStringWithOrdinal(adminViewModel.userData?.joindate) ?: "",
+                            text = formatDateToStringWithOrdinal(mainViewModel.userData?.joindate) ?: "",
                             color = colorResource(id = R.color.gray_50),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Normal
@@ -167,11 +172,20 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
                     .fillMaxWidth()
                     .padding(top = MaterialTheme.spacing.spaceXXLarge)
             ) {
-                Text(
-                    "Company Quotas",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                )
+                Row(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Company Quotas",
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    ButtonHalfWidth(
+                        onClick = { mainViewModel.showEditCompanyParamsDialog() },
+                        buttonText = "Edit"
+                    )
+                }
             }
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -193,50 +207,51 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
                 ) {
                     CompanyQuotasRow(
                         name = "Total max leave per user",
-                        value = "${adminViewModel.companyVariable?.maxtotalleaveleft} Days"
+                        value = "${mainViewModel.companyVariable?.maxtotalleaveleft} Days"
                     )
                     CompanyQuotasRow(
                         name = "Leave per year",
-                        value = "${adminViewModel.companyVariable?.leaveleft} Days"
+                        value = "${mainViewModel.companyVariable?.leaveleft} Days"
                     )
                     CompanyQuotasRow(
                         name = "Leave usage per month",
-                        value = "${adminViewModel.companyVariable?.maxmonthlyleaveleft ?: 0} Days"
+                        value = "${mainViewModel.companyVariable?.maxmonthlyleaveleft ?: 0} Days"
                     )
                     CompanyQuotasRow(
                         name = "Minimum days for leave",
-                        value = "${adminViewModel.companyVariable?.minimumdaysworked ?: 0} Days"
+                        value = "${mainViewModel.companyVariable?.minimumdaysworked ?: 0} Days"
                     )
                     CompanyQuotasRow(
                         name = "Permission per year",
-                        value = "${adminViewModel.companyVariable?.maxpermissionsleft ?: 0} Days"
+                        value = "${mainViewModel.companyVariable?.maxpermissionsleft ?: 0} Days"
                     )
                     CompanyQuotasRow(
                         name = "Company tap in time",
-                        value = "${adminViewModel.companyVariable?.tapintime ?: 0} Days"
+                        value = "${mainViewModel.companyVariable?.tapintime ?: 0} Days"
                     )
                     CompanyQuotasRow(
                         name = "Company tap out time",
-                        value = "${adminViewModel.companyVariable?.tapouttime ?: 0} Days"
+                        value = "${mainViewModel.companyVariable?.tapouttime ?: 0} Days"
                     )
                     CompanyQuotasRow(
                         name = "Tolerance work time", value = convertTimeIntToString(
-                            adminViewModel.companyVariable?.toleranceworktime
+                            mainViewModel.companyVariable?.toleranceworktime
                         )
                     )
                     CompanyQuotasRow(
                         name = "Company work time", value = convertTimeIntToString(
-                            adminViewModel.companyVariable?.companyworktime
+                            mainViewModel.companyVariable?.companyworktime
                         )
                     )
                     CompanyQuotasRow(
                         name = "Compensate work time", value = convertTimeIntToString(
-                            adminViewModel.companyVariable?.maxcompensatetime
+                            mainViewModel.companyVariable?.maxcompensatetime
                         )
                     )
-                    adminViewModel.companyVariable?.wifissid?.let {
+                    mainViewModel.companyVariable?.wifissid?.let {
                         CompanyQuotasRow(
-                            name = "Wifi SSID", value = it, isUnderlined = false)
+                            name = "Wifi SSID", value = it, isUnderlined = false
+                        )
                     }
                 }
             }
@@ -257,6 +272,38 @@ fun AdminHomeContainer(navController: NavController, adminViewModel: AdminViewMo
                 )
                 .zIndex(-100f)
         )
+
+        if (mainViewModel.isEditCompanyParamsDialogShown) {
+            AdminEditCompanyParamsDialog(mainViewModel = mainViewModel)
+        }
+
+        if (logoutConfirmDialogShown) {
+            AlertDialog(
+                onDismissRequest = { logoutConfirmDialogShown = false },
+                title = { Text(text = "Logout") },
+                text = { Text(text = "Are you sure you want to log out?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            logoutConfirmDialogShown = false
+                            mainViewModel.signOutFromAdmin()
+                            navController.navigate(NavGraphs.ROOT) {
+                                popUpTo(AdminBottomNavBarRoutes.AdminHomeScreen.route) { inclusive = true }
+                            }
+                        }
+                    ) {
+                        Text(text = "Logout")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { logoutConfirmDialogShown = false }
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                }
+            )
+        }
     }
 
 }

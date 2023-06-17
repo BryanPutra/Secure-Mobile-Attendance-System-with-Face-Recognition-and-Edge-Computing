@@ -1,15 +1,11 @@
 package com.example.Thesis_Project.viewmodel
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.Thesis_Project.backend.db.db_models.*
-import com.example.Thesis_Project.backend.db.db_util
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
@@ -17,7 +13,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class MainViewModel : ViewModel() {
@@ -88,9 +83,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun signOut() {
-        auth.signOut()
-        currentUser = null
+    //admin
+    var isEditCompanyParamsDialogShown by mutableStateOf(false)
+    fun showEditCompanyParamsDialog() {
+        isEditCompanyParamsDialogShown = true
     }
 
     //main
@@ -154,4 +150,19 @@ class MainViewModel : ViewModel() {
         isCorrectionLeaveDialogShown = true
     }
 
+    fun signOutFromAdmin() {
+        isUserAdmin = false
+        userData = null
+        currentUser = null
+        auth.signOut()
+    }
+
+    fun signOutFromUser() {
+        currentUser = null
+        userData = null
+        companyVariable = null
+        correctionSelected = false
+        leaveSelected = false
+        auth.signOut()
+    }
 }

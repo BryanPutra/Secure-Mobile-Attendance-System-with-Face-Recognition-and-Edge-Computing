@@ -1,6 +1,5 @@
 package com.example.Thesis_Project.ui.screens.login
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,7 +23,6 @@ import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.AuthScreenRoutes
-import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.isValidEmail
 import com.example.Thesis_Project.ui.utils.isValidPassword
@@ -118,7 +116,7 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
                     popUpTo(AuthScreenRoutes.LoginUserScreen.route) { inclusive = true }
                 }
             } else {
-                mainViewModel.signOut()
+                mainViewModel.signOutFromUser()
                 errorText =
                     "The inputted user is an admin, please login as admin in the admin login page"
             }

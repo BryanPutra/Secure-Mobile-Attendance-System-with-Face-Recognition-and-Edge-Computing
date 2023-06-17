@@ -17,18 +17,19 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.ui.component_item_model.BottomNavItem
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.routes.AdminBottomNavBarRoutes
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 
 private val bottomNavItems =
     listOf(
         BottomNavItem(
             title = "Home",
-            route = BottomNavBarRoutes.HomeScreen.route,
+            route = AdminBottomNavBarRoutes.AdminHomeScreen.route,
             icon = Icons.Outlined.Home
         ),
         BottomNavItem(
             title = "Users",
-            route = BottomNavBarRoutes.CalendarScreen.route,
+            route = AdminBottomNavBarRoutes.AdminUsersScreen.route,
             icon = Icons.Outlined.Group
         ),
     )
