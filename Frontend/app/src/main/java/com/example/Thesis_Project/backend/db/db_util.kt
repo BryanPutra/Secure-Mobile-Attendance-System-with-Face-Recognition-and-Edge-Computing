@@ -30,6 +30,23 @@ object db_util {
             }
     }
 
+    fun getAllUser(db: FirebaseFirestore, callback:(List<User>?) -> Unit){
+        val temp = mutableListOf<User>()
+        db.collection("users").get()
+            .addOnSuccessListener {querySnapshot ->
+                if(!querySnapshot.isEmpty){
+                    for(i in querySnapshot){
+                        temp.add(i.toObject<User>())
+                    }
+                }
+                callback(temp)
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Fetch Data","getallUser $exception")
+                callback(null)
+            }
+    }
+
     fun createUser(db: FirebaseFirestore, user:User, companyparams:CompanyParams){
         val doc = db.collection("users").document(user.userid!!)
         val map:MutableMap<String,Int> = mutableMapOf<String,Int>()
