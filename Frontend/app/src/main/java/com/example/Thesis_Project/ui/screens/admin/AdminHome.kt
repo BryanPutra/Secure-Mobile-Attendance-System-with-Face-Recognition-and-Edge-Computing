@@ -92,7 +92,8 @@ fun AdminHomeContainer(navController: NavController, mainViewModel: MainViewMode
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = "Profile",

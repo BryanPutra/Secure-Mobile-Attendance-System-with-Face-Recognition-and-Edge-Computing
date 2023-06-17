@@ -29,7 +29,7 @@ data class Spacing(
     val iconExtraSmall: Dp = 18.dp,
     val iconSmall: Dp = 24.dp,
     val iconMedium: Dp = 28.dp,
-    val iconLarge: Dp = 36.dp,
+    val iconLarge: Dp = 42.dp,
     val iconExtraLarge: Dp = 128.dp,
     val iconXXLarge: Dp = 160.dp,
     )

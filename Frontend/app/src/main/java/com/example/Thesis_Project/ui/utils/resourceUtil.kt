@@ -42,7 +42,7 @@ fun formatDateToStringWithOrdinal(date: Date?): String? {
         dayOfMonth = getDayOfMonthFromDate(date)
     }
 
-    return "$month ${getDayOfMonthOrdinal(dayOfMonth)} $year"
+    return "$month $dayOfMonth${getDayOfMonthOrdinal(dayOfMonth)} $year"
 }
 
 fun formatDateToStringWithDay(date: Date?): String? {

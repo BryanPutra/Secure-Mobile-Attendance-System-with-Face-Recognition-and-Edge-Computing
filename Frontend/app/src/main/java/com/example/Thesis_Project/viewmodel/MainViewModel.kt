@@ -84,6 +84,17 @@ class MainViewModel : ViewModel() {
     }
 
     //admin
+    var usersList: List<User>? by mutableStateOf(null)
+    val setUserList: (List<User>?) -> Unit = { newUsers ->
+        if (newUsers != null) {
+            usersList = newUsers
+            Log.d("Get Users list", "Users List: $usersList")
+        }
+        else{
+            Log.d("Get Users list", "Users List not found")
+        }
+    }
+
     var isEditCompanyParamsDialogShown by mutableStateOf(false)
     fun showEditCompanyParamsDialog() {
         isEditCompanyParamsDialogShown = true
@@ -95,8 +106,11 @@ class MainViewModel : ViewModel() {
     val setCompanyVariable: (CompanyParams?) -> Unit = { newCompanyParams ->
         if (newCompanyParams != null) {
             companyVariable = newCompanyParams
+            Log.d("Get Company variables", "Company Variables: $companyVariable")
         }
-        Log.d("Get Company variables", "Company Variables: $companyVariable")
+        else{
+            Log.d("Get Company variables", "Company Variables not found")
+        }
     }
 
     //history
@@ -115,8 +129,11 @@ class MainViewModel : ViewModel() {
     val setAttendanceList: (List<Attendance>?) -> Unit = { newAttendance ->
         if (newAttendance != null) {
             attendanceList = newAttendance
+            Log.d("Get attendance list", "Attendance List: $attendanceList")
         }
-        Log.d("Get attendance list", "Attendance List: $attendanceList")
+        else{
+            Log.d("Get Attendance list", "Attendance not found")
+        }
     }
 
     var isRequestLeaveButtonEnabled: Boolean by mutableStateOf(true)
@@ -132,14 +149,20 @@ class MainViewModel : ViewModel() {
     val setLeaveRequestList: (List<LeaveRequest>?) -> Unit = { newLeaveRequest ->
         if (newLeaveRequest != null) {
             leaveRequestList = newLeaveRequest
+            Log.d("Get Leave Request list", "Leave Request: $leaveRequestList")
         }
-        Log.d("Get Leave Request list", "Leave Request: $leaveRequestList")
+        else{
+            Log.d("Get Leave Request list", "Leave Request not found")
+        }
     }
     val setCorrectionRequestList: (List<CorrectionRequest>?) -> Unit = { newCorrectionRequest ->
         if (newCorrectionRequest != null) {
             correctionRequestList = newCorrectionRequest
+            Log.d("Get Correction Request list", "Correction Request: $correctionRequestList")
         }
-        Log.d("Get Correction Request list", "Correction Request: $correctionRequestList")
+        else{
+            Log.d("Get Correction Request list", "Correction Request not found")
+        }
     }
 
     fun onRequestLeaveClicked() {
