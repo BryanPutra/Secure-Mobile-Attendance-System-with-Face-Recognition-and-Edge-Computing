@@ -12,6 +12,13 @@ import java.util.*
 object db_testing {
 
     fun runTests(db: FirebaseFirestore,user: User){
+        db_util.getAllUser(db){users ->
+            if(users != null){
+                for(i in users){
+                    Log.e("TESTING",i.userid!!)
+                }
+            }
+        }
 //        // For get, if userid == null, will get for all users
 //        testGetAttendance(db,userid);
 //        testGetLeaveRequest(db,userid);
