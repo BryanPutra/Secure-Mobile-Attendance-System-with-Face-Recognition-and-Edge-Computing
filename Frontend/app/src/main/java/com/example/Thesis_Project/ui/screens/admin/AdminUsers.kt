@@ -1,12 +1,10 @@
 package com.example.Thesis_Project.ui.screens.admin
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement.Absolute.spacedBy
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -25,13 +23,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.Thesis_Project.R
-import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
 import com.example.Thesis_Project.ui.components.AdminUsersRow
-import com.example.Thesis_Project.ui.components.HistoryCard
-import com.example.Thesis_Project.ui.screens.history.correctionCardItems
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.firebase.firestore.auth.User
 

@@ -3,6 +3,7 @@ package com.example.Thesis_Project.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -10,16 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.theme.SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme
+import com.example.Thesis_Project.ui.utils.formatDateToString
 
 @Composable
-fun HistoryCard(historyType: String, description: String, date: String, status: String) {
-    val correctionTitle: String = "Correction Request";
+fun LeaveRequestCard(leaveRequest: LeaveRequest) {
     val leaveTitle: String = "Leave Request";
 
     Box(
@@ -45,7 +45,7 @@ fun HistoryCard(historyType: String, description: String, date: String, status: 
                 ),
             ) {
                 Text(
-                    text = if (historyType == "Correction") correctionTitle else leaveTitle,
+                    text = leaveTitle,
                     color = colorResource(id = R.color.black),
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -56,7 +56,7 @@ fun HistoryCard(historyType: String, description: String, date: String, status: 
                         .fillMaxHeight()
                 ) {
                     Text(
-                        text = description,
+                        text = leaveRequest.reason ?: "",
                         color = colorResource(id = R.color.black),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -74,7 +74,7 @@ fun HistoryCard(historyType: String, description: String, date: String, status: 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = date,
+                        text = formatDateToString(leaveRequest.createdate) ?: "",
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -83,45 +83,54 @@ fun HistoryCard(historyType: String, description: String, date: String, status: 
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(space = MaterialTheme.spacing.spaceSmall)
                     ) {
-                        if (status == "Approved") {
-                            Icon(
-                                imageVector = Icons.Filled.CheckCircle, contentDescription = null,
-                                tint = colorResource(
-                                    id = R.color.teal_A400
-                                ),
-                                modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Filled.Schedule, contentDescription = null,
-                                tint = colorResource(
-                                    id = R.color.deep_orange_500
-                                ),
-                                modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
-                            )
+                        when {
+                            leaveRequest.approvedflag == true -> {
+                                Icon(
+                                    imageVector = Icons.Filled.CheckCircle,
+                                    contentDescription = null,
+                                    tint = colorResource(
+                                        id = R.color.teal_A400
+                                    ),
+                                    modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
+                                )
+                                Text(
+                                    text = "Approved",
+                                    color = colorResource(id = R.color.gray_700),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            leaveRequest.rejectedflag == true -> {
+                                Icon(
+                                    imageVector = Icons.Filled.Block, contentDescription = null,
+                                    tint = colorResource(
+                                        id = R.color.red_800
+                                    ),
+                                    modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
+                                )
+                                Text(
+                                    text = "Pending",
+                                    color = colorResource(id = R.color.gray_700),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            leaveRequest.approvedflag == false && leaveRequest.rejectedflag == false -> {
+                                Icon(
+                                    imageVector = Icons.Filled.Schedule, contentDescription = null,
+                                    tint = colorResource(
+                                        id = R.color.deep_orange_500
+                                    ),
+                                    modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
+                                )
+                                Text(
+                                    text = "Rejected",
+                                    color = colorResource(id = R.color.gray_700),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
-
-                        Text(
-                            text = status,
-                            color = colorResource(id = R.color.gray_700),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
                     }
                 }
             }
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun DefaultPreview() {
-//    SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
-//        HistoryCard(
-//            "Correction",
-//            "Forgot to tap in because of accident",
-//            date = "Friday, 24 June 2023",
-//            status = "Approved"
-//        )
-//    }
-//}

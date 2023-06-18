@@ -106,21 +106,9 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
         }
 
         mainViewModel.signIn(email, password, {
-            db_util.checkUserIsAdmin(
-                mainViewModel.db,
-                mainViewModel.currentUser!!.uid,
-                mainViewModel.setUserAdmin
-            )
-            if (!mainViewModel.isUserAdmin) {
-                navController.navigate(NavGraphs.HOME) {
-                    popUpTo(AuthScreenRoutes.LoginUserScreen.route) { inclusive = true }
-                }
-            } else {
-                mainViewModel.signOutFromUser()
-                errorText =
-                    "The inputted user is an admin, please login as admin in the admin login page"
+            navController.navigate(NavGraphs.HOME) {
+                popUpTo(NavGraphs.ROOT) { saveState = true }
             }
-
         }, { errorMessage -> errorText = errorMessage })
     }
 

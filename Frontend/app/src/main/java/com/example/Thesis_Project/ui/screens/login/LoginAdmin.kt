@@ -112,13 +112,12 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
                 mainViewModel.db,
                 mainViewModel.currentUser!!.uid
             ) { isAdmin ->
-                if (isAdmin != null) {
-                    mainViewModel.isUserAdmin = isAdmin
-                }
+                mainViewModel.setUserAdmin(isAdmin)
                 if (mainViewModel.isUserAdmin) {
                     navController.navigate(NavGraphs.ADMIN) {
-                        popUpTo(AuthScreenRoutes.LoginAdminScreen.route) { inclusive = true }
+                        popUpTo(NavGraphs.ROOT) { saveState = true }
                     }
+
                 } else {
                     mainViewModel.signOutFromUser()
                     errorText =

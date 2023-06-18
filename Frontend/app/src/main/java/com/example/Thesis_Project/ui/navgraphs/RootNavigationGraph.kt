@@ -11,23 +11,17 @@ import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
 fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainViewModel) {
-    Log.d("Print user auth", "isAuthenticated: ${mainViewModel.checkAuth()}")
-    fun setStartDestination(): String {
-        if (!mainViewModel.checkAuth()) return NavGraphs.AUTH
-        if (mainViewModel.isUserAdmin) return NavGraphs.ADMIN
-        return NavGraphs.HOME
-    }
     NavHost(
         navController = navController,
-        startDestination = setStartDestination(),
+        startDestination = NavGraphs.AUTH,
         route = NavGraphs.ROOT
     ) {
         authNavGraph(navController = navController, mainViewModel)
         composable(route = NavGraphs.HOME) {
-            HomeScreen(mainViewModel = mainViewModel)
+            HomeScreen(mainViewModel = mainViewModel, rootNavController = navController)
         }
         composable(route = NavGraphs.ADMIN) {
-            AdminHomeScreen(mainViewModel = mainViewModel)
+            AdminHomeScreen(mainViewModel = mainViewModel, rootNavController = navController)
         }
     }
 }

@@ -48,6 +48,7 @@ enum class homeTapState {
 
 @Composable
 fun HomeScreen(
+    rootNavController: NavHostController,
     navController: NavHostController = rememberNavController(),
     mainViewModel: MainViewModel
 ) {
@@ -56,6 +57,7 @@ fun HomeScreen(
         content = { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 HomeNavGraph(
+                    rootNavController = rootNavController,
                     navController = navController,
                     mainViewModel = mainViewModel
                 )
@@ -248,16 +250,12 @@ fun NotesSection(mainViewModel: MainViewModel) {
 }
 
 @Composable
-fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
-
-    for (entry in navController.backQueue) {
-        entry.destination.route?.let { Log.d("BackStackEntryHome", it) }
-    }
+fun HomeContainer(rootNavController: NavHostController, navController: NavController, mainViewModel: MainViewModel) {
 
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        db_util.getUser(mainViewModel.db, "vMQz8RTu4iR7pJMLlrnN") { data ->
+        db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid) { data ->
             if (data != null) {
                 mainViewModel.userData = data;
                 Log.d("USERDATA", mainViewModel.userData!!.userid!!);
@@ -278,8 +276,8 @@ fun HomeContainer(navController: NavController, mainViewModel: MainViewModel) {
                     onClick = {
                         logoutConfirmDialogShown = false
                         mainViewModel.signOutFromUser()
-                        navController.navigate(NavGraphs.AUTH) {
-                            popUpTo(BottomNavBarRoutes.HomeScreen.route) { inclusive = true }
+                        navController.popBackStack()
+                        rootNavController.navigate(NavGraphs.ROOT) {
                         }
                     }
                 ) {

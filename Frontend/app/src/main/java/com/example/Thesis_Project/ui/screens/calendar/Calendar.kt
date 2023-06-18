@@ -230,7 +230,7 @@ fun Calendar(mainViewModel: MainViewModel) {
 @Composable
 fun CalendarContainer(navController: NavController? = null, mainViewModel: MainViewModel) {
 
-    val isLaunched by rememberSaveable {mutableStateOf(false)}
+    var isLaunched by rememberSaveable { mutableStateOf(false) }
 
     val firstDateOfMonth = rememberSaveable {
         mutableStateOf(db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate))
@@ -240,7 +240,7 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
     }
 
     LaunchedEffect(Unit) {
-        if (!isLaunched){
+        if (!isLaunched) {
             db_util.getAttendance(
                 mainViewModel.db,
                 mainViewModel.userData?.userid,
@@ -253,7 +253,23 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                 mainViewModel.userData?.userid,
                 mainViewModel.setCorrectionRequestList
             )
+            isLaunched = true
         }
+    }
+
+    LaunchedEffect(mainViewModel.userData) {
+        db_util.getAttendance(
+            mainViewModel.db,
+            mainViewModel.userData?.userid,
+            firstDateOfMonth.value,
+            lastDateOfMonth.value,
+            mainViewModel.setAttendanceList
+        )
+        db_util.getCorrectionRequest(
+            mainViewModel.db,
+            mainViewModel.userData?.userid,
+            mainViewModel.setCorrectionRequestList
+        )
     }
 
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value

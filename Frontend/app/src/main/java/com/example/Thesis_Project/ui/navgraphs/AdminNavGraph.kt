@@ -11,14 +11,14 @@ import com.example.Thesis_Project.ui.screens.admin.AdminUsersScreen
 import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
-fun AdminNavGraph(navController: NavHostController, mainViewModel: MainViewModel){
+fun AdminNavGraph(rootNavController: NavHostController, navController: NavHostController, mainViewModel: MainViewModel){
     NavHost(
         navController = navController,
         route = NavGraphs.ADMIN,
         startDestination = AdminBottomNavBarRoutes.AdminHomeScreen.route
     ){
         composable(route = AdminBottomNavBarRoutes.AdminHomeScreen.route){
-            AdminHomeContainer(navController, mainViewModel)
+            AdminHomeContainer(rootNavController, navController, mainViewModel)
         }
         composable(route = AdminBottomNavBarRoutes.AdminUsersScreen.route) {
             AdminUsersScreen(navController = navController, mainViewModel = mainViewModel)

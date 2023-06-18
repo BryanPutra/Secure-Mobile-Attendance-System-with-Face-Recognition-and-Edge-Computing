@@ -44,6 +44,7 @@ import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
 fun AdminHomeScreen(
+    rootNavController: NavHostController,
     navController: NavHostController = rememberNavController(),
     mainViewModel: MainViewModel
 ) {
@@ -52,6 +53,7 @@ fun AdminHomeScreen(
         content = { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 AdminNavGraph(
+                    rootNavController = rootNavController,
                     navController = navController,
                     mainViewModel = mainViewModel
                 )
@@ -60,7 +62,7 @@ fun AdminHomeScreen(
 }
 
 @Composable
-fun AdminHomeContainer(navController: NavController, mainViewModel: MainViewModel) {
+fun AdminHomeContainer(rootNavController: NavHostController, navController: NavController, mainViewModel: MainViewModel) {
 
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
@@ -288,8 +290,8 @@ fun AdminHomeContainer(navController: NavController, mainViewModel: MainViewMode
                         onClick = {
                             logoutConfirmDialogShown = false
                             mainViewModel.signOutFromAdmin()
-                            navController.navigate(NavGraphs.ROOT) {
-                                popUpTo(AdminBottomNavBarRoutes.AdminHomeScreen.route) { inclusive = true }
+                            navController.popBackStack()
+                            rootNavController.navigate(NavGraphs.ROOT) {
                             }
                         }
                     ) {

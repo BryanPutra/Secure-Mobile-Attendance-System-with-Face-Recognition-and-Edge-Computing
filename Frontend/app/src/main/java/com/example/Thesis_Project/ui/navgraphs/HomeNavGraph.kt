@@ -15,14 +15,14 @@ import com.example.Thesis_Project.ui.screens.home.HomeContainer
 import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
-fun HomeNavGraph(navController: NavHostController, mainViewModel: MainViewModel){
+fun HomeNavGraph(rootNavController: NavHostController, navController: NavHostController, mainViewModel: MainViewModel){
     NavHost(
         navController = navController,
         route = NavGraphs.HOME,
         startDestination = BottomNavBarRoutes.HomeScreen.route
     ){
         composable(route = BottomNavBarRoutes.HomeScreen.route){
-            HomeContainer(navController = navController, mainViewModel = mainViewModel)
+            HomeContainer(rootNavController = rootNavController, navController = navController, mainViewModel = mainViewModel)
         }
         composable(route = BottomNavBarRoutes.CalendarScreen.route) {
             CalendarScreen(navController = navController, mainViewModel = mainViewModel)
