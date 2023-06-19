@@ -2,7 +2,9 @@ package com.example.Thesis_Project.ui.screens.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -113,6 +115,8 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
     }
 
     Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(
             space = MaterialTheme.spacing.spaceLarge,
             alignment = Alignment.CenterVertically

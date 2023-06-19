@@ -239,7 +239,7 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         mutableStateOf(db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate))
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = true) {
         if (!isLaunched) {
             db_util.getAttendance(
                 mainViewModel.db,
