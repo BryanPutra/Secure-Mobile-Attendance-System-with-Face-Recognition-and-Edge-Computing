@@ -46,6 +46,10 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
     var searchedItems = remember { mutableStateListOf<String>() }
 //    var filteredUserQuery by rememberSaveable { mutableStateOf() }
 
+    fun searchUsers(searchValue: String) {
+
+    }
+
     Column(
         modifier = Modifier.padding(MaterialTheme.spacing.spaceLarge),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)

@@ -18,49 +18,6 @@ import com.example.Thesis_Project.ui.components.LeaveRequestCard
 import com.example.Thesis_Project.ui.components.MainHeader
 import com.example.Thesis_Project.viewmodel.MainViewModel
 
-val correctionCardItems =
-    listOf(
-        HistoryCardItem(
-            historyType = "Corrrection",
-            reason = "I forgot to tap in when i went into the office",
-            dateGenerated = "Friday, 3 March 2023",
-            status = "Approved",
-        ),
-        HistoryCardItem(
-            historyType = "Corrrection",
-            reason = "Forgot to tap in.....",
-            dateGenerated = "Friday, 24 June 2023",
-            status = "Pending",
-        ),
-        HistoryCardItem(
-            historyType = "Corrrection",
-            reason = "I forgot to tap out at this date",
-            dateGenerated = "Friday, 3 March 2023",
-            status = "Approved",
-        ),
-    )
-
-val leaveCardItems = listOf(
-    HistoryCardItem(
-        historyType = "Leave",
-        reason = "I have to attend to a relative’s wedding party in a different city i went into the office",
-        dateGenerated = "Friday, 3 March 2023",
-        status = "Approved",
-    ),
-    HistoryCardItem(
-        historyType = "Leave",
-        reason = "Lebaran bos",
-        dateGenerated = "Friday, 24 June 2023",
-        status = "Approved",
-    ),
-    HistoryCardItem(
-        historyType = "Leave",
-        reason = "I have to attend to a relative’s wedding party in a different city",
-        dateGenerated = "Friday, 3 March 2023",
-        status = "Pending",
-    ),
-)
-
 @Composable
 fun HistoryScreen(navController: NavController, mainViewModel: MainViewModel) {
     HistoryContainer(navController, mainViewModel)
@@ -73,7 +30,7 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
 
     var isLaunched by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(key1 = true) {
         if (!isLaunched) {
             db_util.getLeaveRequest(
                 mainViewModel.db,
