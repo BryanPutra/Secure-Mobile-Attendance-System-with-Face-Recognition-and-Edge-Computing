@@ -39,6 +39,7 @@ import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -254,15 +255,8 @@ fun HomeContainer(rootNavController: NavHostController, navController: NavContro
 
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid) { data ->
-            if (data != null) {
-                mainViewModel.userData = data;
-                Log.d("USERDATA", mainViewModel.userData!!.userid!!);
-            } else {
-                Log.e("USERDATA", "User not found")
-            }
-        }
+    LaunchedEffect(key1 = mainViewModel.userData) {
+        db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid, mainViewModel.setUserData)
         db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
     }
 

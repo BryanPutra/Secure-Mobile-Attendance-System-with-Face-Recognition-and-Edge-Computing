@@ -31,7 +31,7 @@ data class Spacing(
     val iconMedium: Dp = 28.dp,
     val iconLarge: Dp = 42.dp,
     val iconExtraLarge: Dp = 128.dp,
-    val iconXXLarge: Dp = 160.dp,
+    val iconXXLarge: Dp = 144.dp,
     )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

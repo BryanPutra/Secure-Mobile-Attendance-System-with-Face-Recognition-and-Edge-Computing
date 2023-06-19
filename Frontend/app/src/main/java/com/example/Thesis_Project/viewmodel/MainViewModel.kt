@@ -22,7 +22,15 @@ class MainViewModel : ViewModel() {
     val db: FirebaseFirestore = Firebase.firestore
 
     var currentUser: FirebaseUser? by mutableStateOf(null)
+
     var userData: User? by mutableStateOf(null)
+    
+    val setUserData: (User?) -> Unit = { newUserData ->
+        if (newUserData != null) {
+            userData = newUserData
+        }
+        Log.d("get user data", "user: $userData")
+    }
 
     var isUserAdmin: Boolean by mutableStateOf(false)
 

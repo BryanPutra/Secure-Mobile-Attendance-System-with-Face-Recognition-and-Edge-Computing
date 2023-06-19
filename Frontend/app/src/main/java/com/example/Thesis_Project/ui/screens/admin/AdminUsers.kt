@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.admin
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,11 +24,14 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
+import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.AdminUsersRow
 import com.example.Thesis_Project.viewmodel.MainViewModel
-import com.google.firebase.firestore.auth.User
+import kotlinx.coroutines.*
+import java.util.*
 
 @Composable
 fun AdminUsersScreen(navController: NavController, mainViewModel: MainViewModel) {
@@ -36,18 +40,52 @@ fun AdminUsersScreen(navController: NavController, mainViewModel: MainViewModel)
 
 @Composable
 fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewModel) {
+    var isLaunched by rememberSaveable { mutableStateOf(false) }
+    Log.d("isLaunched", isLaunched.toString())
 
-    LaunchedEffect(Unit) {
-        db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
-    }
     var userQuerySearch by rememberSaveable { mutableStateOf("") }
     var searchIsActive by rememberSaveable { mutableStateOf(false) }
     val lastUserItemIndex by rememberSaveable { mutableStateOf((mainViewModel.usersList?.size)) }
-    var searchedItems = remember { mutableStateListOf<String>() }
-//    var filteredUserQuery by rememberSaveable { mutableStateOf() }
+    val searchedItems = remember { mutableStateListOf<String>() }
+    val filteredUserQuery = remember { mutableStateListOf<User>() }
+
+    fun appendUsersList() {
+        if (mainViewModel.usersList != null) {
+            filteredUserQuery.clear()
+            for (i in mainViewModel.usersList!!) {
+                filteredUserQuery.add(i)
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = isLaunched) {
+        if (!isLaunched) {
+            runBlocking {
+                db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
+                appendUsersList()
+                isLaunched = true
+            }
+            Log.d("shit 1", filteredUserQuery.isEmpty().toString())
+        }
+    }
 
     fun searchUsers(searchValue: String) {
-
+        filteredUserQuery.clear()
+        if (searchValue.isEmpty()) {
+            appendUsersList()
+            return
+        }
+        val tempFilteredUsers =
+            mainViewModel.usersList?.filter {
+                it.name?.lowercase()?.contains(searchValue.lowercase()) ?: false
+            }
+        if (tempFilteredUsers != null) {
+            for (i in tempFilteredUsers) {
+                filteredUserQuery.add(i)
+            }
+        }
+        searchedItems.add(userQuerySearch)
+        userQuerySearch = ""
     }
 
     Column(
@@ -74,9 +112,8 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
             query = userQuerySearch,
             onQueryChange = { userQuerySearch = it },
             onSearch = {
-                searchedItems.add(userQuerySearch)
+                searchUsers(userQuerySearch)
                 searchIsActive = false
-                userQuerySearch = ""
             },
             active = searchIsActive,
             onActiveChange = {
@@ -108,8 +145,11 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
             }
         )
         {
-            searchedItems.forEach{
-                Row(modifier = Modifier.padding(MaterialTheme.spacing.spaceLarge), horizontalArrangement = spacedBy(MaterialTheme.spacing.spaceMedium)){
+            searchedItems.forEach {
+                Row(
+                    modifier = Modifier.padding(MaterialTheme.spacing.spaceLarge),
+                    horizontalArrangement = spacedBy(MaterialTheme.spacing.spaceMedium)
+                ) {
                     Icon(imageVector = Icons.Filled.History, contentDescription = "search history")
                     Text(text = it)
                 }
@@ -117,7 +157,7 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
         }
         if (mainViewModel.usersList != null) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
-                itemsIndexed(mainViewModel.usersList!!) { index, userItem ->
+                itemsIndexed(filteredUserQuery) { index, userItem ->
                     AdminUsersRow(user = userItem, index = index)
                     if (index != lastUserItemIndex) {
                         Box(
