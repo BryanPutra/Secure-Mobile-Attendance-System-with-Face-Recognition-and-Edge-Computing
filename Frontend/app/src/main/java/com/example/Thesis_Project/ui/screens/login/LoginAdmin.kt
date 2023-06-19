@@ -40,7 +40,7 @@ fun LoginAdminScreen(navController: NavController, mainViewModel: MainViewModel)
 fun LoginAdminContainer(navController: NavController, mainViewModel: MainViewModel) {
     Column(
         modifier = Modifier
-            .wrapContentHeight()
+            .verticalScroll(rememberScrollState())
             .padding(dimensionResource(id = R.dimen.padding_xl)),
         verticalArrangement = Arrangement.spacedBy(
             space = MaterialTheme.spacing.spaceLarge,
@@ -130,6 +130,7 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
     }
 
     Column(
+        modifier = Modifier.padding(bottom = MaterialTheme.spacing.spaceLarge),
         verticalArrangement = Arrangement.spacedBy(
             space = MaterialTheme.spacing.spaceLarge,
             alignment = Alignment.CenterVertically

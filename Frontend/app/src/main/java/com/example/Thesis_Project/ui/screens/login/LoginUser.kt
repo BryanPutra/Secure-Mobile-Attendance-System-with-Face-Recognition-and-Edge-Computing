@@ -39,7 +39,7 @@ fun LoginUserScreen(navController: NavController, mainViewModel: MainViewModel) 
 fun LoginUserContainer(navController: NavController, mainViewModel: MainViewModel) {
     Column(
         modifier = Modifier
-            .wrapContentHeight()
+            .verticalScroll(rememberScrollState())
             .padding(dimensionResource(id = R.dimen.padding_xl)),
         verticalArrangement = Arrangement.spacedBy(
             space = MaterialTheme.spacing.spaceLarge,
@@ -114,6 +114,7 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
     }
 
     Column(
+        modifier = Modifier.padding(bottom = MaterialTheme.spacing.spaceLarge),
         verticalArrangement = Arrangement.spacedBy(
             space = MaterialTheme.spacing.spaceLarge,
             alignment = Alignment.CenterVertically
