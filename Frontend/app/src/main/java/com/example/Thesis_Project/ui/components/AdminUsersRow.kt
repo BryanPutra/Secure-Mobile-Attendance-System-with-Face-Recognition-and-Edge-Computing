@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FactCheck
@@ -17,9 +18,13 @@ import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
+import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
-fun AdminUsersRow(user: User, index: Int) {
+fun AdminUsersRow(user: User, mainViewModel: MainViewModel, onViewClick: (User) -> Unit) {
+
+    if (mainViewModel.isViewUserDialogShown) {
+    }
 
     Row(
         modifier = Modifier
@@ -45,6 +50,9 @@ fun AdminUsersRow(user: User, index: Int) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
+                modifier = Modifier.clickable {
+                    onViewClick(user)
+                },
                 imageVector = Icons.Filled.Visibility,
                 contentDescription = null,
                 tint = colorResource(id = R.color.blue_500)

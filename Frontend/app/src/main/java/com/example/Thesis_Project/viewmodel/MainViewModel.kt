@@ -1,6 +1,8 @@
 package com.example.Thesis_Project.viewmodel
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,6 +22,16 @@ import java.time.LocalDate
 
 class MainViewModel : ViewModel() {
 
+    var isLoading by mutableStateOf(false)
+
+    val setIsLoading: (Boolean) -> Unit = { newIsLoading ->
+        isLoading = newIsLoading
+    }
+
+    fun showToast(context: Context, message: String){
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+
     //auth
     val auth: FirebaseAuth = Firebase.auth
     val createUserAuth: FirebaseAuth = Firebase.auth
@@ -33,8 +45,12 @@ class MainViewModel : ViewModel() {
     val setUserData: (User?) -> Unit = { newUserData ->
         if (newUserData != null) {
             userData = newUserData
+            Log.d("set user data", "user: $userData")
         }
-        Log.d("get user data", "user: $userData")
+        else {
+            Log.d("set user data", "no user found")
+            userData = null
+        }
     }
 
     var isUserAdmin: Boolean by mutableStateOf(false)
@@ -127,40 +143,23 @@ class MainViewModel : ViewModel() {
         Log.d("get user data", "user: $isAdminUsersInit")
     }
 
-//    suspend fun createUserFromAdmin(
-//        createUserAuth: FirebaseAuth,
-//        db: FirebaseFirestore,
-//        user: User,
-//        email: String,
-//        password: String,
-//        companyparams: CompanyParams
-//    ) {
-//        viewModelScope.launch{
-//            db_util
-//        }
-//    }
-
     var isEditCompanyParamsDialogShown by mutableStateOf(false)
     fun showEditCompanyParamsDialog() {
         isEditCompanyParamsDialogShown = true
     }
 
     //adminusers
-//    var filteredUsersList: List<User>? by mutableStateOf(null)
-//    val setFilteredUsersList: (List<User>?) -> Unit = { newFilteredUsersList ->
-//        if (newFilteredUsersList != null) {
-//            filteredUsersList = newFilteredUsersList
-//            Log.d("Change Users list", "Users List: $filteredUsersList")
-//        }
-//        else{
-//            Log.d("Change Users list", "Users List not found")
-//        }
-//    }
 
     var isCreateUserDialogShown by mutableStateOf(false)
 
     fun toggleCreateUserDialog() {
         isCreateUserDialogShown = !isCreateUserDialogShown
+    }
+
+    var isViewUserDialogShown by mutableStateOf(false)
+
+    fun toggleViewUserDialog() {
+        isViewUserDialogShown = !isViewUserDialogShown
     }
 
     //main
@@ -180,9 +179,10 @@ class MainViewModel : ViewModel() {
     val setCompanyVariable: (CompanyParams?) -> Unit = { newCompanyParams ->
         if (newCompanyParams != null) {
             companyVariable = newCompanyParams
-            Log.d("Get Company variables", "Company Variables: $companyVariable")
+            Log.d("Set Company Variables", "Company Variables: $companyVariable")
         } else {
-            Log.d("Get Company variables", "Company Variables not found")
+            companyVariable = null
+            Log.d("Set Company Variables", "Set company variables to null")
         }
     }
 
@@ -218,7 +218,7 @@ class MainViewModel : ViewModel() {
     }
 
     var isRequestLeaveButtonEnabled: Boolean by mutableStateOf(true)
-    var isRequestCorrectionButtonEnabled: Boolean by mutableStateOf(true)
+    var isRequestCorrectionButtonEnabled: Boolean by mutableStateOf(false)
 
     //leave & correction request
     var isHistoryInit by mutableStateOf(false)
@@ -232,9 +232,6 @@ class MainViewModel : ViewModel() {
     }
     var leaveRequestList: List<LeaveRequest>? by mutableStateOf(null)
     var correctionRequestList: List<CorrectionRequest>? by mutableStateOf(null)
-
-    var isRequestLeaveDialogShown: Boolean by mutableStateOf(false)
-    var isCorrectionLeaveDialogShown: Boolean by mutableStateOf(false)
 
     val setLeaveRequestList: (List<LeaveRequest>?) -> Unit = { newLeaveRequest ->
         if (newLeaveRequest != null) {
@@ -253,6 +250,15 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    var isRequestLeaveDialogShown: Boolean by mutableStateOf(false)
+    var isCorrectionLeaveDialogShown: Boolean by mutableStateOf(false)
+    fun toggleRequestLeaveDialog() {
+        isRequestLeaveDialogShown = !isRequestLeaveDialogShown
+    }
+    fun toggleCorrectionLeaveDialog() {
+        isCorrectionLeaveDialogShown = !isCorrectionLeaveDialogShown
+    }
+
     fun onRequestLeaveClicked() {
         isRequestLeaveDialogShown = true
     }
@@ -262,6 +268,9 @@ class MainViewModel : ViewModel() {
     }
 
     fun signOutFromAdmin() {
+        setIsAdminHomeInit(false)
+        setIsAdminUsersInit(false)
+
         isUserAdmin = false
         userData = null
         currentUser = null
@@ -269,9 +278,13 @@ class MainViewModel : ViewModel() {
     }
 
     fun signOutFromUser() {
+        setIsHomeInit(false)
+        setIsCalendarInit(false)
+        setIsHistoryInit(false)
+        setUserData(null)
+        setCompanyVariable(null)
+
         currentUser = null
-        userData = null
-        companyVariable = null
         correctionSelected = false
         leaveSelected = false
         auth.signOut()

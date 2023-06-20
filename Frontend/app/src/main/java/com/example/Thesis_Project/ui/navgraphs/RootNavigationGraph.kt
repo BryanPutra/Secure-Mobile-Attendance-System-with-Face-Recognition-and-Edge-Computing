@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.navgraphs
 
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,6 +12,16 @@ import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
 fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainViewModel) {
+
+//    DisposableEffect(key1 = mainViewModel.currentUser) {
+//        if (mainViewModel.currentUser != null) {
+//            navController.navigate(NavGraphs.HOME) {
+//                popUpTo(NavGraphs.AUTH) { inclusive = true }
+//            }
+//        }
+//        onDispose { }
+//    }
+
     NavHost(
         navController = navController,
         startDestination = NavGraphs.AUTH,

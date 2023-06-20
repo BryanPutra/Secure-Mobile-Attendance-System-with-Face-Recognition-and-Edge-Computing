@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.components
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,13 +37,12 @@ import java.util.*
 fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
 
     val createUserScope = rememberCoroutineScope()
+    val context: Context = LocalContext.current
 
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var adminFlag by rememberSaveable { mutableStateOf(false) }
-
-    var loading by rememberSaveable { mutableStateOf(false) }
 
     var nameIsValid by remember { mutableStateOf(true) }
     var emailIsValid by remember { mutableStateOf(true) }
@@ -49,38 +50,11 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
 
     var errorText by remember { mutableStateOf("") }
 
-    val onSubmitClicked: suspend () -> Unit = {
-        nameIsValid = isValidName(name)
-        emailIsValid = isValidEmail(email)
-        passwordIsValid = isValidPassword(password)
-
-        if (!isValidName(name)) {
-            nameIsValid = false
-            errorText = "Name needs to be at least 3 characters"
-            throw Exception("Invalid Name")
-        }
-
-        if (!isValidEmail(email)) {
-            emailIsValid = false
-            errorText = "Please enter a valid email"
-            throw Exception("Invalid Email")
-        }
-
-        if (!isValidPassword(password)) {
-            passwordIsValid = false
-            errorText = "Password needs to be at least 6 characters"
-            throw Exception("Invalid Password")
-        }
-
-        val user = User(
-            email = email,
-            name = name,
-            adminflag = adminFlag
-        )
-
+    val postCreateUser: suspend (user: User) -> Unit = { user ->
+        mainViewModel.setIsLoading(true)
         mainViewModel.companyVariable?.let {
+            mainViewModel.setIsLoading(true)
             try {
-                loading = true
                 db_util.createUserAuth(
                     mainViewModel.createUserAuth,
                     mainViewModel.db,
@@ -91,13 +65,44 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
                 )
                 db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
                 errorText = ""
-                loading = false
+                mainViewModel.showToast(context, "User has been created successfully")
                 mainViewModel.toggleCreateUserDialog()
             } catch (e: Exception) {
                 errorText = "Failed to create user: ${e.message}"
                 Log.e("Error", "Failed to create user: $e")
             }
             Log.d("shit 1", "Create user done")
+        }
+        mainViewModel.setIsLoading(false)
+    }
+
+    fun onSubmitClicked() {
+        nameIsValid = isValidName(name)
+        emailIsValid = isValidEmail(email)
+        passwordIsValid = isValidPassword(password)
+
+        if (!nameIsValid) {
+            errorText = "Name needs to be at least 3 characters"
+            return
+        }
+
+        if (!emailIsValid) {
+            errorText = "Please enter a valid email"
+            return
+        }
+
+        if (!passwordIsValid) {
+            errorText = "Password needs to be at least 6 characters"
+            return
+        }
+
+        val user = User(
+            email = email,
+            name = name,
+            adminflag = adminFlag
+        )
+        createUserScope.launch {
+            postCreateUser(user)
         }
     }
 
@@ -111,7 +116,7 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
             usePlatformDefaultWidth = false
         )
     ) {
-        if (loading) {
+        if (mainViewModel.isLoading) {
             CircularLoadingBar()
         }
         Card(
@@ -266,9 +271,7 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
                     Box(modifier = Modifier.weight(0.5f)) {
                         ButtonHalfWidth(
                             onClick = {
-                                createUserScope.launch {
-                                    onSubmitClicked()
-                                }
+                                onSubmitClicked()
                             },
                             buttonText = "Submit"
                         )

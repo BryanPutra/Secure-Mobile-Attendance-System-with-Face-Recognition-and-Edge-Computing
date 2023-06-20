@@ -76,10 +76,10 @@ object db_util {
     suspend fun createUser(
         db: FirebaseFirestore,
         user: User,
-        userid: String,
+        userId: String,
         companyparams: CompanyParams
     ) {
-        val doc = db.collection("users").document(userid)
+        val doc = db.collection("users").document(userId)
         val map: MutableMap<String, Int> = mutableMapOf<String, Int>()
         for (i in 1..12) {
             map[i.toString()] = companyparams.toleranceworktime!!
@@ -90,6 +90,7 @@ object db_util {
         user.monthlytoleranceworktime = map
         user.leaveallow = false
         user.note = ""
+        user.userid = userId
 
         try {
             doc.set(user).await()
@@ -406,17 +407,16 @@ object db_util {
             }
     }
 
-    fun createLeaveRequest(db: FirebaseFirestore, data: LeaveRequest) {
+    suspend fun createLeaveRequest(db: FirebaseFirestore, data: LeaveRequest) {
         val collection = db.collection("leave_requests").document()
         data.leaverequestid = collection.id
         data.createdate = curDateTime()
-        db.collection("leave_requests").document(collection.id).set(data)
-            .addOnSuccessListener {
-                Log.d("CREATELEAVEREQUEST", "Leave request created with id ${collection.id}")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Creating Data", "createLeaveRequest $exception")
-            }
+        try {
+            collection.set(data).await()
+            Log.d("CREATELEAVEREQUEST", "Leave request created with id ${collection.id}")
+        } catch (exception: Exception) {
+            Log.e("Error Creating Data", "createLeaveRequest $exception")
+        }
     }
 
     fun createCorrectionRequest(db: FirebaseFirestore, data: CorrectionRequest) {
@@ -1115,7 +1115,7 @@ object db_util {
                                             transaction.set(attendanceref, data)
                                         }
                                     }
-                                    val userref = db.collection("users").document(user.userid)
+                                    val userref = db.collection("users").document(user.userid!!)
                                     val newmap = user.monthlytoleranceworktime
                                     for (i in attendances) {
                                         if (i.timeout == null) {

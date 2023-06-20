@@ -30,6 +30,7 @@ import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.AdminCreateUserDialog
 import com.example.Thesis_Project.ui.components.AdminUsersRow
+import com.example.Thesis_Project.ui.components.AdminViewUserDialog
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.*
 import java.util.*
@@ -49,6 +50,8 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
     val lastUserItemIndex by rememberSaveable { mutableStateOf((mainViewModel.usersList?.size)) }
     val searchedItems = remember { mutableStateListOf<String>() }
     val filteredUserQuery = remember { mutableStateListOf<User>() }
+
+    var selectedViewUser by remember { mutableStateOf<User?>(null)}
 
     fun appendUsersList() {
         if (mainViewModel.usersList != null) {
@@ -165,8 +168,11 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
         if (mainViewModel.usersList != null) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
                 itemsIndexed(filteredUserQuery) { index, userItem ->
-                    AdminUsersRow(user = userItem, index = index)
-                    if (index != lastUserItemIndex) {
+                    AdminUsersRow(user = userItem, mainViewModel) { viewItem ->
+                        selectedViewUser = viewItem
+                        mainViewModel.toggleViewUserDialog()
+                    }
+                    if (index != lastUserItemIndex?.minus(1)) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -179,6 +185,12 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
         }
         if (mainViewModel.isCreateUserDialogShown) {
             AdminCreateUserDialog(mainViewModel = mainViewModel)
+        }
+        if (mainViewModel.isViewUserDialogShown) {
+            AdminViewUserDialog(mainViewModel = mainViewModel, user = selectedViewUser) {
+                mainViewModel.toggleViewUserDialog()
+                selectedViewUser = null
+            }
         }
     }
 }

@@ -1,7 +1,5 @@
 package com.example.Thesis_Project.ui.screens.calendar
 
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.Thesis_Project.R
-import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
@@ -83,14 +80,14 @@ fun Calendar(mainViewModel: MainViewModel) {
         }
         dayOfMonth.isSelected = true
         mainViewModel.calendarSelectedDate = dayOfMonth.date!!
-        val message =
-            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date == mainViewModel.calendarSelectedDate} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
-        scope.launch {
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        }
+//        val message =
+//            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date == mainViewModel.calendarSelectedDate} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
+//        scope.launch {
+//            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+//        }
 
         mainViewModel.isRequestCorrectionButtonEnabled =
-            !(dayOfMonth.date.isAfter(currentDate) || checkIfDAttendanceOnCorrectionPending(
+            !(dayOfMonth.date.isEqual(currentDate) || dayOfMonth.date.isAfter(currentDate) || checkIfAttendanceOnCorrectionPending(
                 dayOfMonth.attendance,
                 mainViewModel
             ))
@@ -144,7 +141,7 @@ fun Calendar(mainViewModel: MainViewModel) {
             .padding(MaterialTheme.spacing.spaceLarge), contentAlignment = Alignment.CenterStart
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -183,7 +180,7 @@ fun Calendar(mainViewModel: MainViewModel) {
                 }
             }
             LazyVerticalGrid(
-                modifier = Modifier.height(250.dp),
+                modifier = Modifier.height(275.dp),
                 columns = GridCells.Fixed(7),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
@@ -193,7 +190,7 @@ fun Calendar(mainViewModel: MainViewModel) {
                         text = dayString,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
-                        style = TextStyle(letterSpacing = 2.sp)
+                        style = TextStyle(letterSpacing = 1.sp)
                     )
                 }
                 itemsIndexed(daysInMonth) { index, dayOfMonth ->
