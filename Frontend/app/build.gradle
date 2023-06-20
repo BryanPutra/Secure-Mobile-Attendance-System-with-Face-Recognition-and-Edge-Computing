@@ -70,13 +70,16 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1"
-    kapt "androidx.lifecycle:lifecycle-compiler:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
+    kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
     implementation "androidx.activity:activity-ktx:$activity_version"
     implementation "androidx.activity:activity-compose:$activity_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutines_version"
     implementation "androidx.navigation:navigation-compose:$nav_version"
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
@@ -86,11 +89,10 @@ dependencies {
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
     implementation "androidx.hilt:hilt-navigation-compose:$hilt_navigation_compose_version"
-//    implementation 'com.google.android.gms:play-services-ads:22.1.0'
     implementation "com.maxkeppeler.sheets-compose-dialogs:core:1.2.0"
     implementation "com.maxkeppeler.sheets-compose-dialogs:calendar:1.2.0"
     implementation "com.maxkeppeler.sheets-compose-dialogs:clock:1.2.0"
-    testImplementation 'junit:junit:4.+'
+    testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"

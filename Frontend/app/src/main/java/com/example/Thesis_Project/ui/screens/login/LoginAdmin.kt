@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.login
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -15,21 +16,25 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.AuthScreenRoutes
+import com.example.Thesis_Project.ui.components.CircularLoadingBar
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.isValidEmail
 import com.example.Thesis_Project.ui.utils.isValidPassword
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginAdminScreen(navController: NavController, mainViewModel: MainViewModel) {
@@ -38,6 +43,9 @@ fun LoginAdminScreen(navController: NavController, mainViewModel: MainViewModel)
 
 @Composable
 fun LoginAdminContainer(navController: NavController, mainViewModel: MainViewModel) {
+    if (mainViewModel.isLoading) {
+        CircularLoadingBar()
+    }
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -78,6 +86,9 @@ fun LoginAdminHeader() {
 @Composable
 fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel) {
 
+    val loginAdminScope = rememberCoroutineScope()
+    val context: Context = LocalContext.current
+
     var email by rememberSaveable {
         mutableStateOf("")
     }
@@ -91,24 +102,9 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
 
     var errorText by remember { mutableStateOf("") }
 
-    fun onSubmitLogin() {
-        emailIsValid = isValidEmail(email)
-        passwordIsValid = isValidPassword(password)
-
-        if (!isValidEmail(email)) {
-            emailIsValid = false
-            errorText = "Please enter a valid email"
-            return
-        }
-
-        if (!isValidPassword(password)) {
-            passwordIsValid = false
-            errorText = "Password needs to be at least 6 characters"
-            return
-        }
-
+    val postSignIn: suspend () -> Unit = {
+        mainViewModel.setIsLoading(true)
         mainViewModel.signIn(email, password, {
-
             db_util.checkUserIsAdmin(
                 mainViewModel.db,
                 mainViewModel.currentUser!!.uid
@@ -118,15 +114,33 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
                     navController.navigate(NavGraphs.ADMIN) {
                         popUpTo(NavGraphs.ROOT) { saveState = true }
                     }
-
+                    mainViewModel.showToast(context, "Logged in as Admin")
                 } else {
                     mainViewModel.signOutFromUser()
                     errorText =
                         "The inputted user is a user, please login as user in the user login page"
                 }
-                Log.d("check admin", "admin: ${mainViewModel.isUserAdmin}")
+                mainViewModel.setIsLoading(false)
             }
         }, { errorMessage -> errorText = errorMessage })
+    }
+
+    fun onSubmitLogin() {
+        emailIsValid = isValidEmail(email)
+        passwordIsValid = isValidPassword(password)
+
+        if (!emailIsValid) {
+            errorText = "Please enter a valid email"
+            return
+        }
+
+        if (!passwordIsValid) {
+            errorText = "Password needs to be at least 6 characters"
+            return
+        }
+        loginAdminScope.launch {
+            postSignIn()
+        }
     }
 
     Column(
@@ -187,12 +201,17 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
                     }
                 }
             )
-            Text(
-                text = errorText,
-                color = MaterialTheme.colorScheme.error
-            )
+            if (errorText.isNotEmpty()) {
+                Text(
+                    text = errorText,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
-        ButtonMaxWidth(onClickCallback = { onSubmitLogin() }, buttonText = "Login")
+        ButtonMaxWidth(onClickCallback = {
+            onSubmitLogin()
+        }, buttonText = "Login")
     }
 }
 

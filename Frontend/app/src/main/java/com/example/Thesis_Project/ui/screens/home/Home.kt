@@ -38,7 +38,10 @@ import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -251,20 +254,33 @@ fun NotesSection(mainViewModel: MainViewModel) {
 
 @Composable
 fun HomeContainer(rootNavController: NavHostController, navController: NavController, mainViewModel: MainViewModel) {
-
+    val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isHomeInit) }
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid) { data ->
-            if (data != null) {
-                mainViewModel.userData = data;
-                Log.d("USERDATA", mainViewModel.userData!!.userid!!);
-            } else {
-                Log.e("USERDATA", "User not found")
+    suspend fun getInitData() {
+        coroutineScope {
+            launch{
+                db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid, mainViewModel.setUserData)
+            }
+            launch {
+                db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
             }
         }
-        db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
     }
+
+    LaunchedEffect(key1 = isLaunched) {
+        if (!isLaunched) {
+            runBlocking {
+                getInitData()
+                mainViewModel.setIsHomeInit(true)
+            }
+        }
+    }
+
+//    LaunchedEffect(Unit){
+//        db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
+//        db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+//    }
 
     if (logoutConfirmDialogShown) {
         AlertDialog(

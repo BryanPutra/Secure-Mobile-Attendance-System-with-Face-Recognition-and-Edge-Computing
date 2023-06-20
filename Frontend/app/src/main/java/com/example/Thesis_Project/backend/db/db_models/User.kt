@@ -2,7 +2,7 @@ package com.example.Thesis_Project.backend.db.db_models
 import java.util.Date
 
 data class User(
-    val userid: String? = null,
+    var userid: String? = null,
     val email: String? = null,
     val name: String? = null,
     val adminflag: Boolean? = null,

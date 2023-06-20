@@ -11,7 +11,38 @@ import java.util.*
 fun isAttended(attendance: Attendance): Boolean {
     return attendance.absentflag == false && attendance.permissionflag == false && attendance.leaveflag == false && attendance.timeout != null
 }
+fun getListOfAttendancesByMonth(attendances: List<Attendance>, month: Int): MutableList<Attendance>? {
+    if (attendances.isEmpty()){
+        return null
+    }
+    val attendedAttendances = mutableListOf<Attendance>()
+    val filteredAttendances = mutableListOf<Attendance>()
+    val calendar = Calendar.getInstance()
+    val dateFormat = SimpleDateFormat("MM" , Locale.ENGLISH)
 
+    for (attendance in attendances) {
+        if (isAttended(attendance)){
+            attendedAttendances.add(attendance)
+        }
+    }
+
+    for (attendance in attendedAttendances) {
+        calendar.time = attendance.timeout!!
+        val dateMonth = dateFormat.format(calendar.time).toInt()
+        if (dateMonth == month) {
+            filteredAttendances.add(attendance)
+        }
+    }
+    return filteredAttendances
+}
+
+fun getUserMonthlyToleranceWorkTime(monthlyToleranceWorkTime: MutableMap<String,Int>?): String? {
+    val currentMonthInt = LocalDate.now().monthValue
+    if (monthlyToleranceWorkTime != null) {
+        return "${monthlyToleranceWorkTime["$currentMonthInt"]} minutes"
+    }
+    return null
+}
 fun convertTimeIntToString(time: Int?): String {
     if (time != null) {
         val hours = time / 60
@@ -56,7 +87,7 @@ fun formatDateToStringTimeOnly(date: Date?): String? {
 }
 
 fun formatLocalDateToString(date: LocalDate): String {
-    val dateFormat = DateTimeFormatter.ofPattern("dd/MM//yyyy", Locale.ENGLISH)
+    val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH)
     return date.format(dateFormat)
 }
 
@@ -76,31 +107,6 @@ fun formatMonthYearFromLocalDate(date: LocalDate?): String? {
         return date.format(formatter)
     }
     return ""
-}
-
-fun getListOfAttendancesByMonth(attendances: List<Attendance>, month: Int): MutableList<Attendance>? {
-    if (attendances.isEmpty()){
-        return null
-    }
-    val attendedAttendances = mutableListOf<Attendance>()
-    val filteredAttendances = mutableListOf<Attendance>()
-    val calendar = Calendar.getInstance()
-    val dateFormat = SimpleDateFormat("MM" , Locale.ENGLISH)
-
-    for (attendance in attendances) {
-        if (isAttended(attendance)){
-            attendedAttendances.add(attendance)
-        }
-    }
-
-    for (attendance in attendedAttendances) {
-        calendar.time = attendance.timeout!!
-        val dateMonth = dateFormat.format(calendar.time).toInt()
-        if (dateMonth == month) {
-            filteredAttendances.add(attendance)
-        }
-    }
-    return filteredAttendances
 }
 
 fun getDayOfMonthFromDate(date: Date): Int {

@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.components
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -17,21 +19,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
+import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.utils.formatLocalDateToString
+import com.example.Thesis_Project.ui.screens.calendar.getDurationFromDates
+import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
-import com.maxkeppeker.sheets.core.models.base.UseCaseState
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
 import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
 import com.maxkeppeler.sheets.calendar.models.CalendarSelection
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.*
 
 @Composable
 fun LeaveRequestDialog(mainViewModel: MainViewModel) {
+
+    val createLeaveRequestScope = rememberCoroutineScope()
+    val context: Context = LocalContext.current
 
     var dateFrom by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
     var dateTo by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate.plusDays(1)) }
@@ -41,6 +49,11 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
 
     val calendarDateFromState = rememberUseCaseState()
     val calendarDateToState = rememberUseCaseState()
+
+    var dateFromIsValid by remember { mutableStateOf(true) }
+    var dateToIsValid by remember { mutableStateOf(true) }
+
+    var errorText by remember { mutableStateOf("") }
 
     fun addDisabledDates() {
         val attendanceList = mainViewModel.attendanceList ?: return
@@ -56,8 +69,47 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
         addDisabledDates()
     }
 
+    val postCreateLeaveRequest: suspend (leaveRequest: LeaveRequest) -> Unit = { leaveRequest ->
+        mainViewModel.setIsLoading(true)
+        try {
+            db_util.createLeaveRequest(mainViewModel.db, leaveRequest)
+            db_util.getLeaveRequest(mainViewModel.db, mainViewModel.userData?.userid,mainViewModel.setLeaveRequestList)
+            errorText = ""
+            mainViewModel.showToast(context, "Leave Request has been created successfully")
+            mainViewModel.toggleRequestLeaveDialog()
+        } catch (e: Exception) {
+            errorText = "Failed to create leave request: ${e.message}"
+            Log.e("Error", "Failed to create leave request: $e")
+        }
+        mainViewModel.setIsLoading(false)
+    }
+
     fun onRequestClicked() {
-        mainViewModel.isRequestLeaveDialogShown = false
+        dateFromIsValid = isValidLeaveRequestDateFrom(dateFrom)
+        dateToIsValid = isValidLeaveRequestDateTo(dateFrom, dateTo)
+
+        if (!dateFromIsValid) {
+            errorText = "Date From cannot be earlier than today"
+            return
+        }
+
+        if (!dateToIsValid) {
+            errorText = "Date To cannot be earlier than Date From"
+            return
+        }
+
+        val leaveRequest = LeaveRequest(
+            userid = mainViewModel.userData?.userid,
+            leavestart = db_util.localDateToDate(dateFrom),
+            leaveend = db_util.localDateToDate(dateTo),
+            duration = getDurationFromDates(dateFrom, dateTo),
+            permissionflag = isPermission,
+            reason = detail,
+        )
+
+        createLeaveRequestScope.launch {
+            postCreateLeaveRequest(leaveRequest)
+        }
     }
 
     fun onCancelClicked() {
@@ -70,7 +122,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
             monthSelection = true,
             disabledDates = disabledDatesState
         ),
-        selection = CalendarSelection.Date { newDateTo -> dateFrom = newDateTo }
+        selection = CalendarSelection.Date { newDateFrom -> dateFrom = newDateFrom }
     )
     CalendarDialog(
         state = calendarDateToState,
@@ -78,7 +130,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
             monthSelection = true,
             disabledDates = disabledDatesState
         ),
-        selection = CalendarSelection.Date { newDateFrom -> dateTo = newDateFrom }
+        selection = CalendarSelection.Date { newDateTo -> dateTo = newDateTo }
     )
 
     Dialog(
@@ -88,6 +140,9 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
             usePlatformDefaultWidth = false
         )
     ) {
+        if (mainViewModel.isLoading) {
+            CircularLoadingBar()
+        }
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -162,7 +217,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         )
                         OutlinedTextField(
                             modifier = Modifier.weight(2f).clickable {
-                                calendarDateFromState.show()
+                                calendarDateToState.show()
                                 addDisabledDates()
                             },
                             value = formatLocalDateToString(dateTo),
@@ -227,6 +282,13 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                             )
                         }
 
+                    }
+                    if (errorText.isNotEmpty()) {
+                        Text(
+                            text = errorText,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                        )
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),

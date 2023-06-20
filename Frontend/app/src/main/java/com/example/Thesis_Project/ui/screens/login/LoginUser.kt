@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.ui.screens.login
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,21 +15,26 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.AuthScreenRoutes
+import com.example.Thesis_Project.ui.components.CircularLoadingBar
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.isValidEmail
 import com.example.Thesis_Project.ui.utils.isValidPassword
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun LoginUserScreen(navController: NavController, mainViewModel: MainViewModel) {
@@ -37,6 +43,9 @@ fun LoginUserScreen(navController: NavController, mainViewModel: MainViewModel) 
 
 @Composable
 fun LoginUserContainer(navController: NavController, mainViewModel: MainViewModel) {
+    if (mainViewModel.isLoading) {
+        CircularLoadingBar()
+    }
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -76,6 +85,8 @@ fun LoginUserHeader() {
 
 @Composable
 fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) {
+    val context: Context = LocalContext.current
+    val loginUserScope = rememberCoroutineScope()
 
     var email by rememberSaveable {
         mutableStateOf("")
@@ -90,27 +101,34 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
 
     var errorText by remember { mutableStateOf("") }
 
+    val postSignIn: suspend () -> Unit = {
+        runBlocking {
+            mainViewModel.setIsLoading(true)
+            mainViewModel.signIn(email, password, {
+                navController.navigate(NavGraphs.HOME) {
+                    popUpTo(NavGraphs.ROOT) { saveState = true }
+                }
+                mainViewModel.showToast(context, "Logged in as User")
+            }, { errorMessage -> errorText = errorMessage })
+            mainViewModel.setIsLoading(false)
+        }
+    }
     fun onSubmitLogin() {
         emailIsValid = isValidEmail(email)
         passwordIsValid = isValidPassword(password)
 
-        if (!isValidEmail(email)) {
-            emailIsValid = false
+        if (!emailIsValid) {
             errorText = "Please enter a valid email"
             return
         }
 
-        if (!isValidPassword(password)) {
-            passwordIsValid = false
+        if (!passwordIsValid) {
             errorText = "Password needs to be at least 6 characters"
             return
         }
-
-        mainViewModel.signIn(email, password, {
-            navController.navigate(NavGraphs.HOME) {
-                popUpTo(NavGraphs.ROOT) { saveState = true }
-            }
-        }, { errorMessage -> errorText = errorMessage })
+        loginUserScope.launch {
+            postSignIn()
+        }
     }
 
     Column(
@@ -171,10 +189,13 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
                     }
                 }
             )
-            Text(
-                text = errorText,
-                color = MaterialTheme.colorScheme.error
-            )
+            if (errorText.isNotEmpty()) {
+                Text(
+                    text = errorText,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
         ButtonMaxWidth(onClickCallback = { onSubmitLogin() }, buttonText = "Login")
     }

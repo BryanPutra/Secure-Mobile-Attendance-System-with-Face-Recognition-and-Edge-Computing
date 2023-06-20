@@ -3,11 +3,13 @@ package com.example.Thesis_Project.ui.screens.calendar
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
+import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
 import com.example.Thesis_Project.ui.utils.isAttended
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 fun getAttendanceByDay(day: String, mainViewModel: MainViewModel): Attendance? {
     if (day.isEmpty()) {
@@ -28,7 +30,7 @@ fun getAttendanceByDate(date: LocalDate, mainViewModel: MainViewModel): Attendan
     return tempAttendance
 }
 
-fun checkIfDAttendanceOnCorrectionPending(
+fun checkIfAttendanceOnCorrectionPending(
     attendance: Attendance?,
     mainViewModel: MainViewModel
 ): Boolean {
@@ -39,6 +41,10 @@ fun checkIfDAttendanceOnCorrectionPending(
         }
     }
     return tempCorrectionRequest != null
+}
+
+fun getDurationFromDates(dateFrom: LocalDate, dateTo: LocalDate): Int {
+    return ChronoUnit.DAYS.between(dateFrom, dateTo).toInt()
 }
 
 fun checkIsSelected(dayOfMonth: DayOfMonthItem, mainViewModel: MainViewModel): Boolean {
