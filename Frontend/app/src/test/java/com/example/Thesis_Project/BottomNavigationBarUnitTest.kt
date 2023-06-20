@@ -2,6 +2,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.WorkHistory
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import io.mockk.mockk
 import io.mockk.verify
@@ -10,7 +11,7 @@ import org.junit.Test
 data class BottomNavItem(
     val title: String,
     val route: String,
-    val icon: Any // Replace 'Any' with the appropriate type for icons in your project
+    val icon: ImageVector
 )
 
 object BottomNavBarRoutes {

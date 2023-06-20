@@ -1,6 +1,6 @@
 package com.example.Thesis_Project.routes
 
-class AdminBottomNavBarRoutes {
-    object AdminHomeScreen : BottomNavBarRoutes("admin-home_screen")
-    object AdminUsersScreen : BottomNavBarRoutes("admin-users_screen")
+sealed class AdminBottomNavBarRoutes(val route: String) {
+    object AdminHomeScreen : AdminBottomNavBarRoutes("admin-home_screen")
+    object AdminUsersScreen : AdminBottomNavBarRoutes("admin-users_screen")
 }
