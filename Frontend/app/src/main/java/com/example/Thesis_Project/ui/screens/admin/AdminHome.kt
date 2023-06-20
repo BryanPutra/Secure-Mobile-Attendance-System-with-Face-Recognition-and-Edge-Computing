@@ -41,6 +41,9 @@ import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.convertTimeIntToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun AdminHomeScreen(
@@ -63,19 +66,27 @@ fun AdminHomeScreen(
 
 @Composable
 fun AdminHomeContainer(rootNavController: NavHostController, navController: NavController, mainViewModel: MainViewModel) {
-
+    val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isAdminHomeInit) }
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid) { data ->
-            if (data != null) {
-                mainViewModel.userData = data;
-                Log.d("USERADMINDATA", mainViewModel.userData!!.userid!!);
-            } else {
-                Log.e("USERADMINDATA", "Admin not found")
+    suspend fun getInitData() {
+        coroutineScope {
+            launch{
+                db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid, mainViewModel.setUserData)
+            }
+            launch {
+                db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
             }
         }
-        db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+    }
+
+    LaunchedEffect(key1 = isLaunched) {
+        if (!isLaunched) {
+            runBlocking {
+                getInitData()
+                mainViewModel.setIsAdminHomeInit(true)
+            }
+        }
     }
 
     Box(

@@ -5,7 +5,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.Thesis_Project.backend.db.db_models.*
+import com.example.Thesis_Project.backend.db.db_util
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
@@ -13,18 +15,21 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class MainViewModel : ViewModel() {
 
     //auth
     val auth: FirebaseAuth = Firebase.auth
+    val createUserAuth: FirebaseAuth = Firebase.auth
+
     val db: FirebaseFirestore = Firebase.firestore
 
     var currentUser: FirebaseUser? by mutableStateOf(null)
 
     var userData: User? by mutableStateOf(null)
-    
+
     val setUserData: (User?) -> Unit = { newUserData ->
         if (newUserData != null) {
             userData = newUserData
@@ -92,31 +97,91 @@ class MainViewModel : ViewModel() {
     }
 
     //admin
+    var isAdminHomeInit by mutableStateOf(false)
+        private set
+
+    val setIsAdminHomeInit: (Boolean?) -> Unit = { newIsAdminHomeInit ->
+        if (newIsAdminHomeInit != null) {
+            isAdminHomeInit = newIsAdminHomeInit
+        }
+        Log.d("get user data", "user: $isAdminHomeInit")
+    }
+
     var usersList: List<User>? by mutableStateOf(null)
     val setUserList: (List<User>?) -> Unit = { newUsers ->
         if (newUsers != null) {
             usersList = newUsers
             Log.d("Get Users list", "Users List: $usersList")
-        }
-        else{
+        } else {
             Log.d("Get Users list", "Users List not found")
         }
     }
+
+    var isAdminUsersInit by mutableStateOf(false)
+        private set
+
+    val setIsAdminUsersInit: (Boolean?) -> Unit = { newIsAdminUsersInit ->
+        if (newIsAdminUsersInit != null) {
+            isAdminUsersInit = newIsAdminUsersInit
+        }
+        Log.d("get user data", "user: $isAdminUsersInit")
+    }
+
+//    suspend fun createUserFromAdmin(
+//        createUserAuth: FirebaseAuth,
+//        db: FirebaseFirestore,
+//        user: User,
+//        email: String,
+//        password: String,
+//        companyparams: CompanyParams
+//    ) {
+//        viewModelScope.launch{
+//            db_util
+//        }
+//    }
 
     var isEditCompanyParamsDialogShown by mutableStateOf(false)
     fun showEditCompanyParamsDialog() {
         isEditCompanyParamsDialogShown = true
     }
 
+    //adminusers
+//    var filteredUsersList: List<User>? by mutableStateOf(null)
+//    val setFilteredUsersList: (List<User>?) -> Unit = { newFilteredUsersList ->
+//        if (newFilteredUsersList != null) {
+//            filteredUsersList = newFilteredUsersList
+//            Log.d("Change Users list", "Users List: $filteredUsersList")
+//        }
+//        else{
+//            Log.d("Change Users list", "Users List not found")
+//        }
+//    }
+
+    var isCreateUserDialogShown by mutableStateOf(false)
+
+    fun toggleCreateUserDialog() {
+        isCreateUserDialogShown = !isCreateUserDialogShown
+    }
+
     //main
+
+    var isHomeInit by mutableStateOf(false)
+        private set
+
+    val setIsHomeInit: (Boolean?) -> Unit = { newIsHomeInit ->
+        if (newIsHomeInit != null) {
+            isHomeInit = newIsHomeInit
+        }
+        Log.d("get user data", "user: $isHomeInit")
+    }
+
     var companyVariable: CompanyParams? by mutableStateOf(null)
 
     val setCompanyVariable: (CompanyParams?) -> Unit = { newCompanyParams ->
         if (newCompanyParams != null) {
             companyVariable = newCompanyParams
             Log.d("Get Company variables", "Company Variables: $companyVariable")
-        }
-        else{
+        } else {
             Log.d("Get Company variables", "Company Variables not found")
         }
     }
@@ -131,6 +196,15 @@ class MainViewModel : ViewModel() {
     }
 
     //calendar
+    var isCalendarInit by mutableStateOf(false)
+        private set
+
+    val setIsCalendarInit: (Boolean?) -> Unit = { newIsCalendarInit ->
+        if (newIsCalendarInit != null) {
+            isCalendarInit = newIsCalendarInit
+        }
+        Log.d("get user data", "user: $isCalendarInit")
+    }
     var attendanceList: List<Attendance>? by mutableStateOf(null)
     var calendarSelectedDate: LocalDate by mutableStateOf(LocalDate.now())
 
@@ -138,8 +212,7 @@ class MainViewModel : ViewModel() {
         if (newAttendance != null) {
             attendanceList = newAttendance
             Log.d("Get attendance list", "Attendance List: $attendanceList")
-        }
-        else{
+        } else {
             Log.d("Get Attendance list", "Attendance not found")
         }
     }
@@ -148,6 +221,15 @@ class MainViewModel : ViewModel() {
     var isRequestCorrectionButtonEnabled: Boolean by mutableStateOf(true)
 
     //leave & correction request
+    var isHistoryInit by mutableStateOf(false)
+        private set
+
+    val setIsHistoryInit: (Boolean?) -> Unit = { newIsHistoryInit ->
+        if (newIsHistoryInit != null) {
+            isHistoryInit = newIsHistoryInit
+        }
+        Log.d("get user data", "user: $isHistoryInit")
+    }
     var leaveRequestList: List<LeaveRequest>? by mutableStateOf(null)
     var correctionRequestList: List<CorrectionRequest>? by mutableStateOf(null)
 
@@ -158,8 +240,7 @@ class MainViewModel : ViewModel() {
         if (newLeaveRequest != null) {
             leaveRequestList = newLeaveRequest
             Log.d("Get Leave Request list", "Leave Request: $leaveRequestList")
-        }
-        else{
+        } else {
             Log.d("Get Leave Request list", "Leave Request not found")
         }
     }
@@ -167,8 +248,7 @@ class MainViewModel : ViewModel() {
         if (newCorrectionRequest != null) {
             correctionRequestList = newCorrectionRequest
             Log.d("Get Correction Request list", "Correction Request: $correctionRequestList")
-        }
-        else{
+        } else {
             Log.d("Get Correction Request list", "Correction Request not found")
         }
     }

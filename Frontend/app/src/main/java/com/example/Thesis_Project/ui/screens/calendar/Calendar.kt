@@ -40,9 +40,7 @@ import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
 import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -230,7 +228,7 @@ fun Calendar(mainViewModel: MainViewModel) {
 @Composable
 fun CalendarContainer(navController: NavController? = null, mainViewModel: MainViewModel) {
 
-    var isLaunched by rememberSaveable { mutableStateOf(false) }
+    val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isCalendarInit) }
 
     val firstDateOfMonth = rememberSaveable {
         mutableStateOf(db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate))
@@ -239,37 +237,34 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         mutableStateOf(db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate))
     }
 
-    LaunchedEffect(key1 = true) {
-        if (!isLaunched) {
-            db_util.getAttendance(
-                mainViewModel.db,
-                mainViewModel.userData?.userid,
-                firstDateOfMonth.value,
-                lastDateOfMonth.value,
-                mainViewModel.setAttendanceList
-            )
-            db_util.getCorrectionRequest(
-                mainViewModel.db,
-                mainViewModel.userData?.userid,
-                mainViewModel.setCorrectionRequestList
-            )
-            isLaunched = true
+    suspend fun getInitData() {
+        coroutineScope {
+            launch {
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid,
+                    firstDateOfMonth.value,
+                    lastDateOfMonth.value,
+                    mainViewModel.setAttendanceList
+                )
+            }
+            launch {
+                db_util.getCorrectionRequest(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid,
+                    mainViewModel.setCorrectionRequestList
+                )
+            }
         }
     }
 
-    LaunchedEffect(mainViewModel.userData) {
-        db_util.getAttendance(
-            mainViewModel.db,
-            mainViewModel.userData?.userid,
-            firstDateOfMonth.value,
-            lastDateOfMonth.value,
-            mainViewModel.setAttendanceList
-        )
-        db_util.getCorrectionRequest(
-            mainViewModel.db,
-            mainViewModel.userData?.userid,
-            mainViewModel.setCorrectionRequestList
-        )
+    LaunchedEffect(key1 = isLaunched) {
+        if (!isLaunched) {
+            runBlocking {
+                getInitData()
+                mainViewModel.setIsCalendarInit(true)
+            }
+        }
     }
 
     val currentBackStackEntry = navController?.currentBackStackEntryAsState()?.value

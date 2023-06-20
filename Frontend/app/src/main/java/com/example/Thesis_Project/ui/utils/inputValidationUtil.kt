@@ -11,3 +11,7 @@ fun isValidEmail(email: String): Boolean {
 fun isValidPassword(password: String): Boolean {
     return password.length >= 6
 }
+
+fun isValidName(name: String): Boolean {
+    return name.length >= 3
+}

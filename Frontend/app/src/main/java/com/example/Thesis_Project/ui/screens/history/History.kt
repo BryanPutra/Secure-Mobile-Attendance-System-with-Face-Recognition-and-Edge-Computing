@@ -17,6 +17,9 @@ import com.example.Thesis_Project.ui.components.CorrectionRequestCard
 import com.example.Thesis_Project.ui.components.LeaveRequestCard
 import com.example.Thesis_Project.ui.components.MainHeader
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun HistoryScreen(navController: NavController, mainViewModel: MainViewModel) {
@@ -27,37 +30,48 @@ fun HistoryScreen(navController: NavController, mainViewModel: MainViewModel) {
 fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel) {
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = currentBackStackEntry?.destination?.route
+    val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isHistoryInit) }
 
-    var isLaunched by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(key1 = true) {
-        if (!isLaunched) {
-            db_util.getLeaveRequest(
-                mainViewModel.db,
-                mainViewModel.userData?.userid,
-                mainViewModel.setLeaveRequestList
-            )
-            db_util.getCorrectionRequest(
-                mainViewModel.db,
-                mainViewModel.userData?.userid,
-                mainViewModel.setCorrectionRequestList
-            )
-            isLaunched = true
+    suspend fun getInitData() {
+        coroutineScope {
+            launch{
+                db_util.getLeaveRequest(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid,
+                    mainViewModel.setLeaveRequestList
+                )
+            }
+            launch {
+                db_util.getCorrectionRequest(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid,
+                    mainViewModel.setCorrectionRequestList
+                )
+            }
         }
     }
 
-    LaunchedEffect(mainViewModel.userData) {
-        db_util.getLeaveRequest(
-            mainViewModel.db,
-            mainViewModel.userData?.userid,
-            mainViewModel.setLeaveRequestList
-        )
-        db_util.getCorrectionRequest(
-            mainViewModel.db,
-            mainViewModel.userData?.userid,
-            mainViewModel.setCorrectionRequestList
-        )
+    LaunchedEffect(key1 = isLaunched) {
+        if (!isLaunched) {
+            runBlocking {
+                getInitData()
+                mainViewModel.setIsHistoryInit(true)
+            }
+        }
     }
+
+//    LaunchedEffect(mainViewModel.userData) {
+//        db_util.getLeaveRequest(
+//            mainViewModel.db,
+//            mainViewModel.userData?.userid,
+//            mainViewModel.setLeaveRequestList
+//        )
+//        db_util.getCorrectionRequest(
+//            mainViewModel.db,
+//            mainViewModel.userData?.userid,
+//            mainViewModel.setCorrectionRequestList
+//        )
+//    }
 
     Column(
         modifier = Modifier

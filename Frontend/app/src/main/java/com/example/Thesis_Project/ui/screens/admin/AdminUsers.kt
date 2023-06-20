@@ -28,6 +28,7 @@ import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
+import com.example.Thesis_Project.ui.components.AdminCreateUserDialog
 import com.example.Thesis_Project.ui.components.AdminUsersRow
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.*
@@ -40,7 +41,7 @@ fun AdminUsersScreen(navController: NavController, mainViewModel: MainViewModel)
 
 @Composable
 fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewModel) {
-    var isLaunched by rememberSaveable { mutableStateOf(false) }
+    val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isAdminUsersInit) }
     Log.d("isLaunched", isLaunched.toString())
 
     var userQuerySearch by rememberSaveable { mutableStateOf("") }
@@ -60,13 +61,15 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
 
     LaunchedEffect(key1 = isLaunched) {
         if (!isLaunched) {
-            runBlocking {
-                db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
-                appendUsersList()
-                isLaunched = true
-            }
+            db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
+            appendUsersList()
+            mainViewModel.setIsAdminUsersInit(true)
             Log.d("shit 1", filteredUserQuery.isEmpty().toString())
         }
+    }
+
+    LaunchedEffect(mainViewModel.usersList) {
+        appendUsersList()
     }
 
     fun searchUsers(searchValue: String) {
@@ -102,7 +105,11 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
                 style = MaterialTheme.typography.headlineSmall,
             )
             Icon(
-                modifier = Modifier.size(MaterialTheme.spacing.iconLarge),
+                modifier = Modifier
+                    .size(MaterialTheme.spacing.iconLarge)
+                    .clickable {
+                        mainViewModel.toggleCreateUserDialog()
+                    },
                 imageVector = Icons.Filled.AddCircle,
                 contentDescription = null,
                 tint = colorResource(id = R.color.blue_500)
@@ -169,6 +176,9 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
                     }
                 }
             }
+        }
+        if (mainViewModel.isCreateUserDialogShown) {
+            AdminCreateUserDialog(mainViewModel = mainViewModel)
         }
     }
 }

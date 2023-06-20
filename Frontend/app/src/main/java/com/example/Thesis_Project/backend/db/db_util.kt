@@ -2,14 +2,12 @@ package com.example.Thesis_Project.backend.db
 
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
-import com.example.Thesis_Project.viewmodel.MainViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import java.time.*
 import java.time.temporal.TemporalAdjusters.firstDayOfYear
@@ -17,24 +15,35 @@ import java.time.temporal.TemporalAdjusters.lastDayOfYear
 import java.util.Date
 
 object db_util {
-    fun getUser(db: FirebaseFirestore, userId: String, callback: (User?) -> Unit) {
-        db.collection("users").document(userId).get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    val user = documentSnapshot.toObject<User>()
-                    callback(user)
-                } else {
-                    callback(null)
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetching Data", "getUser: $exception")
+    suspend fun getUser(db: FirebaseFirestore, userId: String, callback: (User?) -> Unit) {
+        try {
+            val documentSnapshot = db.collection("users").document(userId).get().await()
+            if (documentSnapshot.exists()) {
+                callback(documentSnapshot.toObject<User>())
+            } else {
                 callback(null)
             }
+        } catch (exception: Exception) {
+            Log.e("Error Fetching Data", "getUser: $exception")
+            callback(null)
+        }
+//        db.collection("users").document(userId).get()
+//            .addOnSuccessListener { documentSnapshot ->
+//                if (documentSnapshot.exists()) {
+//                    val user = documentSnapshot.toObject<User>()
+//                    callback(user)
+//                } else {
+//                    callback(null)
+//                }
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Error Fetching Data", "getUser: $exception")
+//                callback(null)
+//            }
     }
 
-    suspend fun getAllUser(db: FirebaseFirestore, callback:(List<User>?) -> Unit): List<User>? {
-        return try {
+    suspend fun getAllUser(db: FirebaseFirestore, callback: (List<User>?) -> Unit) {
+        try {
             val querySnapshot = db.collection("users").get().await()
             val userList = mutableListOf<User>()
             for (document in querySnapshot.documents) {
@@ -44,10 +53,9 @@ object db_util {
                 }
             }
             callback(userList)
-            userList
         } catch (e: Exception) {
             Log.e("Error Fetch Data", "getallUser $e")
-            null
+            callback(null)
         }
 //        val temp = mutableListOf<User>()
 //        db.collection("users").get()
@@ -65,8 +73,13 @@ object db_util {
 //            }
     }
 
-    fun createUser(db: FirebaseFirestore, user: User, companyparams: CompanyParams) {
-        val doc = db.collection("users").document(user.userid!!)
+    suspend fun createUser(
+        db: FirebaseFirestore,
+        user: User,
+        userid: String,
+        companyparams: CompanyParams
+    ) {
+        val doc = db.collection("users").document(userid)
         val map: MutableMap<String, Int> = mutableMapOf<String, Int>()
         for (i in 1..12) {
             map[i.toString()] = companyparams.toleranceworktime!!
@@ -77,13 +90,52 @@ object db_util {
         user.monthlytoleranceworktime = map
         user.leaveallow = false
         user.note = ""
-        doc.set(user)
-            .addOnSuccessListener {
-                Log.d("CREATEUSER", "User successfully created with id ${user.userid}")
+
+        try {
+            doc.set(user).await()
+            Log.d("CREATEUSER", "User successfully created with id ${user.userid}")
+        } catch (exception: Exception) {
+            Log.e("Error Creating Data", "createuser $exception")
+        }
+//        val doc = db.collection("users").document(user.userid!!)
+//        val map: MutableMap<String, Int> = mutableMapOf<String, Int>()
+//        for (i in 1..12) {
+//            map[i.toString()] = companyparams.toleranceworktime!!
+//        }
+//        user.joindate = curDateTime()
+//        user.leaveleft = 0
+//        user.notelastupdated = curDateTime()
+//        user.monthlytoleranceworktime = map
+//        user.leaveallow = false
+//        user.note = ""
+//        doc.set(user)
+//            .addOnSuccessListener {
+//                Log.d("CREATEUSER", "User successfully created with id ${user.userid}")
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Error Creating Data", "createuser $exception")
+//            }
+    }
+
+    suspend fun createUserAuth(
+        createUserAuth: FirebaseAuth,
+        db: FirebaseFirestore,
+        user: User,
+        email: String,
+        password: String,
+        companyparams: CompanyParams
+    ) {
+        try {
+            createUserAuth.createUserWithEmailAndPassword(email, password).await()
+            val createdUser = createUserAuth.currentUser
+            Log.d("Create User Auth", "User successfully created with id $user")
+            if (createdUser != null) {
+                createUser(db, user, createdUser.uid, companyparams)
             }
-            .addOnFailureListener { exception ->
-                Log.e("Error Creating Data", "createuser $exception")
-            }
+            createUserAuth.signOut()
+        } catch (exception: Exception) {
+            Log.e("Error Creating User Auth", "createuserauth $exception")
+        }
     }
 
     fun checkUserIsAdmin(db: FirebaseFirestore, userid: String, callback: (Boolean?) -> Unit) {
@@ -121,88 +173,146 @@ object db_util {
 
 
     // userid == null -> get all users
-    fun getAttendance(
+    suspend fun getAttendance(
         db: FirebaseFirestore,
         userId: String?,
         dateStart: Date,
         dateEnd: Date,
         callback: (List<Attendance>?) -> Unit
     ) {
-        var query = db.collection("attendances")
-            .whereGreaterThanOrEqualTo("timein", dateStart)
-            .whereLessThanOrEqualTo("timein", dateEnd)
+        try {
+            var query = db.collection("attendances")
+                .whereGreaterThanOrEqualTo("timein", dateStart)
+                .whereLessThanOrEqualTo("timein", dateEnd)
 
-        if (userId != null) {
-            query = query.whereEqualTo("userid", userId)
+            if (userId != null) {
+                query = query.whereEqualTo("userid", userId)
+            }
+
+            val querySnapshot = query.get().await()
+            val attendances = mutableListOf<Attendance>()
+            for (i in querySnapshot) {
+                val temp = i.toObject<Attendance>()
+                attendances.add(temp)
+            }
+            callback(attendances)
+        } catch (exception: Exception) {
+            Log.e("Error Fetching Data", "getAttendance $exception")
+            callback(null)
         }
-
-        query.get()
-            .addOnSuccessListener { querySnapshot ->
-                val attendances = mutableListOf<Attendance>()
-                for (i in querySnapshot) {
-                    val temp = i.toObject<Attendance>()
-                    attendances.add(temp)
-                }
-                callback(attendances)
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetching Data", "getAttendance $exception")
-                callback(null)
-            }
+//        var query = db.collection("attendances")
+//            .whereGreaterThanOrEqualTo("timein", dateStart)
+//            .whereLessThanOrEqualTo("timein", dateEnd)
+//
+//        if (userId != null) {
+//            query = query.whereEqualTo("userid", userId)
+//        }
+//
+//        query.get()
+//            .addOnSuccessListener { querySnapshot ->
+//                val attendances = mutableListOf<Attendance>()
+//                for (i in querySnapshot) {
+//                    val temp = i.toObject<Attendance>()
+//                    attendances.add(temp)
+//                }
+//                callback(attendances)
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Error Fetching Data", "getAttendance $exception")
+//                callback(null)
+//            }
     }
 
     // userid == null -> get all users
-    fun getLeaveRequest(
+    suspend fun getLeaveRequest(
         db: FirebaseFirestore,
         userId: String?,
         callback: (List<LeaveRequest>?) -> Unit
     ) {
-        val col = db.collection("leave_requests")
-        var query: Query = col
-        if (userId != null) {
-            query = query.whereEqualTo("userid", userId)
-        }
+        try {
+            val col = db.collection("leave_requests")
+            var query: Query = col
+            if (userId != null) {
+                query = query.whereEqualTo("userid", userId)
+            }
 
-        query.orderBy("createdate", Query.Direction.DESCENDING).get()
-            .addOnSuccessListener { querySnapshot ->
-                val leaverequests = mutableListOf<LeaveRequest>()
-                for (i in querySnapshot) {
-                    val temp = i.toObject<LeaveRequest>()
-                    leaverequests.add(temp)
-                }
-                callback(leaverequests)
+            val querySnapshot =
+                query.orderBy("createdate", Query.Direction.DESCENDING).get().await()
+            val leaverequests = mutableListOf<LeaveRequest>()
+            for (i in querySnapshot) {
+                val temp = i.toObject<LeaveRequest>()
+                leaverequests.add(temp)
             }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetching Data", "getLeaveRequest $exception")
-                callback(null)
-            }
+            callback(leaverequests)
+        } catch (exception: Exception) {
+            Log.e("Error Fetching Data", "getLeaveRequest $exception")
+            callback(null)
+        }
+//        val col = db.collection("leave_requests")
+//        var query: Query = col
+//        if (userId != null) {
+//            query = query.whereEqualTo("userid", userId)
+//        }
+//
+//        query.orderBy("createdate", Query.Direction.DESCENDING).get()
+//            .addOnSuccessListener { querySnapshot ->
+//                val leaverequests = mutableListOf<LeaveRequest>()
+//                for (i in querySnapshot) {
+//                    val temp = i.toObject<LeaveRequest>()
+//                    leaverequests.add(temp)
+//                }
+//                callback(leaverequests)
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Error Fetching Data", "getLeaveRequest $exception")
+//                callback(null)
+//            }
     }
 
     // userid == null -> get all users
-    fun getCorrectionRequest(
+    suspend fun getCorrectionRequest(
         db: FirebaseFirestore,
         userId: String?,
         callback: (List<CorrectionRequest>?) -> Unit
     ) {
-        val col = db.collection("correction_requests")
-        var query: Query = col
-        if (userId != null) {
-            query = query.whereEqualTo("userid", userId)
-        }
+        try {
+            val col = db.collection("correction_requests")
+            var query: Query = col
+            if (userId != null) {
+                query = query.whereEqualTo("userid", userId)
+            }
 
-        query.orderBy("createdate", Query.Direction.DESCENDING).get()
-            .addOnSuccessListener { querySnapshot ->
-                val correctionrequests = mutableListOf<CorrectionRequest>()
-                for (i in querySnapshot) {
-                    val temp = i.toObject<CorrectionRequest>()
-                    correctionrequests.add(temp)
-                }
-                callback(correctionrequests)
+            val querySnapshot =
+                query.orderBy("createdate", Query.Direction.DESCENDING).get().await()
+            val correctionRequests = mutableListOf<CorrectionRequest>()
+            for (i in querySnapshot) {
+                val temp = i.toObject<CorrectionRequest>()
+                correctionRequests.add(temp)
             }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetching Data", "getCorrectionRequest $exception")
-                callback(null)
-            }
+            callback(correctionRequests)
+        } catch (exception: Exception) {
+            Log.e("Error Fetching Data", "getCorrectionRequest $exception")
+            callback(null)
+        }
+//        val col = db.collection("correction_requests")
+//        var query: Query = col
+//        if (userId != null) {
+//            query = query.whereEqualTo("userid", userId)
+//        }
+//
+//        query.orderBy("createdate", Query.Direction.DESCENDING).get()
+//            .addOnSuccessListener { querySnapshot ->
+//                val correctionrequests = mutableListOf<CorrectionRequest>()
+//                for (i in querySnapshot) {
+//                    val temp = i.toObject<CorrectionRequest>()
+//                    correctionrequests.add(temp)
+//                }
+//                callback(correctionrequests)
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Error Fetching Data", "getCorrectionRequest $exception")
+//                callback(null)
+//            }
     }
 
     fun getTotalLeaveThisMonth(db: FirebaseFirestore, userid: String, callback: (Int?) -> Unit) {
@@ -238,19 +348,34 @@ object db_util {
             }
     }
 
-    fun getCompanyParams(db: FirebaseFirestore, callback: (CompanyParams?) -> Unit) {
-        db.collection("company_params").document("COMPANYPARAMS").get()
-            .addOnSuccessListener { documentSnapshot ->
-                if (documentSnapshot.exists()) {
-                    callback(documentSnapshot.toObject<CompanyParams>())
-                } else {
-                    callback(null)
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetching Data", "getCompanyParams $exception")
+    suspend fun getCompanyParams(
+        db: FirebaseFirestore,
+        callback: (CompanyParams?) -> Unit
+    ) {
+        try {
+            val documentSnapshot =
+                db.collection("company_params").document("COMPANYPARAMS").get().await()
+            if (documentSnapshot.exists()) {
+                callback(documentSnapshot.toObject<CompanyParams>())
+            } else {
                 callback(null)
             }
+        } catch (exception: Exception) {
+            Log.e("Error Fetching Data", "getCompanyParams $exception")
+            callback(null)
+        }
+//        db.collection("company_params").document("COMPANYPARAMS").get()
+//            .addOnSuccessListener { documentSnapshot ->
+//                if (documentSnapshot.exists()) {
+//                    callback(documentSnapshot.toObject<CompanyParams>())
+//                } else {
+//                    callback(null)
+//                }
+//            }
+//            .addOnFailureListener { exception ->
+//                Log.e("Error Fetching Data", "getCompanyParams $exception")
+//                callback(null)
+//            }
     }
 
     fun createAttendance(db: FirebaseFirestore, data: Attendance, user: User) {
@@ -649,7 +774,7 @@ object db_util {
             }
     }
 
-    fun checkValidLeaveRequestDate(
+    suspend fun checkValidLeaveRequestDate(
         db: FirebaseFirestore,
         userid: String,
         date: Date,
@@ -662,41 +787,46 @@ object db_util {
             startOfDay(dateToLocalDate(date)),
             endOfDay(dateToLocalDate(date).plusDays(duration - 1.toLong()))
         ) { attendance ->
-            if (attendance != null) {
-                if (attendance.isEmpty()) {
-                    getPendingRequestDates(db, userid) { dates ->
-                        if (dates != null) {
-                            var flag = true
-                            val temp = mutableListOf<Date>()
-                            for (i in 0 until duration) {
-                                temp.add(localDateToDate(dateToLocalDate(date).plusDays(i.toLong())))
-                            }
-                            for (i in dates) {
-                                for (j in temp) {
-                                    if (dateToLocalDate(i) == dateToLocalDate(j)) {
-                                        flag = false
+            try {
+                if (attendance != null) {
+                    if (attendance.isEmpty()) {
+                        getPendingRequestDates(db, userid) { dates ->
+                            if (dates != null) {
+                                var flag = true
+                                val temp = mutableListOf<Date>()
+                                for (i in 0 until duration) {
+                                    temp.add(localDateToDate(dateToLocalDate(date).plusDays(i.toLong())))
+                                }
+                                for (i in dates) {
+                                    for (j in temp) {
+                                        if (dateToLocalDate(i) == dateToLocalDate(j)) {
+                                            flag = false
+                                            break
+                                        }
+                                    }
+                                    if (!flag) {
                                         break
                                     }
                                 }
-                                if (!flag) {
-                                    break
-                                }
+                                callback(flag)
+                            } else {
+                                callback(null)
                             }
-                            callback(flag)
-                        } else {
-                            callback(null)
                         }
+                    } else {
+                        callback(false)
                     }
                 } else {
-                    callback(false)
+                    callback(null)
                 }
-            } else {
+            } catch (e: Exception) {
+                Log.e("Error Fetch Data", "getallUser $e")
                 callback(null)
             }
         }
     }
 
-    fun checkValidCorrectionRequestDate(
+    suspend fun checkValidCorrectionRequestDate(
         db: FirebaseFirestore,
         userid: String,
         date: Date,
@@ -845,11 +975,11 @@ object db_util {
                     .addOnSuccessListener { snapshot ->
                         for (i in snapshot) {
                             val temp = i.toObject<LeaveRequest>()
-                            for (i in 0 until temp.duration!!) {
+                            for (j in 0 until temp.duration!!) {
                                 dates.add(
                                     Date.from(
                                         dateToLocalDate(temp.leavestart!!).atStartOfDay()
-                                            .plusDays(i.toLong()).atZone(ZoneId.systemDefault())
+                                            .plusDays(j.toLong()).atZone(ZoneId.systemDefault())
                                             .toInstant()
                                     )
                                 )
@@ -904,7 +1034,7 @@ object db_util {
         correctionrequestid: String,
         callback: (Boolean) -> Unit
     ) {
-        val correctionref = db.collection("correction_requests").document(correctionrequestid!!)
+        val correctionref = db.collection("correction_requests").document(correctionrequestid)
         db.runTransaction { transaction ->
             val correctionsnapshot = transaction.get(correctionref)
             if (correctionsnapshot.exists() && correctionsnapshot.getString("rejectedby") == null && correctionsnapshot.getString(
@@ -934,7 +1064,7 @@ object db_util {
     }
 
     // Callback boolean denotes whether frontend should show popup or not (12pm auto insert timeout)
-    fun checkBackAttendance(
+    suspend fun checkBackAttendance(
         db: FirebaseFirestore,
         user: User,
         companyparams: CompanyParams,
@@ -985,7 +1115,7 @@ object db_util {
                                             transaction.set(attendanceref, data)
                                         }
                                     }
-                                    val userref = db.collection("users").document(user.userid!!)
+                                    val userref = db.collection("users").document(user.userid)
                                     val newmap = user.monthlytoleranceworktime
                                     for (i in attendances) {
                                         if (i.timeout == null) {
