@@ -15,9 +15,8 @@ fun getAttendanceByDay(day: String, mainViewModel: MainViewModel): Attendance? {
     if (day.isEmpty()) {
         return null
     }
-    var tempAttendance: Attendance? = null
-    tempAttendance = mainViewModel.attendanceList?.find { attendance ->
-        db_util.dateToLocalDate(attendance.timein!!).toString() == day
+    val tempAttendance: Attendance? = mainViewModel.attendanceList?.find { attendance ->
+        db_util.dateToLocalDate(attendance.timein!!).dayOfMonth.toString() == day
     }
     return tempAttendance
 }

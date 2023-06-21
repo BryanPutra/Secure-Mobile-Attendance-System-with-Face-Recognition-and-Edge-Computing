@@ -1,5 +1,7 @@
 package com.example.Thesis_Project.ui.screens.calendar
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -58,43 +60,17 @@ fun CalendarScreen(navController: NavController? = null, mainViewModel: MainView
 @Composable
 fun Calendar(mainViewModel: MainViewModel) {
     val context = LocalContext.current
+    val getAttendanceCurrentMonthScope = rememberCoroutineScope()
+
     val currentDate = LocalDate.now()
+    var firstDateOfMonth by rememberSaveable {
+        mutableStateOf(db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate))
+    }
+    var lastDateOfMonth by rememberSaveable {
+        mutableStateOf(db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate))
+    }
     var monthYear by rememberSaveable { mutableStateOf(formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)) }
-    val _daysInMonth = remember { mutableStateListOf<DayOfMonthItem>() }
-    val daysInMonth = _daysInMonth
-
-    fun onNextMonthClicked() {
-        mainViewModel.calendarSelectedDate = mainViewModel.calendarSelectedDate.plusMonths(1)
-        monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
-    }
-
-    fun onPreviousMonthClicked() {
-        mainViewModel.calendarSelectedDate = mainViewModel.calendarSelectedDate.minusMonths(1)
-        monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
-    }
-
-    fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
-        val scope = CoroutineScope(Dispatchers.Main)
-        if (dayOfMonth == null) {
-            return
-        }
-        dayOfMonth.isSelected = true
-        mainViewModel.calendarSelectedDate = dayOfMonth.date!!
-//        val message =
-//            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date == mainViewModel.calendarSelectedDate} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
-//        scope.launch {
-//            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-//        }
-
-        mainViewModel.isRequestCorrectionButtonEnabled =
-            !(dayOfMonth.date.isEqual(currentDate) || dayOfMonth.date.isAfter(currentDate) || checkIfAttendanceOnCorrectionPending(
-                dayOfMonth.attendance,
-                mainViewModel
-            ))
-
-        mainViewModel.isRequestLeaveButtonEnabled =
-            !currentDate.isAfter(mainViewModel.calendarSelectedDate)
-    }
+    val daysInMonth = remember { mutableStateListOf<DayOfMonthItem>() }
 
     fun daysInMonthList(date: LocalDate): SnapshotStateList<DayOfMonthItem> {
         val year = date.year
@@ -127,12 +103,79 @@ fun Calendar(mainViewModel: MainViewModel) {
     }
 
     fun addDaysInMonth() {
-        if (!_daysInMonth.isEmpty()) _daysInMonth.clear()
+        if (!daysInMonth.isEmpty()) daysInMonth.clear()
         for (i in daysInMonthList(mainViewModel.calendarSelectedDate)) {
-            _daysInMonth.add(i)
+            daysInMonth.add(i)
         }
     }
 
+    suspend fun getAttendanceCurrentMonth() {
+        coroutineScope {
+            launch {
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid,
+                    firstDateOfMonth,
+                    lastDateOfMonth,
+                    mainViewModel.setAttendanceList
+                )
+            }
+        }
+    }
+
+    fun onNextMonthClicked() {
+        mainViewModel.setCalendarSelectedDate(mainViewModel.calendarSelectedDate.plusMonths(1))
+        firstDateOfMonth = db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate)
+        lastDateOfMonth = db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate)
+
+        monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
+        runBlocking {
+            getAttendanceCurrentMonthScope.launch {
+                getAttendanceCurrentMonth()
+            }
+            addDaysInMonth()
+        }
+        Log.d("nextMonth", "$daysInMonth")
+    }
+
+    fun onPreviousMonthClicked() {
+        mainViewModel.setCalendarSelectedDate(mainViewModel.calendarSelectedDate.minusMonths(1))
+        firstDateOfMonth = db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate)
+        lastDateOfMonth = db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate)
+        monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
+        runBlocking {
+            getAttendanceCurrentMonthScope.launch {
+                getAttendanceCurrentMonth()
+            }
+            addDaysInMonth()
+        }
+        Log.d("previousMonth", "${daysInMonth[0]}")
+    }
+
+    fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
+        val scope = CoroutineScope(Dispatchers.Main)
+        if (dayOfMonth == null) {
+            return
+        }
+        dayOfMonth.isSelected = true
+        mainViewModel.setCalendarSelectedDate(dayOfMonth.date!!)
+        val message =
+            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
+        scope.launch {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+
+        mainViewModel.setIsRequestCorrectionButtonEnabled(
+            dayOfMonth.attendance != null && (!(dayOfMonth.date.isEqual(currentDate) || dayOfMonth.date.isAfter(
+                currentDate
+            ) || checkIfAttendanceOnCorrectionPending(
+                dayOfMonth.attendance,
+                mainViewModel
+            )))
+        )
+
+        mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate))
+    }
     addDaysInMonth()
 
     Box(
@@ -227,10 +270,10 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
 
     val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isCalendarInit) }
 
-    val firstDateOfMonth = rememberSaveable {
+    val firstDateOfMonth by rememberSaveable {
         mutableStateOf(db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate))
     }
-    val lastDateOfMonth = rememberSaveable {
+    val lastDateOfMonth by rememberSaveable {
         mutableStateOf(db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate))
     }
 
@@ -240,8 +283,8 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                 db_util.getAttendance(
                     mainViewModel.db,
                     mainViewModel.userData?.userid,
-                    firstDateOfMonth.value,
-                    lastDateOfMonth.value,
+                    firstDateOfMonth,
+                    lastDateOfMonth,
                     mainViewModel.setAttendanceList
                 )
             }
@@ -372,7 +415,7 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                 }
                 item {
                     Text(
-                        text = convertTimeIntToString(currentAttendance?.worktime),
+                        text = convertTimeMinutesIntToString(currentAttendance?.worktime),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Medium
                     )
@@ -403,7 +446,7 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
     if (mainViewModel.isRequestLeaveDialogShown) {
         LeaveRequestDialog(mainViewModel = mainViewModel)
     }
-    if (mainViewModel.isCorrectionLeaveDialogShown) {
+    if (mainViewModel.isCorrectionDialogShown) {
         CorrectionRequestDialog(mainViewModel = mainViewModel, currentAttendance)
     }
 }

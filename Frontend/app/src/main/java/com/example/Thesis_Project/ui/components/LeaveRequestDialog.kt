@@ -65,7 +65,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
         }
     }
 
-    LaunchedEffect(disabledDatesState) {
+    LaunchedEffect(Unit) {
         addDisabledDates()
     }
 
@@ -113,7 +113,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
     }
 
     fun onCancelClicked() {
-        mainViewModel.isRequestLeaveDialogShown = false
+        mainViewModel.toggleRequestLeaveDialog()
     }
 
     CalendarDialog(

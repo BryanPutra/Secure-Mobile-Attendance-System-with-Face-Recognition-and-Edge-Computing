@@ -1,6 +1,5 @@
 package com.example.Thesis_Project.ui.screens.admin
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -29,8 +28,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
-import com.example.Thesis_Project.routes.AdminBottomNavBarRoutes
-import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.AdminBottomNavigationBar
 import com.example.Thesis_Project.ui.components.AdminEditCompanyParamsDialog
@@ -38,7 +35,7 @@ import com.example.Thesis_Project.ui.components.ButtonHalfWidth
 import com.example.Thesis_Project.ui.components.CompanyQuotasRow
 import com.example.Thesis_Project.ui.navgraphs.AdminNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
-import com.example.Thesis_Project.ui.utils.convertTimeIntToString
+import com.example.Thesis_Project.ui.utils.convertTimeMinutesIntToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.coroutineScope
@@ -248,17 +245,17 @@ fun AdminHomeContainer(rootNavController: NavHostController, navController: NavC
                         value = "${mainViewModel.companyVariable?.tapouttime ?: 0} Days"
                     )
                     CompanyQuotasRow(
-                        name = "Tolerance work time", value = convertTimeIntToString(
+                        name = "Tolerance work time", value = convertTimeMinutesIntToString(
                             mainViewModel.companyVariable?.toleranceworktime
                         )
                     )
                     CompanyQuotasRow(
-                        name = "Company work time", value = convertTimeIntToString(
+                        name = "Company work time", value = convertTimeMinutesIntToString(
                             mainViewModel.companyVariable?.companyworktime
                         )
                     )
                     CompanyQuotasRow(
-                        name = "Compensate work time", value = convertTimeIntToString(
+                        name = "Compensate work time", value = convertTimeMinutesIntToString(
                             mainViewModel.companyVariable?.maxcompensatetime
                         )
                     )

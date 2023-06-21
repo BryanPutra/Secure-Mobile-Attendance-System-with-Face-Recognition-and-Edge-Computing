@@ -8,20 +8,27 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 
-fun isAttended(attendance: Attendance): Boolean {
+fun isAttended(attendance: Attendance?): Boolean {
+    if (attendance == null) {
+        return false
+    }
     return attendance.absentflag == false && attendance.permissionflag == false && attendance.leaveflag == false && attendance.timeout != null
 }
-fun getListOfAttendancesByMonth(attendances: List<Attendance>, month: Int): MutableList<Attendance>? {
-    if (attendances.isEmpty()){
+
+fun getListOfAttendancesByMonth(
+    attendances: List<Attendance>,
+    month: Int
+): MutableList<Attendance>? {
+    if (attendances.isEmpty()) {
         return null
     }
     val attendedAttendances = mutableListOf<Attendance>()
     val filteredAttendances = mutableListOf<Attendance>()
     val calendar = Calendar.getInstance()
-    val dateFormat = SimpleDateFormat("MM" , Locale.ENGLISH)
+    val dateFormat = SimpleDateFormat("MM", Locale.ENGLISH)
 
     for (attendance in attendances) {
-        if (isAttended(attendance)){
+        if (isAttended(attendance)) {
             attendedAttendances.add(attendance)
         }
     }
@@ -36,20 +43,60 @@ fun getListOfAttendancesByMonth(attendances: List<Attendance>, month: Int): Muta
     return filteredAttendances
 }
 
-fun getUserMonthlyToleranceWorkTime(monthlyToleranceWorkTime: MutableMap<String,Int>?): String? {
+fun getUserMonthlyToleranceWorkTime(monthlyToleranceWorkTime: MutableMap<String, Int>?): String? {
     val currentMonthInt = LocalDate.now().monthValue
     if (monthlyToleranceWorkTime != null) {
         return "${monthlyToleranceWorkTime["$currentMonthInt"]} minutes"
     }
     return null
 }
-fun convertTimeIntToString(time: Int?): String {
+
+fun convertTimeMinutesIntToString(time: Int?): String {
     if (time != null) {
         val hours = time / 60
         val minutes = time % 60
         return "${hours}h ${minutes}m"
     }
     return ""
+}
+
+fun replaceTimeInDate(date: Date?, time: String?): Date? {
+    if (date == null) {
+        return null
+    }
+    if (time == null || time.isEmpty()) {
+        return null
+    }
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val calendar = Calendar.getInstance()
+    calendar.time = date
+    val timeCalendar = Calendar.getInstance()
+    timeCalendar.time = time?.let { timeFormat.parse(it) } as Date
+
+    calendar.apply {
+        set(Calendar.HOUR_OF_DAY, timeCalendar.get(Calendar.HOUR_OF_DAY))
+        set(Calendar.MINUTE, timeCalendar.get(Calendar.MINUTE))
+        set(Calendar.SECOND, 0)
+    }
+    return calendar.time
+}
+
+fun checkSixMonthsLeft(startDate: Date, endDate: Date): Boolean {
+    val calendar = Calendar.getInstance()
+    calendar.time = startDate
+    val startYear = calendar.get(Calendar.YEAR)
+
+    calendar.time = endDate
+    val endYear = calendar.get(Calendar.YEAR)
+
+    return (endYear - startYear == 0 && calendar.get(Calendar.MONTH) - Calendar.JUNE >= 6)
+}
+
+fun getEndOfYearDate(): Date{
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.MONTH, Calendar.DECEMBER)
+    calendar.set(Calendar.DAY_OF_MONTH, 31)
+    return calendar.time
 }
 
 fun convertHexToComposeColor(colorString: String): Color {

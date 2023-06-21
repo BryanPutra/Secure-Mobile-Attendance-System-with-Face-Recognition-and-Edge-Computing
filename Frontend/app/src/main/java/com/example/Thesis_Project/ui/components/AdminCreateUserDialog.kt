@@ -24,9 +24,7 @@ import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.utils.isValidEmail
-import com.example.Thesis_Project.ui.utils.isValidName
-import com.example.Thesis_Project.ui.utils.isValidPassword
+import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -99,7 +97,8 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
         val user = User(
             email = email,
             name = name,
-            adminflag = adminFlag
+            adminflag = adminFlag,
+            leaveallow = checkSixMonthsLeft(db_util.curDateTime(), getEndOfYearDate())
         )
         createUserScope.launch {
             postCreateUser(user)

@@ -23,9 +23,6 @@ import com.example.Thesis_Project.viewmodel.MainViewModel
 @Composable
 fun AdminUsersRow(user: User, mainViewModel: MainViewModel, onViewClick: (User) -> Unit) {
 
-    if (mainViewModel.isViewUserDialogShown) {
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()

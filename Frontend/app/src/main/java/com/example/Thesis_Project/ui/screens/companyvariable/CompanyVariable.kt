@@ -27,7 +27,7 @@ import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.CompanyQuotasRow
-import com.example.Thesis_Project.ui.utils.convertTimeIntToString
+import com.example.Thesis_Project.ui.utils.convertTimeMinutesIntToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
 import com.example.Thesis_Project.ui.utils.getListOfAttendancesByMonth
 import com.example.Thesis_Project.viewmodel.MainViewModel
@@ -168,7 +168,7 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                 ) {
                     CompanyQuotasRow(name = "Leave left", value = "${mainViewModel.userData?.leaveleft ?: 0} Days")
                     CompanyQuotasRow(name = "Permission left", value = "${getPermissionTotal()} Days")
-                    CompanyQuotasRow(name = "Tolerance work time ", value = convertTimeIntToString(
+                    CompanyQuotasRow(name = "Tolerance work time ", value = convertTimeMinutesIntToString(
                         mainViewModel.userData?.monthlytoleranceworktime?.get("$currentMonthInt")
                     ) ?: "")
                     CompanyQuotasRow(name = "Attended this month", value = " ${mainViewModel.attendanceList?.let {

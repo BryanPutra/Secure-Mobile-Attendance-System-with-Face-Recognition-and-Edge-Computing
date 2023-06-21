@@ -1,6 +1,8 @@
 package com.example.Thesis_Project.ui.utils
 
 import android.util.Patterns
+import com.example.Thesis_Project.backend.db.db_models.Attendance
+import com.example.Thesis_Project.backend.db.db_util
 import java.time.LocalDate
 
 fun isValidEmail(email: String): Boolean {
@@ -24,3 +26,18 @@ fun isValidLeaveRequestDateFrom(date: LocalDate): Boolean {
 fun isValidLeaveRequestDateTo(dateFrom: LocalDate, dateTo: LocalDate): Boolean {
     return dateTo.isAfter(dateFrom) || dateTo.isEqual(dateFrom)
 }
+
+fun isValidCorrectionRequestDateFrom(date: LocalDate?, attendance: Attendance?): Boolean {
+    if (date == null){
+        return false
+    }
+    if (attendance == null) {
+        return false
+    }
+    val attendanceDate = attendance.timein?.let { db_util.dateToLocalDate(it) } ?: return false
+    return attendanceDate.isEqual(date)
+}
+
+//fun isValidCorrectionRequestDateTo(date: LocalDate, attendance: Attendance): Boolean {
+//
+//}

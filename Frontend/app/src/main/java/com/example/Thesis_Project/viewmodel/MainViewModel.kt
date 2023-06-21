@@ -7,9 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.Thesis_Project.backend.db.db_models.*
-import com.example.Thesis_Project.backend.db.db_util
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
@@ -17,7 +15,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class MainViewModel : ViewModel() {
@@ -206,8 +203,6 @@ class MainViewModel : ViewModel() {
         Log.d("get user data", "user: $isCalendarInit")
     }
     var attendanceList: List<Attendance>? by mutableStateOf(null)
-    var calendarSelectedDate: LocalDate by mutableStateOf(LocalDate.now())
-
     val setAttendanceList: (List<Attendance>?) -> Unit = { newAttendance ->
         if (newAttendance != null) {
             attendanceList = newAttendance
@@ -217,8 +212,25 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    var calendarSelectedDate: LocalDate by mutableStateOf(LocalDate.now())
+    val setCalendarSelectedDate: (LocalDate?) -> Unit = { newCalendarSelectedDate ->
+        if (newCalendarSelectedDate != null) {
+            calendarSelectedDate = newCalendarSelectedDate
+            Log.d("Get attendance list", "Attendance List: $calendarSelectedDate")
+        } else {
+            Log.d("Get Attendance list", "Attendance not found")
+        }
+    }
+
+
     var isRequestLeaveButtonEnabled: Boolean by mutableStateOf(true)
+    val setIsRequestLeaveButtonEnabled: (Boolean) -> Unit = { newIsRequestLeaveButtonEnabled ->
+        isRequestLeaveButtonEnabled = newIsRequestLeaveButtonEnabled
+    }
     var isRequestCorrectionButtonEnabled: Boolean by mutableStateOf(false)
+    val setIsRequestCorrectionButtonEnabled: (Boolean) -> Unit = { newIsRequestCorrectionEnabled ->
+        isRequestCorrectionButtonEnabled = newIsRequestCorrectionEnabled
+    }
 
     //leave & correction request
     var isHistoryInit by mutableStateOf(false)
@@ -251,12 +263,12 @@ class MainViewModel : ViewModel() {
     }
 
     var isRequestLeaveDialogShown: Boolean by mutableStateOf(false)
-    var isCorrectionLeaveDialogShown: Boolean by mutableStateOf(false)
+    var isCorrectionDialogShown: Boolean by mutableStateOf(false)
     fun toggleRequestLeaveDialog() {
         isRequestLeaveDialogShown = !isRequestLeaveDialogShown
     }
-    fun toggleCorrectionLeaveDialog() {
-        isCorrectionLeaveDialogShown = !isCorrectionLeaveDialogShown
+    fun toggleCorrectionDialog() {
+        isCorrectionDialogShown = !isCorrectionDialogShown
     }
 
     fun onRequestLeaveClicked() {
@@ -264,7 +276,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun onRequestCorrectionClicked() {
-        isCorrectionLeaveDialogShown = true
+        isCorrectionDialogShown = true
     }
 
     fun signOutFromAdmin() {

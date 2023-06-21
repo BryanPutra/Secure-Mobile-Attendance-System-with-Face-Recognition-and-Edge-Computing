@@ -88,7 +88,6 @@ object db_util {
         user.leaveleft = 0
         user.notelastupdated = curDateTime()
         user.monthlytoleranceworktime = map
-        user.leaveallow = false
         user.note = ""
         user.userid = userId
 
