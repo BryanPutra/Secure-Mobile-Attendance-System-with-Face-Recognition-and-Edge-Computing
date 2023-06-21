@@ -192,6 +192,18 @@ class MainViewModel : ViewModel() {
         leaveSelected = !leaveSelected
     }
 
+    var isCancelLeaveDialogShown by mutableStateOf(false)
+
+    fun toggleCancelLeaveDialog() {
+        isCancelLeaveDialogShown = !isCancelLeaveDialogShown
+    }
+
+    var isCancelCorrectionDialogShown by mutableStateOf(false)
+
+    fun toggleCancelCorrectionDialog() {
+        isCancelCorrectionDialogShown = !isCancelCorrectionDialogShown
+    }
+
     //calendar
     var isCalendarInit by mutableStateOf(false)
         private set

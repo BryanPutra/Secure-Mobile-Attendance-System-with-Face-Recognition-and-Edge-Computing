@@ -2,6 +2,7 @@ package com.example.Thesis_Project.backend.db
 
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -997,35 +998,35 @@ object db_util {
             }
     }
 
-    fun cancelLeaveRequest(
+    suspend fun cancelLeaveRequest(
         db: FirebaseFirestore,
         leaverequestid: String,
         callback: (Boolean) -> Unit
     ) {
         val leaveref = db.collection("leave_requests").document(leaverequestid)
-        db.runTransaction { transaction ->
-            val leavesnapshot = transaction.get(leaveref)
-            if (leavesnapshot.exists() && leavesnapshot.getString("rejectedby") == null && leavesnapshot.getString(
-                    "approvedby"
-                ) == null
-            ) {
-                transaction.delete(leaveref)
-            } else {
-                throw FirebaseFirestoreException(
-                    "Invalid request",
-                    FirebaseFirestoreException.Code.ABORTED
-                )
-            }
-            null
+        try {
+            db.runTransaction { transaction ->
+                val leavesnapshot = transaction.get(leaveref)
+                if (leavesnapshot.exists() &&
+                    leavesnapshot.getString("rejectedby") == null &&
+                    leavesnapshot.getString("approvedby") == null
+                ) {
+                    transaction.delete(leaveref)
+                    true
+                } else {
+                    throw FirebaseFirestoreException(
+                        "Invalid request",
+                        FirebaseFirestoreException.Code.ABORTED
+                    )
+                }
+            }.await()
+            Log.d("CANCELLEAVEREQUEST", "Leave request $leaverequestid successfully cancelled")
+            callback(true)
+        } catch (e: Exception) {
+            Log.e("Error Update Data", "cancelLeaveRequest $e")
+            callback(false)
         }
-            .addOnSuccessListener {
-                Log.d("CANCELLEAVEREQUEST", "Leave request $leaverequestid successfully cancelled")
-                callback(true)
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Update Data", "cancelLeaveRequest $exception")
-                callback(false)
-            }
+
     }
 
     fun cancelCorrectionRequest(

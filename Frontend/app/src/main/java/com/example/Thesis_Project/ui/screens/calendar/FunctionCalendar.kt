@@ -43,7 +43,7 @@ fun checkIfAttendanceOnCorrectionPending(
 }
 
 fun getDurationFromDates(dateFrom: LocalDate, dateTo: LocalDate): Int {
-    return ChronoUnit.DAYS.between(dateFrom, dateTo).toInt()
+    return ChronoUnit.DAYS.between(dateFrom, dateTo).toInt() + 1
 }
 
 fun checkIsSelected(dayOfMonth: DayOfMonthItem, mainViewModel: MainViewModel): Boolean {

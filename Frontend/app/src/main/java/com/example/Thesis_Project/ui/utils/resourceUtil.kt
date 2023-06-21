@@ -103,6 +103,11 @@ fun convertHexToComposeColor(colorString: String): Color {
     return Color(android.graphics.Color.parseColor("#" + colorString))
 }
 
+fun formatDateToStringForInputs(date: Date?): String? {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    return date?.let { dateFormat.format(it) }
+}
+
 fun formatDateToString(date: Date?): String? {
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
     return date?.let { dateFormat.format(it) }

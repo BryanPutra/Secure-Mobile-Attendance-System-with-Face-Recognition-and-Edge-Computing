@@ -10,9 +10,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
+import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
+import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.component_item_model.HistoryCardItem
+import com.example.Thesis_Project.ui.components.CancelLeaveDialog
 import com.example.Thesis_Project.ui.components.CorrectionRequestCard
 import com.example.Thesis_Project.ui.components.LeaveRequestCard
 import com.example.Thesis_Project.ui.components.MainHeader
@@ -31,10 +34,12 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
     val currentBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = currentBackStackEntry?.destination?.route
     val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isHistoryInit) }
+    var selectedViewLeaveRequest by remember { mutableStateOf<LeaveRequest?>(null) }
+    var selectedViewCorrectionRequest by remember { mutableStateOf<CorrectionRequest?>(null) }
 
     suspend fun getInitData() {
         coroutineScope {
-            launch{
+            launch {
                 db_util.getLeaveRequest(
                     mainViewModel.db,
                     mainViewModel.userData?.userid,
@@ -60,19 +65,6 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
         }
     }
 
-//    LaunchedEffect(mainViewModel.userData) {
-//        db_util.getLeaveRequest(
-//            mainViewModel.db,
-//            mainViewModel.userData?.userid,
-//            mainViewModel.setLeaveRequestList
-//        )
-//        db_util.getCorrectionRequest(
-//            mainViewModel.db,
-//            mainViewModel.userData?.userid,
-//            mainViewModel.setCorrectionRequestList
-//        )
-//    }
-
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -86,9 +78,12 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
             mainViewModel = mainViewModel
         )
         if (mainViewModel.correctionSelected) {
-            if (mainViewModel.correctionRequestList?.isEmpty() == true) {
+            if (mainViewModel.correctionRequestList?.isEmpty() == false) {
                 LazyColumn(
-                    modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
+                    modifier = Modifier.padding(
+                        horizontal = MaterialTheme.spacing.spaceMedium,
+                        vertical = MaterialTheme.spacing.spaceLarge
+                    ),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
                 ) {
                     item {
@@ -101,8 +96,7 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
                         CorrectionRequestCard(correctionCardItem)
                     }
                 }
-            }
-            else {
+            } else {
                 LazyColumn(
                     modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
@@ -122,7 +116,7 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
                 }
             }
         } else {
-            if (mainViewModel.leaveRequestList?.isEmpty() == true) {
+            if (mainViewModel.leaveRequestList?.isEmpty() == false) {
                 LazyColumn(
                     modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
@@ -134,11 +128,16 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
                         )
                     }
                     items(mainViewModel.leaveRequestList!!) { leaveCardItem ->
-                        LeaveRequestCard(leaveRequest = leaveCardItem)
+                        LeaveRequestCard(
+                            leaveRequest = leaveCardItem,
+                            mainViewModel
+                        ) { leaveRequestItem ->
+                            selectedViewLeaveRequest = leaveRequestItem
+                            mainViewModel.toggleCancelLeaveDialog()
+                        }
                     }
                 }
-            }
-            else {
+            } else {
                 LazyColumn(
                     modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
@@ -156,6 +155,12 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
                         )
                     }
                 }
+            }
+        }
+        if (mainViewModel.isCancelLeaveDialogShown) {
+            CancelLeaveDialog(selectedViewLeaveRequest, mainViewModel) {
+                mainViewModel.toggleCancelLeaveDialog()
+                selectedViewLeaveRequest = null
             }
         }
     }

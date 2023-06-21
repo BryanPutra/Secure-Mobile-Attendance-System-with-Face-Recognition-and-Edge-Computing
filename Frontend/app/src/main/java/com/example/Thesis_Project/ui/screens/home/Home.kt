@@ -34,6 +34,7 @@ import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.BottomNavigationBar
+import com.example.Thesis_Project.ui.components.CircularLoadingBar
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.formatDateToString
@@ -266,6 +267,7 @@ fun HomeContainer(rootNavController: NavHostController, navController: NavContro
                 db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
             }
         }
+        mainViewModel.setIsLoading(false)
     }
 
     LaunchedEffect(key1 = isLaunched) {
@@ -308,6 +310,10 @@ fun HomeContainer(rootNavController: NavHostController, navController: NavContro
                 }
             }
         )
+    }
+
+    if (mainViewModel.isLoading) {
+        CircularLoadingBar()
     }
 
     Box(

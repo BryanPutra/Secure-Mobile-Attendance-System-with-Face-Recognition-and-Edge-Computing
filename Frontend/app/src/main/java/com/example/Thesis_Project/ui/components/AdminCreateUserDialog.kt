@@ -26,10 +26,7 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import java.util.*
 
 @Composable
 fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
@@ -51,7 +48,6 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
     val postCreateUser: suspend (user: User) -> Unit = { user ->
         mainViewModel.setIsLoading(true)
         mainViewModel.companyVariable?.let {
-            mainViewModel.setIsLoading(true)
             try {
                 db_util.createUserAuth(
                     mainViewModel.createUserAuth,

@@ -43,7 +43,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
 
     var dateFrom by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
     var dateTo by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate.plusDays(1)) }
-    var detail by rememberSaveable { mutableStateOf("I forgot my homework fuck this world") }
+    var detail by rememberSaveable { mutableStateOf("") }
     var isPermission by rememberSaveable { mutableStateOf(false) }
     val disabledDatesState = rememberSaveable { mutableListOf<LocalDate>() }
 
@@ -52,6 +52,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
 
     var dateFromIsValid by remember { mutableStateOf(true) }
     var dateToIsValid by remember { mutableStateOf(true) }
+    var dateIsValid by remember { mutableStateOf(false)}
 
     var errorText by remember { mutableStateOf("") }
 
@@ -72,15 +73,26 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
     val postCreateLeaveRequest: suspend (leaveRequest: LeaveRequest) -> Unit = { leaveRequest ->
         mainViewModel.setIsLoading(true)
         try {
-            db_util.createLeaveRequest(mainViewModel.db, leaveRequest)
-            db_util.getLeaveRequest(mainViewModel.db, mainViewModel.userData?.userid,mainViewModel.setLeaveRequestList)
-            errorText = ""
-            mainViewModel.showToast(context, "Leave Request has been created successfully")
-            mainViewModel.toggleRequestLeaveDialog()
+            db_util.checkValidLeaveRequestDate(mainViewModel.db, mainViewModel.userData?.userid!!, leaveRequest.leavestart!!, leaveRequest.duration!!,) {isDateValid ->
+                dateIsValid = isDateValid == true
+            }
+            if (dateIsValid) {
+                db_util.createLeaveRequest(mainViewModel.db, leaveRequest)
+                db_util.getLeaveRequest(mainViewModel.db, mainViewModel.userData?.userid,mainViewModel.setLeaveRequestList)
+                errorText = ""
+                mainViewModel.showToast(context, "Leave Request has been created successfully")
+                mainViewModel.toggleRequestLeaveDialog()
+                dateIsValid = false
+            }
+            else {
+                mainViewModel.showToast(context, "There is a pending request in the selected date")
+                errorText = "There is a pending request in the selected date"
+            }
         } catch (e: Exception) {
             errorText = "Failed to create leave request: ${e.message}"
             Log.e("Error", "Failed to create leave request: $e")
         }
+        dateIsValid = false
         mainViewModel.setIsLoading(false)
     }
 

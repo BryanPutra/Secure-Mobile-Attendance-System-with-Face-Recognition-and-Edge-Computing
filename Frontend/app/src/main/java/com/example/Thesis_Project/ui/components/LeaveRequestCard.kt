@@ -1,6 +1,8 @@
 package com.example.Thesis_Project.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
@@ -17,10 +19,11 @@ import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToString
+import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
-fun LeaveRequestCard(leaveRequest: LeaveRequest) {
-    val leaveTitle: String = "Leave Request";
+fun LeaveRequestCard(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel, onViewClick: (LeaveRequest) -> Unit) {
+    val leaveTitle = "Leave Request";
 
     Box(
         modifier = Modifier
@@ -29,7 +32,14 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight(),
+                .wrapContentHeight()
+                .clickable{
+                    Log.d("leavecardlcick", "click: $leaveRequest")
+                    if (leaveRequest?.approvedflag == null || leaveRequest.approvedflag == false) {
+                        onViewClick(leaveRequest!!)
+                    }
+                }
+            ,
             colors = CardDefaults.cardColors(
                 containerColor = colorResource(
                     id = R.color.white
@@ -56,7 +66,7 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
                         .fillMaxHeight()
                 ) {
                     Text(
-                        text = leaveRequest.reason ?: "",
+                        text = leaveRequest?.reason ?: "",
                         color = colorResource(id = R.color.black),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -74,7 +84,7 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = formatDateToString(leaveRequest.createdate) ?: "",
+                        text = formatDateToString(leaveRequest?.createdate) ?: "",
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -84,7 +94,7 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
                         horizontalArrangement = Arrangement.spacedBy(space = MaterialTheme.spacing.spaceSmall)
                     ) {
                         when {
-                            leaveRequest.approvedflag == true -> {
+                            leaveRequest?.approvedflag == true -> {
                                 Icon(
                                     imageVector = Icons.Filled.CheckCircle,
                                     contentDescription = null,
@@ -99,7 +109,7 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
-                            leaveRequest.rejectedflag == true -> {
+                            leaveRequest?.rejectedflag == true -> {
                                 Icon(
                                     imageVector = Icons.Filled.Block, contentDescription = null,
                                     tint = colorResource(
@@ -108,12 +118,12 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
                                     modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
                                 )
                                 Text(
-                                    text = "Pending",
+                                    text = "Rejected",
                                     color = colorResource(id = R.color.gray_700),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
-                            leaveRequest.approvedflag == false && leaveRequest.rejectedflag == false -> {
+                            (leaveRequest?.approvedflag == null || leaveRequest.approvedflag == false) && (leaveRequest?.rejectedflag == null || leaveRequest.rejectedflag == false) -> {
                                 Icon(
                                     imageVector = Icons.Filled.Schedule, contentDescription = null,
                                     tint = colorResource(
@@ -122,7 +132,7 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest) {
                                     modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
                                 )
                                 Text(
-                                    text = "Rejected",
+                                    text = "Pending",
                                     color = colorResource(id = R.color.gray_700),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
