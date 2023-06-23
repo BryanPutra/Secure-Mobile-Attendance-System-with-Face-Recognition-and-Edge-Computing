@@ -38,14 +38,14 @@ class Model (context: Context){
         var fileName = "embsKnown"
         var modelDesc = "MobileFaceNet"
 
-        fun changeModel(status: Int){
-            modelName = if(status == 1) "facenet_quantized.tflite" else "mobile_face_net.tflite"
-            modelInput = if(status == 1) 160 else 112
-            modelOutput = if(status == 1) 128 else 192
-            threshold = if(status == 1) 0.65f else 0.5f
-            fileName = if(status == 1) "embsKnownFacenet" else "embsKnown"
-            modelDesc = if(status == 1) "Facenet" else "MobileFaceNet"
-        }
+//        fun changeModel(status: Int){
+//            modelName = if(status == 1) "facenet_quantized.tflite" else "mobile_face_net.tflite"
+//            modelInput = if(status == 1) 160 else 112
+//            modelOutput = if(status == 1) 128 else 192
+//            threshold = if(status == 1) 0.65f else 0.5f
+//            fileName = if(status == 1) "embsKnownFacenet" else "embsKnown"
+//            modelDesc = if(status == 1) "Facenet" else "MobileFaceNet"
+//        }
     }
 
     private var interpreter : Interpreter

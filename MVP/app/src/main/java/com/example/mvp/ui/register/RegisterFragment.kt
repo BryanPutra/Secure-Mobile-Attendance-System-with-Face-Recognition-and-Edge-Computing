@@ -49,17 +49,17 @@ class RegisterFragment : Fragment() {
 
         _binding!!.imageCaptureButton.setOnClickListener { takePhoto() }
 
-        _binding!!.modelChangeButton.text = if(registerViewModel.getStatus() == 1) "FaceNet" else "MobileFaceNet"
-        _binding!!.modelChangeButton.setOnClickListener{
-            val status = registerViewModel.changeModel()
-            if(status == 1){
-                _binding!!.modelChangeButton.text = "FaceNet"
-
-            } else {
-                binding!!.modelChangeButton.text = "MobileFaceNet"
-            }
-            Model.changeModel(status)
-        }
+//        _binding!!.modelChangeButton.text = if(registerViewModel.getStatus() == 1) "FaceNet" else "MobileFaceNet"
+//        _binding!!.modelChangeButton.setOnClickListener{
+//            val status = registerViewModel.changeModel()
+//            if(status == 1){
+//                _binding!!.modelChangeButton.text = "FaceNet"
+//
+//            } else {
+//                binding!!.modelChangeButton.text = "MobileFaceNet"
+//            }
+//            Model.changeModel(status)
+//        }
         return root
     }
 

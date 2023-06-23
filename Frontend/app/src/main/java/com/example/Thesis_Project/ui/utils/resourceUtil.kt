@@ -51,6 +51,17 @@ fun getUserMonthlyToleranceWorkTime(monthlyToleranceWorkTime: MutableMap<String,
     return null
 }
 
+fun makeTimeString(hours: Long, minutes: Long, seconds: Long): String {
+    return String.format("%02d Hours %02d Minutes", hours, minutes)
+}
+
+fun timeStringFromLong(milisecond: Long): String{
+    val seconds = (milisecond / 1000) % 60
+    val minutes = (milisecond / (1000 * 60) % 60)
+    val hours = (milisecond / (1000 * 60 * 60) % 24)
+    return makeTimeString(hours, minutes, seconds)
+}
+
 fun convertTimeMinutesIntToString(time: Int?): String {
     if (time != null) {
         val hours = time / 60
@@ -101,6 +112,26 @@ fun getEndOfYearDate(): Date{
 
 fun convertHexToComposeColor(colorString: String): Color {
     return Color(android.graphics.Color.parseColor("#" + colorString))
+}
+
+fun checkHaveSameDates(date1: Date?, date2: Date?): Boolean{
+
+    if (date1 == null || date2 == null){
+        return false
+    }
+
+    val calendar1 = Calendar.getInstance().apply { time = date1 }
+    val calendar2 = Calendar.getInstance().apply { time = date2 }
+
+    val year1 = calendar1.get(Calendar.YEAR)
+    val month1 = calendar1.get(Calendar.MONTH)
+    val day1 = calendar1.get(Calendar.DAY_OF_MONTH)
+
+    val year2 = calendar2.get(Calendar.YEAR)
+    val month2 = calendar2.get(Calendar.MONTH)
+    val day2 = calendar2.get(Calendar.DAY_OF_MONTH)
+
+    return year1 == year2 && month1 == month2 && day1 == day2
 }
 
 fun formatDateToStringForInputs(date: Date?): String? {

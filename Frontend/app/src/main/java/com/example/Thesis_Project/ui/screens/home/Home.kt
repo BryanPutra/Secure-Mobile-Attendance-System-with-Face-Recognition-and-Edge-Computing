@@ -1,6 +1,7 @@
 package com.example.Thesis_Project.ui.screens.home
 
-import android.util.Log
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -28,22 +30,28 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.components.ButtonMaxWidth
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.SharedPreferencesConstants.Companion.COMPANYVAR_KEY
+import com.example.Thesis_Project.SharedPreferencesConstants.Companion.PREFERENCES
+import com.example.Thesis_Project.TimerHelper
+import com.example.Thesis_Project.backend.db.db_models.Attendance
+import com.example.Thesis_Project.backend.db.db_models.CompanyParams
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.routes.HomeSubGraphRoutes
-import com.example.Thesis_Project.ui.components.BottomNavigationBar
-import com.example.Thesis_Project.ui.components.CircularLoadingBar
+import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
+import com.example.Thesis_Project.ui.utils.checkHaveSameDates
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import com.google.gson.Gson
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.*
 
 enum class homeTapState {
@@ -56,88 +64,30 @@ fun HomeScreen(
     navController: NavHostController = rememberNavController(),
     mainViewModel: MainViewModel
 ) {
+    var currentScreen by rememberSaveable { mutableStateOf<String?>(null) }
+
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController = navController) },
+        bottomBar = {
+            when (currentScreen) {
+                BottomNavBarRoutes.HomeScreen.route,
+                BottomNavBarRoutes.CalendarScreen.route,
+                BottomNavBarRoutes.HistoryScreen.route -> {
+                    BottomNavigationBar(navController = navController)
+                }
+            }
+        },
         content = { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {
                 HomeNavGraph(
                     rootNavController = rootNavController,
                     navController = navController,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    onScreenChanged = { screen ->
+                        currentScreen = screen
+                    }
                 )
             }
         })
-}
-
-@Composable
-fun TapCard(navController: NavController? = null, tapState: homeTapState) {
-
-}
-
-@Composable
-fun TapInCard(tapInDisabled: Boolean) {
-
-    var currentDateTime by rememberSaveable { mutableStateOf(Date()) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            currentDateTime = Date()
-            delay(60000) // Delay for 1 minute (60000 milliseconds)
-        }
-    }
-
-    val dateFormat = SimpleDateFormat("EEEE, dd MMM yyyy", Locale.ENGLISH)
-    val timeFormat = SimpleDateFormat("HH : mm", Locale.ENGLISH)
-    val formattedDate = dateFormat.format(currentDateTime)
-    val formattedTime = timeFormat.format(currentDateTime)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
-            containerColor = colorResource(
-                id = R.color.white
-            )
-        ), elevation = CardDefaults.cardElevation(defaultElevation = MaterialTheme.elevation.medium)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(MaterialTheme.spacing.spaceMedium),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(
-                space = MaterialTheme.spacing.spaceLarge,
-                alignment = Alignment.CenterVertically
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(
-                    space = MaterialTheme.spacing.spaceSmall,
-                    alignment = Alignment.CenterHorizontally
-                ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Today, contentDescription = null,
-                    tint = colorResource(
-                        id = R.color.blue_500
-                    ),
-                    modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
-                )
-                Text(text = formattedDate, style = MaterialTheme.typography.bodyLarge)
-            }
-            Text(
-                text = formattedTime,
-                style = MaterialTheme.typography.headlineLarge,
-                color = colorResource(id = R.color.blue_500)
-            )
-            ButtonMaxWidth(onClickCallback = { }, buttonText = "Tap In")
-        }
-    }
-}
-
-@Composable
-fun TapOutCard() {
-
 }
 
 @Composable
@@ -254,17 +204,47 @@ fun NotesSection(mainViewModel: MainViewModel) {
 }
 
 @Composable
-fun HomeContainer(rootNavController: NavHostController, navController: NavController, mainViewModel: MainViewModel) {
+fun HomeContainer(
+    rootNavController: NavHostController,
+    navController: NavController,
+    mainViewModel: MainViewModel
+) {
+    val context: Context = LocalContext.current
     val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isHomeInit) }
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
+    val sharedPreferences =
+        context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+    val gson = Gson()
+
     suspend fun getInitData() {
+        mainViewModel.setIsLoading(true)
         coroutineScope {
-            launch{
-                db_util.getUser(mainViewModel.db, mainViewModel.currentUser!!.uid, mainViewModel.setUserData)
+            launch {
+                db_util.getUser(
+                    mainViewModel.db,
+                    mainViewModel.currentUser!!.uid,
+                    mainViewModel.setUserData
+                )
+                if (mainViewModel.userData!!.embedding == null) {
+                    mainViewModel.setIsFaceRegistered(false)
+                } else {
+                    mainViewModel.setIsFaceRegistered(true)
+                }
             }
             launch {
+                if (sharedPreferences.contains(COMPANYVAR_KEY)) {
+                    val companyParamsString = sharedPreferences.getString(COMPANYVAR_KEY, null)
+                    val companyParams =
+                        gson.fromJson(companyParamsString, CompanyParams::class.java)
+                    mainViewModel.setCompanyVariable(companyParams)
+                    return@launch
+                }
                 db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+                val companyParamString = gson.toJson(mainViewModel.companyVariable)
+                val editor = sharedPreferences.edit()
+                editor.putString("companyVariablesKey", companyParamString)
+                editor.apply()
             }
         }
         mainViewModel.setIsLoading(false)
@@ -279,10 +259,34 @@ fun HomeContainer(rootNavController: NavHostController, navController: NavContro
         }
     }
 
-//    LaunchedEffect(Unit){
-//        db_util.getAllUser(mainViewModel.db, mainViewModel.setUserList)
-//        db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
-//    }
+    LaunchedEffect(Unit) {
+        runBlocking {
+            db_util.getAttendance(
+                mainViewModel.db,
+                mainViewModel.userData!!.userid,
+                db_util.startOfDay(LocalDate.now()),
+                db_util.endOfDay(LocalDate.now()),
+            ) { attendances ->
+                if (attendances == null) {
+                    mainViewModel.setTodayAttendance(null)
+                } else {
+                    mainViewModel.setTodayAttendance(attendances[0])
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(mainViewModel.todayAttendance){
+        if (mainViewModel.todayAttendance == null) {
+            mainViewModel.setTapInDisabled(false)
+        } else {
+            if (mainViewModel.todayAttendance!!.timeout == null) {
+                mainViewModel.setIsTappedIn(true)
+            } else {
+                mainViewModel.setTapInDisabled(true)
+            }
+        }
+    }
 
     if (logoutConfirmDialogShown) {
         AlertDialog(
@@ -312,8 +316,16 @@ fun HomeContainer(rootNavController: NavHostController, navController: NavContro
         )
     }
 
+//    if () {
+//        RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
+//    }
+
     if (mainViewModel.isLoading) {
         CircularLoadingBar()
+    }
+
+    if (mainViewModel.isFaceRegistered == false) {
+        RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
     }
 
     Box(
@@ -385,7 +397,12 @@ fun HomeContainer(rootNavController: NavHostController, navController: NavContro
                     fontWeight = FontWeight.Normal
                 )
             }
-            TapInCard(tapInDisabled = false)
+            if (mainViewModel.isTappedIn) {
+                TapOutCard(navController = navController, mainViewModel = mainViewModel)
+            }
+            else {
+                TapInCard(navController = navController, mainViewModel = mainViewModel)
+            }
             NotesSection(mainViewModel)
         }
         Box(

@@ -5,6 +5,7 @@ plugins {
     id 'kotlin-kapt'
     id 'com.google.gms.google-services'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.6.21'
 }
 
 android {
@@ -45,6 +46,7 @@ android {
     namespace 'com.example.Thesis_Project'
     buildFeatures {
         compose true
+        mlModelBinding true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.4.0'
@@ -63,9 +65,13 @@ android {
 }
 
 dependencies {
+    implementation 'org.tensorflow:tensorflow-lite-support:0.1.0'
+    implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
     def composeBom = platform("androidx.compose:compose-bom:$composebom_version")
     implementation(composeBom)
     androidTestImplementation(composeBom)
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
@@ -77,6 +83,16 @@ dependencies {
     kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
     implementation "androidx.activity:activity-ktx:$activity_version"
     implementation "androidx.activity:activity-compose:$activity_version"
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+    implementation 'com.google.android.gms:play-services-mlkit-face-detection:17.1.0'
+    implementation 'org.tensorflow:tensorflow-lite:+'
+    implementation "androidx.camera:camera-core:1.1.0-beta01"
+    implementation "androidx.camera:camera-camera2:1.1.0-beta01"
+    implementation "androidx.camera:camera-lifecycle:1.1.0-beta01"
+    implementation "androidx.camera:camera-video:1.1.0-beta01"
+    implementation "androidx.camera:camera-view:1.1.0-beta01"
+    implementation "androidx.camera:camera-extensions:1.1.0-beta01"
+    implementation "com.google.accompanist:accompanist-permissions:0.23.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$coroutines_version"

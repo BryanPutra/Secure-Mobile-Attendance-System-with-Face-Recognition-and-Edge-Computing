@@ -883,7 +883,7 @@ object db_util {
             }
     }
 
-    fun tapOutAttendance(
+    suspend fun tapOutAttendance(
         db: FirebaseFirestore,
         user: User,
         attendance: Attendance,
@@ -897,18 +897,16 @@ object db_util {
             newmap[LocalDate.now().month.value.toString()] =
                 newmap[LocalDate.now().month.value.toString()]!! + (worktime - companyparams.companyworktime!!)
         }
-        db.runTransaction { transaction ->
-            transaction.update(userref, "monthlytoleranceworktime", newmap)
-            transaction.update(attendanceref, "timeout", curDateTime(), "worktime", worktime)
-            null
+        try {
+            db.runTransaction { transaction ->
+                transaction.update(userref, "monthlytoleranceworktime", newmap)
+                transaction.update(attendanceref, "timeout", curDateTime(), "worktime", worktime)
+                null
+            }.await()
+            Log.d("TAPOUT", "Tap out attendance successful")
+        } catch (e: Exception) {
+            Log.e("TAPOUT", "tapOutAttendance $e")
         }
-            .addOnSuccessListener {
-                Log.d("TAPOUT", "Tap out attendance successful")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("TAPOUT", "tapOutAttendance $exception")
-            }
-
     }
 
     fun getHolidays(

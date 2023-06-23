@@ -174,7 +174,7 @@ object db_testing {
         }
     }
 
-    // Logic for tapout
+//     Logic for tapout
 //    fun testTapOutAttendance(db:FirebaseFirestore, user: User){
 //        db_util.getAttendance(db, user.userid!!,db_util.startOfDay(LocalDate.now()),db_util.endOfDay(LocalDate.now())) { data ->
 //            if (data != null) {
@@ -355,15 +355,15 @@ object db_testing {
 //        }
 //    }
 
-    fun testCancelLeaveRequest(db:FirebaseFirestore, leaverequestid: String){
-        db_util.cancelLeaveRequest(db, leaverequestid) { result ->
-            if (result) {
-                // Delete success
-            } else {
-                // Admin has already approved/rejected the request
-            }
-        }
-    }
+//    fun testCancelLeaveRequest(db:FirebaseFirestore, leaverequestid: String){
+//        db_util.cancelLeaveRequest(db, leaverequestid) { result ->
+//            if (result) {
+//                // Delete success
+//            } else {
+//                // Admin has already approved/rejected the request
+//            }
+//        }
+//    }
 
     fun testCancelCorrectionRequest(db:FirebaseFirestore, correctionrequestid: String){
         db_util.cancelCorrectionRequest(db, correctionrequestid) { result ->

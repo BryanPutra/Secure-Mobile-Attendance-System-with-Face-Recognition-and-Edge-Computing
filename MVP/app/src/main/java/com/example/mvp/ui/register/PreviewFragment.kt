@@ -50,7 +50,6 @@ class PreviewFragment : Fragment() {
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
                 .build()
             val faceDetector = FaceDetection.getClient(options)
-
             var bitmap = _binding!!.previewIv.drawable.toBitmap(600,800)
             bitmap = BitmapUtils.toGrayscale(bitmap)
             saveImage(bitmap,requireContext(),"Test")
