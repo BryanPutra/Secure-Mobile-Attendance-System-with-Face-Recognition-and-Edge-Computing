@@ -32,9 +32,9 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.COMPANYVAR_KEY
+import com.example.Thesis_Project.SharedPreferencesConstants.Companion.FACEREGISTERED_KEY
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.PREFERENCES
 import com.example.Thesis_Project.TimerHelper
-import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_models.CompanyParams
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
@@ -246,6 +246,13 @@ fun HomeContainer(
                 editor.putString("companyVariablesKey", companyParamString)
                 editor.apply()
             }
+            launch{
+                if (sharedPreferences.contains(FACEREGISTERED_KEY)){
+                    val registeredFaceBool = sharedPreferences.getBoolean(FACEREGISTERED_KEY, false)
+                    mainViewModel.setIsFaceRegistered(registeredFaceBool)
+                    return@launch
+                }
+            }
         }
         mainViewModel.setIsLoading(false)
     }
@@ -316,15 +323,11 @@ fun HomeContainer(
         )
     }
 
-//    if () {
-//        RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
-//    }
-
     if (mainViewModel.isLoading) {
         CircularLoadingBar()
     }
 
-    if (mainViewModel.isFaceRegistered == false) {
+    if (!mainViewModel.isFaceRegistered) {
         RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
     }
 

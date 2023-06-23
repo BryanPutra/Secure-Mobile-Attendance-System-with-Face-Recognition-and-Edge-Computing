@@ -35,6 +35,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
+import com.example.Thesis_Project.SharedPreferencesConstants
+import com.example.Thesis_Project.SharedPreferencesConstants.Companion.FACEREGISTERED_KEY
 import com.example.Thesis_Project.backend.camera.BitmapUtils
 import com.example.Thesis_Project.backend.camera.Model
 import com.example.Thesis_Project.backend.db.db_models.User
@@ -188,6 +190,8 @@ fun CameraView(
         bitmap = BitmapUtils.toGrayscale(bitmap)
         saveImage(bitmap, context, "Test")
         val inputImage = InputImage.fromBitmap(bitmap, 0)
+        val sharedPreferences =
+            context.getSharedPreferences(SharedPreferencesConstants.PREFERENCES, Context.MODE_PRIVATE)
 
         faceDetector.process(inputImage).addOnSuccessListener { faces ->
             if (faces.size == 0) {
@@ -218,7 +222,10 @@ fun CameraView(
                     val contents = savedEmbs.readText()
                     mainViewModel.setUserEmbeddings(contents)
                     db_util.registerFace(mainViewModel.db, mainViewModel.userData?.userid!!, contents)
-
+                    val editor = sharedPreferences.edit()
+                    editor.putBoolean(FACEREGISTERED_KEY, true)
+                    editor.apply()
+                    mainViewModel.setIsFaceRegistered(true)
                 } catch (ex: IllegalArgumentException) {
                     Toast.makeText(context, "Face too close to camera", Toast.LENGTH_SHORT).show()
                     return@addOnSuccessListener
