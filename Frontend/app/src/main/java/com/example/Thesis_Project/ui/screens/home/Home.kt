@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.screens.home
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,9 +33,9 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.COMPANYVAR_KEY
-import com.example.Thesis_Project.SharedPreferencesConstants.Companion.FACEREGISTERED_KEY
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.PREFERENCES
 import com.example.Thesis_Project.TimerHelper
+import com.example.Thesis_Project.backend.camera.Model
 import com.example.Thesis_Project.backend.db.db_models.CompanyParams
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
@@ -50,6 +51,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.*
@@ -226,11 +230,29 @@ fun HomeContainer(
                     mainViewModel.currentUser!!.uid,
                     mainViewModel.setUserData
                 )
-                if (mainViewModel.userData!!.embedding == null) {
-                    mainViewModel.setIsFaceRegistered(false)
-                } else {
-                    mainViewModel.setIsFaceRegistered(true)
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData!!.userid,
+                    db_util.firstDateOfMonth(),
+                    db_util.lastDateOfMonth(),
+                ) { attendances ->
+                    if (attendances == null) {
+                        mainViewModel.setAttendanceList(null)
+                    } else {
+                        mainViewModel.setAttendanceList(attendances)
+                    }
                 }
+                if (mainViewModel.userData!!.embedding != null) {
+                    //overwrite the embeddings di local with the one from database in case
+                    // clear data in app
+                    context.openFileOutput(Model.fileName,Context.MODE_PRIVATE).use{
+                        it.write(mainViewModel.userData!!.embedding?.toByteArray())
+                    }
+                    mainViewModel.setIsFaceRegistered(true)
+                    return@launch
+                }
+                //kalau check local lagi nanti ktemunya muka orang lain because reset embedding on registerface
+                mainViewModel.setIsFaceRegistered(false)
             }
             launch {
                 if (sharedPreferences.contains(COMPANYVAR_KEY)) {
@@ -243,15 +265,8 @@ fun HomeContainer(
                 db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
                 val companyParamString = gson.toJson(mainViewModel.companyVariable)
                 val editor = sharedPreferences.edit()
-                editor.putString("companyVariablesKey", companyParamString)
+                editor.putString(COMPANYVAR_KEY, companyParamString)
                 editor.apply()
-            }
-            launch{
-                if (sharedPreferences.contains(FACEREGISTERED_KEY)){
-                    val registeredFaceBool = sharedPreferences.getBoolean(FACEREGISTERED_KEY, false)
-                    mainViewModel.setIsFaceRegistered(registeredFaceBool)
-                    return@launch
-                }
             }
         }
         mainViewModel.setIsLoading(false)
@@ -280,17 +295,14 @@ fun HomeContainer(
                     mainViewModel.setTodayAttendance(attendances[0])
                 }
             }
-        }
-    }
-
-    LaunchedEffect(mainViewModel.todayAttendance){
-        if (mainViewModel.todayAttendance == null) {
-            mainViewModel.setTapInDisabled(false)
-        } else {
-            if (mainViewModel.todayAttendance!!.timeout == null) {
-                mainViewModel.setIsTappedIn(true)
+            if (mainViewModel.todayAttendance == null) {
+                mainViewModel.setTapInDisabled(false)
             } else {
-                mainViewModel.setTapInDisabled(true)
+                if (mainViewModel.todayAttendance!!.timeout == null) {
+                    mainViewModel.setIsTappedIn(true)
+                } else {
+                    mainViewModel.setTapInDisabled(true)
+                }
             }
         }
     }
@@ -303,6 +315,9 @@ fun HomeContainer(
             confirmButton = {
                 Button(
                     onClick = {
+                        val editor = sharedPreferences.edit()
+                        editor.remove(COMPANYVAR_KEY)
+                        editor.apply()
                         logoutConfirmDialogShown = false
                         mainViewModel.signOutFromUser()
                         navController.popBackStack()
@@ -323,106 +338,111 @@ fun HomeContainer(
         )
     }
 
-    if (mainViewModel.isLoading) {
+    if (!isLaunched) {
         CircularLoadingBar()
-    }
+    } else {
+        if (mainViewModel.isLoading) {
+            CircularLoadingBar()
+        }
 
-    if (!mainViewModel.isFaceRegistered) {
-        RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
-    }
+        if (!mainViewModel.isFaceRegistered) {
+            RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
+        }
 
-    Box(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .fillMaxSize()
-            .padding(MaterialTheme.spacing.spaceLarge),
-        contentAlignment = Alignment.TopCenter
-    ) {
-
-        Column(
-            modifier = Modifier.zIndex(2f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(
-                space = MaterialTheme.spacing.spaceLarge,
-                alignment = Alignment.CenterVertically
-            ),
+        Box(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .padding(MaterialTheme.spacing.spaceLarge),
+            contentAlignment = Alignment.TopCenter
         ) {
+
             Column(
+                modifier = Modifier.zIndex(2f),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(
                     space = MaterialTheme.spacing.spaceLarge,
                     alignment = Alignment.CenterVertically
                 ),
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(
                         space = MaterialTheme.spacing.spaceLarge,
-                        alignment = Alignment.End
-                    )
+                        alignment = Alignment.CenterVertically
+                    ),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = colorResource(
-                            id = R.color.gray_50
-                        ),
+                    Row(
                         modifier = Modifier
-                            .size(MaterialTheme.spacing.iconMedium)
-                            .clickable {
-                                navController.navigate(HomeSubGraphRoutes.CompanyVarScreen.route)
-                            }
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            space = MaterialTheme.spacing.spaceLarge,
+                            alignment = Alignment.End
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = colorResource(
+                                id = R.color.gray_50
+                            ),
+                            modifier = Modifier
+                                .size(MaterialTheme.spacing.iconMedium)
+                                .clickable {
+                                    navController.navigate(HomeSubGraphRoutes.CompanyVarScreen.route)
+                                }
+                        )
+                        Icon(
+                            imageVector = Icons.Rounded.Logout,
+                            contentDescription = null,
+                            tint = colorResource(
+                                id = R.color.gray_50
+                            ),
+                            modifier = Modifier
+                                .size(MaterialTheme.spacing.iconMedium)
+                                .clickable {
+                                    logoutConfirmDialogShown = true
+                                }
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Filled.AccountCircle,
+                        contentDescription = null,
+                        tint = colorResource(id = R.color.gray_50),
+                        modifier = Modifier.size(MaterialTheme.spacing.iconXXLarge)
                     )
-                    Icon(
-                        imageVector = Icons.Rounded.Logout,
-                        contentDescription = null,
-                        tint = colorResource(
-                            id = R.color.gray_50
-                        ),
-                        modifier = Modifier
-                            .size(MaterialTheme.spacing.iconMedium)
-                            .clickable {
-                                logoutConfirmDialogShown = true
-                            }
+                    Text(
+                        text = mainViewModel.userData?.name ?: "",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = colorResource(id = R.color.gray_50),
+                        fontWeight = FontWeight.Normal
                     )
                 }
-                Icon(
-                    imageVector = Icons.Filled.AccountCircle,
-                    contentDescription = null,
-                    tint = colorResource(id = R.color.gray_50),
-                    modifier = Modifier.size(MaterialTheme.spacing.iconXXLarge)
-                )
-                Text(
-                    text = mainViewModel.userData?.name ?: "",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colorResource(id = R.color.gray_50),
-                    fontWeight = FontWeight.Normal
-                )
+                if (isLaunched) {
+                    if (mainViewModel.isTappedIn) {
+                        TapOutCard(navController = navController, mainViewModel = mainViewModel)
+                    } else {
+                        TapInCard(navController = navController, mainViewModel = mainViewModel)
+                    }
+                }
+                NotesSection(mainViewModel)
             }
-            if (mainViewModel.isTappedIn) {
-                TapOutCard(navController = navController, mainViewModel = mainViewModel)
-            }
-            else {
-                TapInCard(navController = navController, mainViewModel = mainViewModel)
-            }
-            NotesSection(mainViewModel)
+            Box(
+                modifier = Modifier
+                    .width(231.dp)
+                    .height(225.dp)
+                    .graphicsLayer {
+                        this.scaleX = 2f
+                        this.scaleY = 2f
+                    }
+                    .background(
+                        colorResource(id = R.color.blue_500),
+                        RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge)
+                    )
+                    .offset(x = 0.dp, y = 0.dp)
+                    .zIndex(-100f)
+            )
         }
-        Box(
-            modifier = Modifier
-                .width(231.dp)
-                .height(225.dp)
-                .graphicsLayer {
-                    this.scaleX = 2f
-                    this.scaleY = 2f
-                }
-                .background(
-                    colorResource(id = R.color.blue_500),
-                    RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge)
-                )
-                .offset(x = 0.dp, y = 0.dp)
-                .zIndex(-100f)
-        )
     }
 }
 

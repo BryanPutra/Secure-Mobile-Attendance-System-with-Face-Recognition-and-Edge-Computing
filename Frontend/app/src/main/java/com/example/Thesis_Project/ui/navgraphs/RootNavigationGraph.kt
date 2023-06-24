@@ -1,13 +1,11 @@
 package com.example.Thesis_Project.ui.navgraphs
 
-import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.Thesis_Project.TimerHelper
 import com.example.Thesis_Project.ui.screens.admin.AdminHomeScreen
 import com.example.Thesis_Project.ui.screens.home.HomeScreen
 import com.example.Thesis_Project.ui.utils.timeStringFromLong
@@ -18,27 +16,7 @@ import java.util.*
 
 @Composable
 fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainViewModel) {
-    val context: Context = LocalContext.current
     val isLaunched by rememberSaveable { mutableStateOf(false) }
-    val timerHelper = TimerHelper(context)
-
-    class TimeTask(): TimerTask(){
-        override fun run() {
-            if (timerHelper.timerCounting()){
-                val time = Date().time - timerHelper.startTime()!!.time
-                mainViewModel.setWorkHourTime(timeStringFromLong(time))
-            }
-        }
-    }
-
-    if (timerHelper.timerCounting()){
-        mainViewModel.startTimer(timerHelper)
-    }
-    else {
-        mainViewModel.stopTimer(timerHelper)
-    }
-
-    mainViewModel.timer.scheduleAtFixedRate(TimeTask(), 1000L, 1000L)
 
     LaunchedEffect(mainViewModel.currentUser) {
         if (!isLaunched) {

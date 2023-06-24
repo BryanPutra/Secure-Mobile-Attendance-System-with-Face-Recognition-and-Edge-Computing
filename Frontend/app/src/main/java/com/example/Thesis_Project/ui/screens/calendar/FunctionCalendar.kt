@@ -22,8 +22,7 @@ fun getAttendanceByDay(day: String, mainViewModel: MainViewModel): Attendance? {
 }
 
 fun getAttendanceByDate(date: LocalDate, mainViewModel: MainViewModel): Attendance? {
-    var tempAttendance: Attendance? = null
-    tempAttendance = mainViewModel.attendanceList?.find { attendance ->
+    val tempAttendance: Attendance? = mainViewModel.attendanceList?.find { attendance ->
         db_util.dateToLocalDate(attendance.timein!!) == date
     }
     return tempAttendance
@@ -92,7 +91,7 @@ fun setDateTextColor(
     return when {
         isSelected -> R.color.white
         isAbsent -> R.color.red_800
-        isLeave -> R.color.light_orange_300
+        isLeave -> R.color.purple_500
         isAttended -> R.color.teal_600
         else -> R.color.black
     }

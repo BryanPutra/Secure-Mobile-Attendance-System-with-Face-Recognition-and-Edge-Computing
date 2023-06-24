@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -14,17 +13,13 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
 import com.example.Thesis_Project.R
-import com.example.Thesis_Project.TimerHelper
 import com.example.Thesis_Project.backend.db.db_models.Attendance
-import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
-import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
-import java.util.*
 
 @Composable
 fun TapOutCard(navController: NavController, mainViewModel: MainViewModel) {
@@ -32,13 +27,25 @@ fun TapOutCard(navController: NavController, mainViewModel: MainViewModel) {
     val tapOutScope = rememberCoroutineScope()
 
     val context: Context = LocalContext.current
-    val timerHelper = TimerHelper(context)
 
     val postTimeOut: suspend (attendance: Attendance) -> Unit = { attendance ->
         mainViewModel.setIsLoading(true)
         try {
+            Log.e("check null exception", "$attendance")
             db_util.tapOutAttendance(mainViewModel.db, mainViewModel.userData!!, attendance, mainViewModel.companyVariable!!)
-            mainViewModel.stopWorkHourTimer(timerHelper)
+            db_util.getAttendance(
+                mainViewModel.db,
+                mainViewModel.userData!!.userid,
+                db_util.firstDateOfMonth(),
+                db_util.lastDateOfMonth(),
+            ) { attendances ->
+                if (attendances == null) {
+                    mainViewModel.setAttendanceList(null)
+                } else {
+                    mainViewModel.setAttendanceList(attendances)
+                }
+            }
+            mainViewModel.stopWorkHourTimer(mainViewModel.timerHelper)
             mainViewModel.showToast(context, "Tapped out successfully")
             navController.popBackStack()
             navController.navigate(NavGraphs.HOME)
@@ -54,6 +61,7 @@ fun TapOutCard(navController: NavController, mainViewModel: MainViewModel) {
         val attendance = Attendance(
             attendanceid = mainViewModel.todayAttendance?.attendanceid,
             userid = mainViewModel.todayAttendance?.userid,
+            timein = mainViewModel.todayAttendance?.timein
             )
         tapOutScope.launch {
             postTimeOut(attendance)
@@ -92,7 +100,7 @@ fun TapOutCard(navController: NavController, mainViewModel: MainViewModel) {
                 style = MaterialTheme.typography.headlineLarge,
                 color = colorResource(id = R.color.blue_500)
             )
-            ButtonMaxWidth(onClickCallback = { onTapOut() }, buttonText = "Tap In")
+            ButtonMaxWidth(onClickCallback = { onTapOut() }, buttonText = "Tap Out")
         }
     }
 }

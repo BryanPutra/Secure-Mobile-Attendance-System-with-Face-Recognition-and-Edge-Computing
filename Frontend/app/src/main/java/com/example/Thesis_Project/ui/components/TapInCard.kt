@@ -14,6 +14,7 @@ import com.example.Thesis_Project.R
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
+import com.example.Thesis_Project.ui.utils.checkDateIsWeekend
 import com.example.Thesis_Project.ui.utils.replaceTimeInDate
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
@@ -30,13 +31,13 @@ fun TapInCard(navController: NavController, mainViewModel: MainViewModel) {
     LaunchedEffect(Unit) {
         while (true) {
             currentDateTime = Date()
-            if (currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime){
+            if (mainViewModel.todayAttendance?.timeout == null && currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime && !checkDateIsWeekend(currentDateTime)){
                 mainViewModel.setTapInDisabled(true)
             }
             else {
                 mainViewModel.setTapInDisabled(false)
             }
-            delay(60000) // Delay for 1 minute (60000 milliseconds)
+            delay(1000) // Delay for 1 minute (60000 milliseconds)
         }
     }
 

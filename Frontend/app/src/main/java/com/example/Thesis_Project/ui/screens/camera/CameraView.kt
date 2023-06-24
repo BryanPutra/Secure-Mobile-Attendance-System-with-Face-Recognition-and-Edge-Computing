@@ -36,7 +36,6 @@ import androidx.compose.ui.zIndex
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import com.example.Thesis_Project.SharedPreferencesConstants
-import com.example.Thesis_Project.SharedPreferencesConstants.Companion.FACEREGISTERED_KEY
 import com.example.Thesis_Project.backend.camera.BitmapUtils
 import com.example.Thesis_Project.backend.camera.Model
 import com.example.Thesis_Project.backend.db.db_models.User
@@ -188,7 +187,6 @@ fun CameraView(
         val faceDetector = FaceDetection.getClient(options)
         var bitmap = Bitmap.createScaledBitmap(mainViewModel.imgBitmap!!, 600, 800, true)
         bitmap = BitmapUtils.toGrayscale(bitmap)
-        saveImage(bitmap, context, "Test")
         val inputImage = InputImage.fromBitmap(bitmap, 0)
         val sharedPreferences =
             context.getSharedPreferences(SharedPreferencesConstants.PREFERENCES, Context.MODE_PRIVATE)
@@ -218,13 +216,9 @@ fun CameraView(
                     val model = Model(context)
                     model.registerFace(croppedBitmap)
                     val savedEmbs = File(context.filesDir, "embsKnown")
-                    Log.d("savedembds", "${savedEmbs.exists()}")
                     val contents = savedEmbs.readText()
                     mainViewModel.setUserEmbeddings(contents)
                     db_util.registerFace(mainViewModel.db, mainViewModel.userData?.userid!!, contents)
-                    val editor = sharedPreferences.edit()
-                    editor.putBoolean(FACEREGISTERED_KEY, true)
-                    editor.apply()
                     mainViewModel.setIsFaceRegistered(true)
                 } catch (ex: IllegalArgumentException) {
                     Toast.makeText(context, "Face too close to camera", Toast.LENGTH_SHORT).show()
@@ -259,7 +253,7 @@ fun CameraView(
         ) {
             if (mainViewModel.hasTakenPicture) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.spaceLarge),
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -276,14 +270,22 @@ fun CameraView(
                 }
             }
             else {
-                ButtonHalfWidth(onClick = {
-                    takePhoto(
-                        imageCapture = imageCapture,
-                        executor = executor,
-                        onError = onError,
-                        mainViewModel = mainViewModel
-                    )
-                }, buttonText = "Take Photo")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.spaceLarge),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(0.5f)) {
+                        ButtonHalfWidth(onClick = {
+                            takePhoto(
+                                imageCapture = imageCapture,
+                                executor = executor,
+                                onError = onError,
+                                mainViewModel = mainViewModel
+                            )
+                        }, buttonText = "Take Photo")
+                    }
+                }
+
             }
         }
     }

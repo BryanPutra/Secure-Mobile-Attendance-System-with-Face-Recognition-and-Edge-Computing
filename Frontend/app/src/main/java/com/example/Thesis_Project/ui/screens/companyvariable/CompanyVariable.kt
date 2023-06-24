@@ -13,6 +13,8 @@ import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -23,13 +25,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.CompanyQuotasRow
-import com.example.Thesis_Project.ui.utils.convertTimeMinutesIntToString
-import com.example.Thesis_Project.ui.utils.formatDateToStringWithOrdinal
-import com.example.Thesis_Project.ui.utils.getListOfAttendancesByMonth
+import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import java.time.LocalDate
 
@@ -37,17 +38,19 @@ import java.time.LocalDate
 fun CompanyVariableScreen(navController: NavController, mainViewModel: MainViewModel) {
     CompanyVariableContainer(navController, mainViewModel)
 }
+
 @Composable
 fun CompanyVariableContainer(navController: NavController, mainViewModel: MainViewModel) {
 
     val currentMonthInt = LocalDate.now().monthValue
 
+
     fun getPermissionTotal(): Int {
-        if (mainViewModel.leaveRequestList == null){
+        if (mainViewModel.leaveRequestList == null) {
             return mainViewModel.companyVariable?.maxpermissionsleft ?: 12
         }
         val tempLeaveRequestList = mutableListOf<LeaveRequest>()
-        for(i in mainViewModel.leaveRequestList!!){
+        for (i in mainViewModel.leaveRequestList!!) {
             tempLeaveRequestList.add(i)
         }
         val tempPermissionRequestList = tempLeaveRequestList.filter { it.permissionflag == true }
@@ -78,7 +81,9 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                     tint = colorResource(
                         id = R.color.gray_50
                     ),
-                    modifier = Modifier.size(MaterialTheme.spacing.iconLarge).clickable { navController.popBackStack() },
+                    modifier = Modifier
+                        .size(MaterialTheme.spacing.iconLarge)
+                        .clickable { navController.popBackStack() },
                 )
                 Text(
                     text = "Profile",
@@ -141,7 +146,11 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                     }
                 }
             }
-            Box(modifier = Modifier.fillMaxWidth().padding(top = MaterialTheme.spacing.spaceXXLarge)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.spacing.spaceXXLarge)
+            ) {
                 Text(
                     "Your Quotas",
                     style = MaterialTheme.typography.headlineSmall,
@@ -166,15 +175,23 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                         alignment = Alignment.CenterVertically
                     )
                 ) {
-                    CompanyQuotasRow(name = "Leave left", value = "${mainViewModel.userData?.leaveleft ?: 0} Days")
-                    CompanyQuotasRow(name = "Permission left", value = "${getPermissionTotal()} Days")
-                    CompanyQuotasRow(name = "Tolerance work time ", value = convertTimeMinutesIntToString(
-                        mainViewModel.userData?.monthlytoleranceworktime?.get("$currentMonthInt")
-                    ) ?: "")
-                    CompanyQuotasRow(name = "Attended this month", value = " ${mainViewModel.attendanceList?.let {
-                        getListOfAttendancesByMonth(
-                            it, currentMonthInt)?.size ?: 0
-                    } ?: 0} Days", isUnderlined = false)
+                    CompanyQuotasRow(
+                        name = "Leave left",
+                        value = "${mainViewModel.userData?.leaveleft ?: 0} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Permission left",
+                        value = "${getPermissionTotal()} Days"
+                    )
+                    CompanyQuotasRow(
+                        name = "Tolerance work time ", value = convertTimeMinutesIntToString(
+                            mainViewModel.userData?.monthlytoleranceworktime?.get("$currentMonthInt")
+                        ) ?: ""
+                    )
+                    CompanyQuotasRow(
+                        name = "Attended this month",
+                        value = " ${mainViewModel.attendanceList?.let { getAttended(it)?.size } ?: 0} Days",
+                        isUnderlined = false)
                 }
             }
         }

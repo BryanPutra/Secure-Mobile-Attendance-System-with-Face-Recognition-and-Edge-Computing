@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.utils
 
 import androidx.compose.ui.graphics.Color
 import com.example.Thesis_Project.backend.db.db_models.Attendance
+import com.example.Thesis_Project.backend.db.db_util
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -15,32 +16,55 @@ fun isAttended(attendance: Attendance?): Boolean {
     return attendance.absentflag == false && attendance.permissionflag == false && attendance.leaveflag == false && attendance.timeout != null
 }
 
-fun getListOfAttendancesByMonth(
-    attendances: List<Attendance>,
-    month: Int
-): MutableList<Attendance>? {
+//fun getListOfAttendancesByMonth(
+//    attendances: List<Attendance>,
+//    month: Int
+//): MutableList<Attendance>? {
+//    if (attendances.isEmpty()) {
+//        return null
+//    }
+//    val attendedAttendances = mutableListOf<Attendance>()
+//    val filteredAttendances = mutableListOf<Attendance>()
+//    val calendar = Calendar.getInstance()
+//    val dateFormat = SimpleDateFormat("MM", Locale.ENGLISH)
+//
+//    for (attendance in attendances) {
+//        if (isAttended(attendance)) {
+//            attendedAttendances.add(attendance)
+//        }
+//    }
+//
+//    for (attendance in attendedAttendances) {
+//        calendar.time = attendance.timeout!!
+//        val dateMonth = dateFormat.format(calendar.time).toInt()
+//        if (dateMonth == month) {
+//            filteredAttendances.add(attendance)
+//        }
+//    }
+//    return filteredAttendances
+//}
+
+fun getAttendanceByDate(date: LocalDate?, attendances: List<Attendance>): Attendance? {
+    if (date == null) {
+        return null
+    }
+    return attendances.find { checkHaveSameDates(it.timein, db_util.localDateToDate(date)) }
+}
+
+fun getAttended(attendances: List<Attendance>): MutableList<Attendance>? {
     if (attendances.isEmpty()) {
         return null
     }
+
     val attendedAttendances = mutableListOf<Attendance>()
-    val filteredAttendances = mutableListOf<Attendance>()
-    val calendar = Calendar.getInstance()
-    val dateFormat = SimpleDateFormat("MM", Locale.ENGLISH)
 
     for (attendance in attendances) {
         if (isAttended(attendance)) {
             attendedAttendances.add(attendance)
         }
     }
+    return attendedAttendances
 
-    for (attendance in attendedAttendances) {
-        calendar.time = attendance.timeout!!
-        val dateMonth = dateFormat.format(calendar.time).toInt()
-        if (dateMonth == month) {
-            filteredAttendances.add(attendance)
-        }
-    }
-    return filteredAttendances
 }
 
 fun getUserMonthlyToleranceWorkTime(monthlyToleranceWorkTime: MutableMap<String, Int>?): String? {
@@ -90,6 +114,16 @@ fun replaceTimeInDate(date: Date?, time: String?): Date? {
         set(Calendar.SECOND, 0)
     }
     return calendar.time
+}
+
+fun checkDateIsWeekend(date: Date?): Boolean {
+    if (date == null){
+        return false
+    }
+    val calendar = Calendar.getInstance()
+    calendar.time = date
+    val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+    return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY
 }
 
 fun checkSixMonthsLeft(startDate: Date, endDate: Date): Boolean {
@@ -165,7 +199,7 @@ fun formatDateToStringWithDay(date: Date?): String? {
 }
 
 fun formatDateToStringTimeOnly(date: Date?): String? {
-    val dateFormat = SimpleDateFormat("mm:ss", Locale.ENGLISH)
+    val dateFormat = SimpleDateFormat("HH:mm", Locale.ENGLISH)
     return date?.let { dateFormat.format(it) }
 }
 
