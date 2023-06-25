@@ -33,8 +33,10 @@ import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.isValidEmail
 import com.example.Thesis_Project.ui.utils.isValidPassword
 import com.example.Thesis_Project.viewmodel.MainViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 @Composable
 fun LoginUserScreen(navController: NavController, mainViewModel: MainViewModel) {
@@ -102,17 +104,20 @@ fun LoginUserInputs(navController: NavController, mainViewModel: MainViewModel) 
     var errorText by remember { mutableStateOf("") }
 
     val postSignIn: suspend () -> Unit = {
-        runBlocking {
-            mainViewModel.setIsLoading(true)
-            mainViewModel.signIn(email, password, {
+        mainViewModel.setIsLoading(true)
+        mainViewModel.signIn(email, password, {
+            withContext(
+                Dispatchers.Main
+            ) {
                 navController.navigate(NavGraphs.HOME) {
                     popUpTo(NavGraphs.ROOT) { saveState = true }
                 }
                 mainViewModel.showToast(context, "Logged in as User")
-            }, { errorMessage -> errorText = errorMessage })
-            mainViewModel.setIsLoading(false)
-        }
+                mainViewModel.setIsLoading(false)
+            }
+        }, { errorMessage -> errorText = errorMessage })
     }
+
     fun onSubmitLogin() {
         emailIsValid = isValidEmail(email)
         passwordIsValid = isValidPassword(password)

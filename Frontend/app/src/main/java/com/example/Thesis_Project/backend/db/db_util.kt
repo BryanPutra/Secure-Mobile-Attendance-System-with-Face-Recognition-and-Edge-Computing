@@ -9,7 +9,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.time.*
 import java.time.temporal.TemporalAdjusters.firstDayOfYear
 import java.time.temporal.TemporalAdjusters.lastDayOfYear
@@ -139,14 +141,24 @@ object db_util {
         }
     }
 
-    fun checkUserIsAdmin(db: FirebaseFirestore, userid: String, callback: (Boolean?) -> Unit) {
-        db.collection("users").document(userid)
-            .get()
-            .addOnSuccessListener { snapshot ->
+    suspend fun checkUserIsAdmin(
+        db: FirebaseFirestore,
+        userid: String,
+        callback: (Boolean?) -> Unit
+    ) {
+        withContext(
+            Dispatchers.Main
+        ) {
+            try {
+                val snapshot = db.collection("users").document(userid).get().await()
                 if (snapshot.exists()) {
                     val temp = snapshot.toObject<User>()
-                    if (temp!!.adminflag!!) {
-                        callback(true)
+                    if (temp != null) {
+                        if (temp.adminflag == true) {
+                            callback(true)
+                        } else {
+                            callback(false)
+                        }
                     } else {
                         callback(false)
                     }
@@ -154,11 +166,12 @@ object db_util {
                     Log.e("CHECKUSERISADMIN", "User not found")
                     callback(false)
                 }
-            }
-            .addOnFailureListener { exception ->
+            } catch (exception: Exception) {
                 Log.e("Error Fetch Data", "checkUserIsAdmin $exception")
                 callback(null)
             }
+        }
+
     }
 
     fun updateUserNote(db: FirebaseFirestore, user: User) {
@@ -201,27 +214,6 @@ object db_util {
             Log.e("Error Fetching Data", "getAttendance $exception")
             callback(null)
         }
-//        var query = db.collection("attendances")
-//            .whereGreaterThanOrEqualTo("timein", dateStart)
-//            .whereLessThanOrEqualTo("timein", dateEnd)
-//
-//        if (userId != null) {
-//            query = query.whereEqualTo("userid", userId)
-//        }
-//
-//        query.get()
-//            .addOnSuccessListener { querySnapshot ->
-//                val attendances = mutableListOf<Attendance>()
-//                for (i in querySnapshot) {
-//                    val temp = i.toObject<Attendance>()
-//                    attendances.add(temp)
-//                }
-//                callback(attendances)
-//            }
-//            .addOnFailureListener { exception ->
-//                Log.e("Error Fetching Data", "getAttendance $exception")
-//                callback(null)
-//            }
     }
 
     // userid == null -> get all users
@@ -1097,7 +1089,8 @@ object db_util {
                                     for (i in 1..14) {
                                         val tempdate = LocalDate.now().minusDays(i.toLong())
                                         if (!skippeddates.contains(tempdate) && tempdate.dayOfWeek != DayOfWeek.SATURDAY && tempdate.dayOfWeek != DayOfWeek.SUNDAY
-                                            && tempdate.isAfter(dateToLocalDate(user.joindate!!))) {
+                                            && tempdate.isAfter(dateToLocalDate(user.joindate!!))
+                                        ) {
                                             val collection = db.collection("attendances").document()
                                             val attendanceref =
                                                 db.collection("attendances").document(collection.id)

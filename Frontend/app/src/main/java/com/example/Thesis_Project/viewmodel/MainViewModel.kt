@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import com.example.Thesis_Project.backend.db.db_models.*
 import androidx.compose.runtime.getValue
 import com.example.Thesis_Project.TimerHelper
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
@@ -17,6 +18,9 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.pow
@@ -54,7 +58,6 @@ class MainViewModel(val application: Application) : ViewModel() {
     }
 
     var userData: User? by mutableStateOf(null)
-
     val setUserData: (User?) -> Unit = { newUserData ->
         if (newUserData != null) {
             userData = newUserData
@@ -63,6 +66,14 @@ class MainViewModel(val application: Application) : ViewModel() {
             Log.d("set user data", "no user found")
             userData = null
         }
+    }
+
+    var isLoggedInAsAdmin: Boolean by mutableStateOf(false)
+    val setIsLoggedInAsAdmin: (Boolean?) -> Unit = { newIsLoggedInAsAdmin ->
+        if (newIsLoggedInAsAdmin != null) {
+            isLoggedInAsAdmin = newIsLoggedInAsAdmin
+        }
+        Log.d("check login as admin", "admin: $isLoggedInAsAdmin")
     }
 
     var isFaceRegistered: Boolean by mutableStateOf(false)
@@ -92,40 +103,54 @@ class MainViewModel(val application: Application) : ViewModel() {
         Log.d("check admin", "admin: $isUserAdmin")
     }
 
-    fun checkAuth(): Boolean {
-        return currentUser != null
-    }
-
-    fun signIn(
+    suspend fun signIn(
         email: String,
         password: String,
-        onSuccess: () -> Unit,
+        onSuccess: suspend () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    currentUser = auth.currentUser
-                    if (currentUser != null) {
-                        Log.d(
-                            "currentUser",
-                            "currentUser: ${currentUser}, uid: ${currentUser!!.uid}"
-                        )
-                        onSuccess()
-                    } else {
-                        onFailure("No user detected")
-                    }
+        withContext(Dispatchers.IO) {
+            try {
+                val authResult = Tasks.await(auth.signInWithEmailAndPassword(email, password))
+                // Authentication successful
+                setCurrentUser(authResult.user)
+                onSuccess()
+            } catch (exception: Exception) {
+                Log.e("BRUWIAHIDAW U", "$exception")
+                // Handle authentication failure
+                if (exception is FirebaseAuthException) {
+                    val errorCode = exception.errorCode
+                    val errorMessage = exception.message
+                    onFailure(errorMessage ?: "Login failed with error code: $errorCode")
                 } else {
-                    val exception = task.exception
-                    if (exception is FirebaseAuthException) {
-                        val errorCode = exception.errorCode
-                        val errorMessage = exception.message
-                        onFailure(errorMessage ?: "Login failed with error code: $errorCode")
-                    } else {
-                        onFailure("Login failed")
-                    }
+                    onFailure("Login failed")
                 }
             }
+        }
+//        auth.signInWithEmailAndPassword(email, password)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    setCurrentUser(auth.currentUser)
+//                    if (currentUser != null) {
+//                        Log.d(
+//                            "currentUser",
+//                            "currentUser: ${currentUser}, uid: ${currentUser!!.uid}"
+//                        )
+//                        onSuccess()
+//                    } else {
+//                        onFailure("No user detected")
+//                    }
+//                } else {
+//                    val exception = task.exception
+//                    if (exception is FirebaseAuthException) {
+//                        val errorCode = exception.errorCode
+//                        val errorMessage = exception.message
+//                        onFailure(errorMessage ?: "Login failed with error code: $errorCode")
+//                    } else {
+//                        onFailure("Login failed")
+//                    }
+//                }
+//            }
     }
 
     fun changePassword(email: String) {
@@ -451,7 +476,7 @@ class MainViewModel(val application: Application) : ViewModel() {
     fun signOutFromAdmin() {
         setIsAdminHomeInit(false)
         setIsAdminUsersInit(false)
-
+        setIsLoggedInAsAdmin(false)
         isUserAdmin = false
         userData = null
         currentUser = null

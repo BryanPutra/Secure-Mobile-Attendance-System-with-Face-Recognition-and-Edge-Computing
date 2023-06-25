@@ -110,6 +110,7 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
                 mainViewModel.currentUser!!.uid
             ) { isAdmin ->
                 mainViewModel.setUserAdmin(isAdmin)
+                mainViewModel.setIsLoggedInAsAdmin(isAdmin)
                 if (mainViewModel.isUserAdmin) {
                     navController.navigate(NavGraphs.ADMIN) {
                         popUpTo(NavGraphs.ROOT) { saveState = true }

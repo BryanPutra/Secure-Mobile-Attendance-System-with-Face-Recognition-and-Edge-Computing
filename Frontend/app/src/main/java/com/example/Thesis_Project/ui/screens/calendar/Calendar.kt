@@ -298,8 +298,9 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     mainViewModel.userData?.userid,
                     firstDateOfMonth,
                     lastDateOfMonth,
-                    mainViewModel.setAttendanceList
-                )
+                ) { attendanceList ->
+                    mainViewModel.setAttendanceList(attendanceList)
+                }
                 mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
                     getAttendanceByDate(
                         mainViewModel.calendarSelectedDate,

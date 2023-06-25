@@ -1,6 +1,7 @@
 package com.example.Thesis_Project.ui.screens.home
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -204,9 +205,8 @@ fun HomeContainer(
     mainViewModel: MainViewModel
 ) {
     val context: Context = LocalContext.current
-    val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isHomeInit) }
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
-
+    val initHomeScope = rememberCoroutineScope()
     val sharedPreferences =
         context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
     val gson = Gson()
@@ -218,8 +218,10 @@ fun HomeContainer(
                 db_util.getUser(
                     mainViewModel.db,
                     mainViewModel.currentUser!!.uid,
-                    mainViewModel.setUserData
-                )
+                ) { user ->
+                    mainViewModel.setUserData(user)
+                }
+                Log.e("getuserdataoninit", "${mainViewModel.userData}" + "${mainViewModel.currentUser}")
                 db_util.getAttendance(
                     mainViewModel.db,
                     mainViewModel.userData!!.userid,
@@ -232,10 +234,11 @@ fun HomeContainer(
                         mainViewModel.setAttendanceList(attendances)
                     }
                 }
+                Log.e("getAttendanceInit", "${mainViewModel.userData}" + "${mainViewModel.attendanceList}")
                 if (mainViewModel.userData!!.embedding != null) {
                     //overwrite the embeddings di local with the one from database in case
                     // clear data in app
-                    context.openFileOutput(Model.fileName,Context.MODE_PRIVATE).use{
+                    context.openFileOutput(Model.fileName, Context.MODE_PRIVATE).use {
                         it.write(mainViewModel.userData!!.embedding?.toByteArray())
                     }
                     mainViewModel.setIsFaceRegistered(true)
@@ -243,6 +246,7 @@ fun HomeContainer(
                 }
                 //kalau check local lagi nanti ktemunya muka orang lain because reset embedding on registerface
                 mainViewModel.setIsFaceRegistered(false)
+
                 db_util.getAttendance(
                     mainViewModel.db,
                     mainViewModel.userData!!.userid,
@@ -273,31 +277,33 @@ fun HomeContainer(
                     mainViewModel.setCompanyVariable(companyParams)
                     return@launch
                 }
-                db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+                db_util.getCompanyParams(mainViewModel.db) { companyVariables ->
+                    mainViewModel.setCompanyVariable(companyVariables)
+                }
                 val companyParamString = gson.toJson(mainViewModel.companyVariable)
                 val editor = sharedPreferences.edit()
                 editor.putString(COMPANYVAR_KEY, companyParamString)
                 editor.apply()
             }
         }
-        mainViewModel.setIsLoading(false)
     }
-
-    LaunchedEffect(key1 = isLaunched) {
-        if (!isLaunched) {
+    LaunchedEffect(Unit) {
+        if (!mainViewModel.isHomeInit) {
             runBlocking {
                 getInitData()
+                Log.e("getuserdataoninit", "${mainViewModel.userData}" + "${mainViewModel.currentUser}")
                 mainViewModel.setIsHomeInit(true)
+                mainViewModel.setIsLoading(false)
             }
         }
     }
 
     LaunchedEffect(Unit) {
-        if (mainViewModel.isHomeInit && mainViewModel.userData != null) {
-            runBlocking {
+        if (mainViewModel.isHomeInit) {
+            initHomeScope.launch {
                 db_util.getAttendance(
                     mainViewModel.db,
-                    mainViewModel.userData!!.userid,
+                    mainViewModel.currentUser?.uid,
                     db_util.startOfDay(LocalDate.now()),
                     db_util.endOfDay(LocalDate.now()),
                 ) { attendances ->
@@ -351,7 +357,7 @@ fun HomeContainer(
         )
     }
 
-    if (!isLaunched) {
+    if (!mainViewModel.isHomeInit) {
         CircularLoadingBar()
     } else {
         if (mainViewModel.isLoading) {
@@ -431,7 +437,7 @@ fun HomeContainer(
                         fontWeight = FontWeight.Normal
                     )
                 }
-                if (isLaunched) {
+                if (mainViewModel.isHomeInit) {
                     if (mainViewModel.isTappedIn) {
                         TapOutCard(navController = navController, mainViewModel = mainViewModel)
                     } else {

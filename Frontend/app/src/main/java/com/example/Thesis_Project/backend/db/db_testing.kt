@@ -106,19 +106,19 @@ object db_testing {
 //        }
 //    }
 
-    fun testCheckLoginUserAdmin(db: FirebaseFirestore, userid: String){
-        db_util.checkUserIsAdmin(db, userid) { result ->
-            if (result != null) {
-                if (result) {
-                    // User is admin, success login
-                    // do stuff
-                } else {
-                    // User is not admin, don't login
-                    // do stuff
-                }
-            }
-        }
-    }
+//    fun testCheckLoginUserAdmin(db: FirebaseFirestore, userid: String){
+//        db_util.checkUserIsAdmin(db, userid) { result ->
+//            if (result != null) {
+//                if (result) {
+//                    // User is admin, success login
+//                    // do stuff
+//                } else {
+//                    // User is not admin, don't login
+//                    // do stuff
+//                }
+//            }
+//        }
+//    }
 
 
 //    fun testGetLeaveRequest(db:FirebaseFirestore, userid: String? = null){
