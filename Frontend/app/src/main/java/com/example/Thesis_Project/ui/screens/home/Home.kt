@@ -243,6 +243,27 @@ fun HomeContainer(
                 }
                 //kalau check local lagi nanti ktemunya muka orang lain because reset embedding on registerface
                 mainViewModel.setIsFaceRegistered(false)
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData!!.userid,
+                    db_util.startOfDay(LocalDate.now()),
+                    db_util.endOfDay(LocalDate.now()),
+                ) { attendances ->
+                    if (attendances == null) {
+                        mainViewModel.setTodayAttendance(null)
+                    } else {
+                        mainViewModel.setTodayAttendance(attendances[0])
+                    }
+                }
+                if (mainViewModel.todayAttendance == null) {
+                    mainViewModel.setTapInDisabled(false)
+                } else {
+                    if (mainViewModel.todayAttendance!!.timeout == null) {
+                        mainViewModel.setIsTappedIn(true)
+                    } else {
+                        mainViewModel.setTapInDisabled(true)
+                    }
+                }
             }
             launch {
                 if (sharedPreferences.contains(COMPANYVAR_KEY)) {
@@ -272,31 +293,28 @@ fun HomeContainer(
     }
 
     LaunchedEffect(Unit) {
-        if (!mainViewModel.isHomeInit) {
-            while (!mainViewModel.isHomeInit){
-                delay(1000)
-            }
-        }
-        runBlocking {
-            db_util.getAttendance(
-                mainViewModel.db,
-                mainViewModel.userData!!.userid,
-                db_util.startOfDay(LocalDate.now()),
-                db_util.endOfDay(LocalDate.now()),
-            ) { attendances ->
-                if (attendances == null) {
-                    mainViewModel.setTodayAttendance(null)
-                } else {
-                    mainViewModel.setTodayAttendance(attendances[0])
+        if (mainViewModel.isHomeInit) {
+            runBlocking {
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData!!.userid,
+                    db_util.startOfDay(LocalDate.now()),
+                    db_util.endOfDay(LocalDate.now()),
+                ) { attendances ->
+                    if (attendances == null) {
+                        mainViewModel.setTodayAttendance(null)
+                    } else {
+                        mainViewModel.setTodayAttendance(attendances[0])
+                    }
                 }
-            }
-            if (mainViewModel.todayAttendance == null) {
-                mainViewModel.setTapInDisabled(false)
-            } else {
-                if (mainViewModel.todayAttendance!!.timeout == null) {
-                    mainViewModel.setIsTappedIn(true)
+                if (mainViewModel.todayAttendance == null) {
+                    mainViewModel.setTapInDisabled(false)
                 } else {
-                    mainViewModel.setTapInDisabled(true)
+                    if (mainViewModel.todayAttendance!!.timeout == null) {
+                        mainViewModel.setIsTappedIn(true)
+                    } else {
+                        mainViewModel.setTapInDisabled(true)
+                    }
                 }
             }
         }
