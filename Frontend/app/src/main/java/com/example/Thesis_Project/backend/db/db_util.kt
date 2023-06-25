@@ -1096,7 +1096,8 @@ object db_util {
                                     }
                                     for (i in 1..14) {
                                         val tempdate = LocalDate.now().minusDays(i.toLong())
-                                        if (!skippeddates.contains(tempdate) && tempdate.dayOfWeek != DayOfWeek.SATURDAY && tempdate.dayOfWeek != DayOfWeek.SUNDAY) {
+                                        if (!skippeddates.contains(tempdate) && tempdate.dayOfWeek != DayOfWeek.SATURDAY && tempdate.dayOfWeek != DayOfWeek.SUNDAY
+                                            && tempdate.isAfter(dateToLocalDate(user.joindate!!))) {
                                             val collection = db.collection("attendances").document()
                                             val attendanceref =
                                                 db.collection("attendances").document(collection.id)
