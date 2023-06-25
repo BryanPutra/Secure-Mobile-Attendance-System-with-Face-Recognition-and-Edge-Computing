@@ -111,7 +111,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                                     modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
                                 )
                                 Text(
-                                    text = "Pending",
+                                    text = "Rejected",
                                     color = colorResource(id = R.color.gray_700),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
@@ -125,7 +125,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                                     modifier = Modifier.size(MaterialTheme.spacing.iconMedium)
                                 )
                                 Text(
-                                    text = "Rejected",
+                                    text = "Pending",
                                     color = colorResource(id = R.color.gray_700),
                                     style = MaterialTheme.typography.bodyMedium
                                 )

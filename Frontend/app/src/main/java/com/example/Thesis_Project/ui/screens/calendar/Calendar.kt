@@ -42,6 +42,7 @@ import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.*
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.*
 
 val daysString = listOf<String>("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT")
 
@@ -49,7 +50,7 @@ val calendarStatusList = listOf<CalendarStatusItem>(
     CalendarStatusItem(statusName = "Selected", statusColor = R.color.blue_500),
     CalendarStatusItem(statusName = "Attended", statusColor = R.color.teal_600),
     CalendarStatusItem(statusName = "Absent", statusColor = R.color.red_800),
-    CalendarStatusItem(statusName = "Leave", statusColor = R.color.light_orange_300),
+    CalendarStatusItem(statusName = "Leave", statusColor = R.color.purple_500),
 )
 
 @Composable
@@ -155,26 +156,37 @@ fun Calendar(mainViewModel: MainViewModel) {
     fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
         val scope = CoroutineScope(Dispatchers.Main)
         if (dayOfMonth == null) {
+            Log.d("DayOfMonth Clicked", "$dayOfMonth")
             return
         }
         dayOfMonth.isSelected = true
-        mainViewModel.setCalendarSelectedDate(dayOfMonth.date!!)
-        val message =
-            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
-        scope.launch {
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        }
+        mainViewModel.setCalendarSelectedDate(dayOfMonth.date)
+//        val message =
+//            "Position = $position, clickedDay = ${dayOfMonth.dateString} " + "attendance = ${dayOfMonth.attendance} date = ${dayOfMonth.date} " + "currentSelectedDate = ${mainViewModel.calendarSelectedDate}"
+//        scope.launch {
+//            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+//        }
 
         mainViewModel.setIsRequestCorrectionButtonEnabled(
-            dayOfMonth.attendance != null && (!(dayOfMonth.date.isEqual(currentDate) || dayOfMonth.date.isAfter(
+            dayOfMonth.attendance != null && (!(dayOfMonth.date?.isEqual(currentDate) == true || dayOfMonth.date?.isAfter(
                 currentDate
-            ) || checkIfAttendanceOnCorrectionPending(
+            ) == true || checkIfAttendanceOnCorrectionPending(
                 dayOfMonth.attendance,
                 mainViewModel
-            )))
+            ))) && mainViewModel.attendanceList?.let {
+                getAttendanceByDate(
+                    mainViewModel.calendarSelectedDate,
+                    it
+                )?.timeout
+            } != null
         )
 
-        mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate))
+        mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+            getAttendanceByDate(
+                mainViewModel.calendarSelectedDate,
+                it
+            )?.timein
+        } == null)
     }
     addDaysInMonth()
 
@@ -268,6 +280,7 @@ fun Calendar(mainViewModel: MainViewModel) {
 @Composable
 fun CalendarContainer(navController: NavController? = null, mainViewModel: MainViewModel) {
 
+    val currentDate = LocalDate.now()
     val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isCalendarInit) }
 
     val firstDateOfMonth by rememberSaveable {
@@ -286,6 +299,19 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     firstDateOfMonth,
                     lastDateOfMonth,
                     mainViewModel.setAttendanceList
+                )
+                mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+                    getAttendanceByDate(
+                        mainViewModel.calendarSelectedDate,
+                        it
+                    )?.timein
+                } == null)
+                mainViewModel.setIsRequestCorrectionButtonEnabled(mainViewModel.attendanceList?.let {
+                    getAttendanceByDate(
+                        mainViewModel.calendarSelectedDate,
+                        it
+                    )?.timeout
+                } != null
                 )
             }
             launch {
@@ -389,11 +415,11 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     Box(contentAlignment = Alignment.Center) {
                         Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceXXSmall)) {
                             Text(
-                                text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate) ?: "",
+                                text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate),
                                 textAlign = TextAlign.Center,
                             )
                             Text(
-                                text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate) ?: "",
+                                text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate),
                                 textAlign = TextAlign.Center,
                             )
                         }

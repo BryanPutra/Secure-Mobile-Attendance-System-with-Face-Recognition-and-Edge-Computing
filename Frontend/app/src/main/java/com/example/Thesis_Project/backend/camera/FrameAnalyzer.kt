@@ -34,7 +34,6 @@ class FrameAnalyzer (private val context: Context, val mainViewModel: MainViewMo
 
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(image: ImageProxy) {
-        val timerHelper = TimerHelper(context)
         var bitmap = BitmapUtils.getBitmap(image)
         bitmap = BitmapUtils.toGrayscale(bitmap!!)
         val inputImage = InputImage.fromBitmap(bitmap,0)
@@ -62,14 +61,13 @@ class FrameAnalyzer (private val context: Context, val mainViewModel: MainViewMo
                             )
                             Toast.makeText(context, "Pass " +result[1], Toast.LENGTH_SHORT).show()
                             val savedEmbs = File(context.filesDir, "embsKnown")
-                            Log.d("savedembds", "${savedEmbs.exists()}")
                             val contents = savedEmbs.readText()
                             mainViewModel.setUserEmbeddings(contents)
                             db_util.registerFace(mainViewModel.db, mainViewModel.userData?.userid!!, contents)
                             db_util.createAttendance(mainViewModel.db, attendance ,
                                 mainViewModel.userData!!
                             )
-                            mainViewModel.startWorkHourTimer(timerHelper)
+                            mainViewModel.startWorkHourTimer(mainViewModel.timerHelper)
                             mainViewModel.setIsTappedIn(true)
                             mainViewModel.setTapInDisabled(true)
                             navController.popBackStack()

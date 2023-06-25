@@ -53,8 +53,6 @@ class Model (context: Context){
         loadKnownFaces()
     }
 
-
-
     fun getKnownFacesSize():Int{
         return embsKnown.size
     }
@@ -104,7 +102,7 @@ class Model (context: Context){
 
     fun compareFace(image: Bitmap): Array<String> {
         val embs = getEmbeddingsFromBitmap(image)
-
+//        loadKnownFaces()
         var score = 0f
         for(i in embsKnown){
             score += cosineSimilarity(embs!!,i)

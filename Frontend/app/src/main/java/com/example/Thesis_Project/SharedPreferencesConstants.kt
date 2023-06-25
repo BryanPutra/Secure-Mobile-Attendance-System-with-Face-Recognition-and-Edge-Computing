@@ -7,6 +7,5 @@ class SharedPreferencesConstants {
         const val STOP_TIME_KEY = "stopKey"
         const val COUNTING_KEY = "countingKey"
         const val COMPANYVAR_KEY = "companyVariablesKey"
-        const val FACEREGISTERED_KEY = "faceRegisteredKey"
     }
 }

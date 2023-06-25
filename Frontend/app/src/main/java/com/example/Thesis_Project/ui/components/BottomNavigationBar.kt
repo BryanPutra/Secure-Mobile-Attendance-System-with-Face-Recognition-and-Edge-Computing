@@ -26,7 +26,7 @@ private val bottomNavItems =
             icon = Icons.Outlined.Home
         ),
         BottomNavItem(
-            title = "Calendar",
+            title = "Request",
             route = BottomNavBarRoutes.CalendarScreen.route,
             icon = Icons.Outlined.CalendarMonth
         ),

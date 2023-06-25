@@ -1,5 +1,6 @@
 package com.example.Thesis_Project.viewmodel
 
+import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
@@ -8,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import com.example.Thesis_Project.backend.db.db_models.*
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import com.example.Thesis_Project.TimerHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
@@ -21,9 +21,11 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.math.pow
 import kotlin.math.sqrt
+import java.lang.ref.WeakReference
 
-class MainViewModel : ViewModel() {
+class MainViewModel(val application: Application) : ViewModel() {
 
+    val appContext = application.applicationContext
     var isLoading by mutableStateOf(false)
 
     val setIsLoading: (Boolean) -> Unit = { newIsLoading ->
@@ -148,7 +150,7 @@ class MainViewModel : ViewModel() {
         if (newIsAdminHomeInit != null) {
             isAdminHomeInit = newIsAdminHomeInit
         }
-        Log.d("get user data", "user: $isAdminHomeInit")
+        Log.d("isAdminHomeInit", "isAdminHomeInit: $isAdminHomeInit")
     }
 
     var usersList: List<User>? by mutableStateOf(null)
@@ -168,7 +170,7 @@ class MainViewModel : ViewModel() {
         if (newIsAdminUsersInit != null) {
             isAdminUsersInit = newIsAdminUsersInit
         }
-        Log.d("get user data", "user: $isAdminUsersInit")
+        Log.d("isAdminUsersInit", "isAdminUsersInit: $isAdminUsersInit")
     }
 
     var isEditCompanyParamsDialogShown by mutableStateOf(false)
@@ -192,9 +194,11 @@ class MainViewModel : ViewModel() {
 
     //main
     val timer = Timer()
+    val timerHelper = TimerHelper(appContext)
 
-    var workHourTime by mutableStateOf("")
+    var workHourTime by mutableStateOf("0")
     var setWorkHourTime: (String?) -> Unit = { newWorkHourTime ->
+
         if (newWorkHourTime != null) {
             workHourTime = newWorkHourTime
         }
@@ -234,7 +238,7 @@ class MainViewModel : ViewModel() {
         if (newIsTapInDisabled != null) {
             tapInDisabled = newIsTapInDisabled
         }
-        Log.d("get user data", "user: $tapInDisabled")
+        Log.d("tapInDisabled", "tapInDisabled: $tapInDisabled")
     }
 
     var isTappedIn by mutableStateOf(false)
@@ -242,7 +246,7 @@ class MainViewModel : ViewModel() {
         if (newIsTappedIn != null) {
             isTappedIn = newIsTappedIn
         }
-        Log.d("get user data", "user: $isTappedIn")
+        Log.d("isTappedIn", "isTappedIn: $isTappedIn")
     }
 
     var isHomeInit by mutableStateOf(false)
@@ -252,7 +256,7 @@ class MainViewModel : ViewModel() {
         if (newIsHomeInit != null) {
             isHomeInit = newIsHomeInit
         }
-        Log.d("get user data", "user: $isHomeInit")
+        Log.d("isHomeInit", "user: $isHomeInit")
     }
 
     var companyVariable: CompanyParams? by mutableStateOf(null)
@@ -274,7 +278,7 @@ class MainViewModel : ViewModel() {
         if (newIsConnectedToSSID != null) {
             isConnectedToSSID = newIsConnectedToSSID
         }
-        Log.d("get user data", "user: $isConnectedToSSID")
+        Log.d("isConnectedToSSID", "isConnectedToSSID: $isConnectedToSSID")
     }
 
     var hasTakenPicture: Boolean by mutableStateOf(false)
@@ -283,7 +287,7 @@ class MainViewModel : ViewModel() {
         if (newHasTakenPicture != null) {
             hasTakenPicture = newHasTakenPicture
         }
-        Log.d("get user data", "user: $hasTakenPicture")
+        Log.d("hasTakenPicture", "hasTakenPicture: $hasTakenPicture")
     }
 
     //tap in detect
@@ -364,7 +368,7 @@ class MainViewModel : ViewModel() {
         if (newIsCalendarInit != null) {
             isCalendarInit = newIsCalendarInit
         }
-        Log.d("get user data", "user: $isCalendarInit")
+        Log.d("isCalendarInit", "isCalendarInit: $isCalendarInit")
     }
     var attendanceList: List<Attendance>? by mutableStateOf(null)
     val setAttendanceList: (List<Attendance>?) -> Unit = { newAttendance ->
@@ -380,9 +384,9 @@ class MainViewModel : ViewModel() {
     val setCalendarSelectedDate: (LocalDate?) -> Unit = { newCalendarSelectedDate ->
         if (newCalendarSelectedDate != null) {
             calendarSelectedDate = newCalendarSelectedDate
-            Log.d("Get attendance list", "Attendance List: $calendarSelectedDate")
+            Log.d("calendarSelectedDate", "calendarSelectedDate: $calendarSelectedDate")
         } else {
-            Log.d("Get Attendance list", "Attendance not found")
+            Log.d("calendarSelectedDate", "calendarSelectedDate null")
         }
     }
 
@@ -404,7 +408,7 @@ class MainViewModel : ViewModel() {
         if (newIsHistoryInit != null) {
             isHistoryInit = newIsHistoryInit
         }
-        Log.d("get user data", "user: $isHistoryInit")
+        Log.d("isHistoryInit", "isHistoryInit: $isHistoryInit")
     }
     var leaveRequestList: List<LeaveRequest>? by mutableStateOf(null)
     var correctionRequestList: List<CorrectionRequest>? by mutableStateOf(null)

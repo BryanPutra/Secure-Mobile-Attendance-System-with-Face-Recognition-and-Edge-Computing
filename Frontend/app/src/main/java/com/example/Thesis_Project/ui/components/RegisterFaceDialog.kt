@@ -79,7 +79,7 @@ fun RegisterFaceDialog(mainViewModel: MainViewModel, navController: NavControlle
                         .size(MaterialTheme.spacing.iconLarge)
                         .clickable { navController.popBackStack() },
                 )
-                Text(text = "Please register your face once to tap in")
+                Text(text = "Please register your face once to tap in", textAlign = TextAlign.Center)
                 ButtonHalfWidth(onClick = {onTakePhotoClicked()}, buttonText = "Take a photo")
             }
         }
