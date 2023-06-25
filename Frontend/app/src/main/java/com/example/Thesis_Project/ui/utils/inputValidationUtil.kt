@@ -18,6 +18,7 @@ fun isValidName(name: String): Boolean {
     return name.length >= 3
 }
 
+
 fun isValidLeaveRequestDateFrom(date: LocalDate): Boolean {
     val currentDate = LocalDate.now()
     return date.isAfter(currentDate) || date.isEqual(currentDate)

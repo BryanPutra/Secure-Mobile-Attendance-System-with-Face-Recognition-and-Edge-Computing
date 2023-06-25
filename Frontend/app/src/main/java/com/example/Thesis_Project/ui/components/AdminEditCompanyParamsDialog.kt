@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.text.isDigitsOnly
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
@@ -100,6 +101,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
             ) {
                 Text(
                     text = "Edit Company Params",
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceLarge)
@@ -113,7 +115,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Tap In",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -148,7 +150,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Tap Out",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -183,7 +185,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Max Leave",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -197,7 +199,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 maxTotalLeaveLeft = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium),text = "Days", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -209,7 +211,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Leave per Year",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -223,7 +225,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 leaveleft = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -235,7 +237,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Leave per Month",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -249,7 +251,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 maxMonthlyLeaveLeft = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -261,7 +263,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Min Days",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -275,7 +277,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 minimumDaysWorked = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -287,7 +289,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Permission Per Year",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -301,7 +303,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 maxPermissionLeft = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -313,7 +315,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Tolerance Work Time",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -327,7 +329,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 toleranceWorkTime = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Minutes", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -339,7 +341,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Company Work Time",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -353,7 +355,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 companyWorkTime = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Minutes", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -363,9 +365,9 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Compensate Work Time",
+                            text = "Work Time Compensation",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -379,7 +381,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 maxCompensateTime = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -391,7 +393,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Wifi SSID",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )

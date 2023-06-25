@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         }
 
         mainViewModel.timer.scheduleAtFixedRate(TimeTask(), 1000L, 1000L)
+
         setContent {
             SecureMobileAttendanceSystemwithFaceRecognitionandEdgeComputingTheme {
                 RootNavigationGraph(

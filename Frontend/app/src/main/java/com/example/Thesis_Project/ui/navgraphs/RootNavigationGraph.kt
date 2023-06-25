@@ -6,6 +6,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.screens.admin.AdminHomeScreen
 import com.example.Thesis_Project.ui.screens.home.HomeScreen
 import com.example.Thesis_Project.ui.utils.timeStringFromLong
@@ -17,6 +18,20 @@ import java.util.*
 @Composable
 fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainViewModel) {
     var isLaunched by rememberSaveable { mutableStateOf(false) }
+
+    NavHost(
+        navController = navController,
+        startDestination = NavGraphs.AUTH,
+        route = NavGraphs.ROOT
+    ) {
+        authNavGraph(navController = navController, mainViewModel)
+        composable(route = NavGraphs.ADMIN) {
+            AdminHomeScreen(mainViewModel = mainViewModel, rootNavController = navController)
+        }
+        composable(route = NavGraphs.HOME) {
+            HomeScreen(mainViewModel = mainViewModel, rootNavController = navController)
+        }
+    }
 
     LaunchedEffect(mainViewModel.currentUser) {
         if (!isLaunched) {
@@ -39,30 +54,11 @@ fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainVie
                             popUpTo(NavGraphs.AUTH) { inclusive = true }
                         }
                     }
-                } else {
-//                    navController.popBackStack(navController.graph.startDestinationId, true)
                 }
                 isLaunched = true
             } finally {
                 mainViewModel.auth.removeAuthStateListener(authStateListener)
                 isLaunched = true
-            }
-        }
-
-    }
-
-    if (isLaunched) {
-        NavHost(
-            navController = navController,
-            startDestination = NavGraphs.AUTH,
-            route = NavGraphs.ROOT
-        ) {
-            authNavGraph(navController = navController, mainViewModel)
-            composable(route = NavGraphs.ADMIN) {
-                AdminHomeScreen(mainViewModel = mainViewModel, rootNavController = navController)
-            }
-            composable(route = NavGraphs.HOME) {
-                HomeScreen(mainViewModel = mainViewModel, rootNavController = navController)
             }
         }
     }
