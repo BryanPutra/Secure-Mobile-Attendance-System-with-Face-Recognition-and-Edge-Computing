@@ -193,7 +193,7 @@ fun AdminHomeContainer(rootNavController: NavHostController, navController: NavC
                         style = MaterialTheme.typography.headlineSmall,
                     )
                     ButtonHalfWidth(
-                        onClick = { mainViewModel.showEditCompanyParamsDialog() },
+                        onClick = { mainViewModel.toggleIsEditCompanyParamsDialogShown() },
                         buttonText = "Edit"
                     )
                 }
@@ -255,7 +255,7 @@ fun AdminHomeContainer(rootNavController: NavHostController, navController: NavC
                         )
                     )
                     CompanyQuotasRow(
-                        name = "Compensate work time", value = convertTimeMinutesIntToString(
+                        name = "Max Compensation Work Time", value = convertTimeMinutesIntToString(
                             mainViewModel.companyVariable?.maxcompensatetime
                         )
                     )

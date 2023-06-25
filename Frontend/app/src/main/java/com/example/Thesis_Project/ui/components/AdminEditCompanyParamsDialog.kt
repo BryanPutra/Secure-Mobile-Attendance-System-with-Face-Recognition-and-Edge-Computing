@@ -1,43 +1,45 @@
 package com.example.Thesis_Project.ui.components
 
+import android.content.Context
+import android.util.Log
 import com.maxkeppeler.sheets.clock.ClockDialog
 import com.maxkeppeler.sheets.clock.models.ClockSelection
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.text.isDigitsOnly
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_models.CompanyParams
+import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
-import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.navgraphs.NavGraphs
-import com.example.Thesis_Project.ui.utils.formatLocalDateToString
+import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
-import java.util.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
 
-    var leaveleft by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.leaveleft.toString()) }
+    val updateCompanyParamsScope = rememberCoroutineScope()
+    val context: Context = LocalContext.current
+
+    var leaveLeft by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.leaveleft.toString()) }
     var maxTotalLeaveLeft by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.maxtotalleaveleft.toString()) }
     var minimumDaysWorked by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.minimumdaysworked.toString()) }
     var maxMonthlyLeaveLeft by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.maxmonthlyleaveleft.toString()) }
@@ -49,26 +51,134 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
     var maxCompensateTime by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.maxcompensatetime.toString()) }
     var maxPermissionLeft by rememberSaveable { mutableStateOf(mainViewModel.companyVariable?.maxpermissionsleft.toString()) }
 
+    var tapInIsValid by remember { mutableStateOf(true) }
+    var tapOutIsValid by remember { mutableStateOf(true) }
+    var maxLeaveIsValid by remember { mutableStateOf(true) }
+    var leavePerYearIsValid by remember { mutableStateOf(true) }
+    var leavePerMonthIsValid by remember { mutableStateOf(true) }
+    var minimumDaysWorkedIsValid by remember { mutableStateOf(true) }
+    var permissionPerYearIsValid by remember { mutableStateOf(true) }
+    var toleranceWorkTimeIsValid by remember { mutableStateOf(true) }
+    var companyWorkTimeIsValid by remember { mutableStateOf(true) }
+    var maxCompensateWorkTimeIsValid by remember { mutableStateOf(true) }
+    var wifiSSIDIsValid by remember { mutableStateOf(true) }
+
+    var errorText by remember { mutableStateOf("") }
+
     val clockTapInTimeState = rememberUseCaseState()
     val clockTapOutTimeState = rememberUseCaseState()
 
+    val postEditCompanyParams: suspend (companyParams: CompanyParams) -> Unit = { companyParams ->
+        mainViewModel.setIsLoading(true)
+        mainViewModel.companyVariable?.let {
+            try {
+                db_util.updateCompanyParams(
+                    mainViewModel.db,
+                    companyParams
+                )
+                db_util.getCompanyParams(mainViewModel.db, mainViewModel.setCompanyVariable)
+                errorText = ""
+                mainViewModel.showToast(context, "Company Params updated successfully")
+                mainViewModel.toggleIsEditCompanyParamsDialogShown()
+            } catch (e: Exception) {
+                errorText = "Failed to update company params: ${e.message}"
+                Log.e("Error", "Failed to update company params: $e")
+            }
+        }
+        mainViewModel.setIsLoading(false)
+    }
+
     fun onSubmitClicked() {
-        mainViewModel.isEditCompanyParamsDialogShown = false
+
+        tapInIsValid = isValidTapIn(tapInTime)
+        tapOutIsValid = isValidTapOut(tapOutTime)
+        maxLeaveIsValid = isValidMaxLeave(maxTotalLeaveLeft)
+        leavePerYearIsValid = isValidLeavePerYear(leaveLeft)
+        leavePerMonthIsValid = isValidLeavePerMonth(maxMonthlyLeaveLeft)
+        minimumDaysWorkedIsValid = isValidMinimumDaysWorked(minimumDaysWorked)
+        permissionPerYearIsValid = isValidPermissionPerYear(maxPermissionLeft)
+        toleranceWorkTimeIsValid = isValidToleranceWorkTime(toleranceWorkTime)
+        companyWorkTimeIsValid = isValidCompanyWorkTime(companyWorkTime)
+        maxCompensateWorkTimeIsValid = isValidMaxCompensateWorkTime(maxCompensateTime)
+        wifiSSIDIsValid = isValidWifiSSID(wifiSSID)
+
+        if (!tapInIsValid) {
+            errorText = "Please fill tap in"
+            return
+        }
+
+        if (!tapOutIsValid) {
+            errorText = "Please fill tap out"
+            return
+        }
+
+        if (!maxLeaveIsValid) {
+            errorText = "Please fill max leave"
+            return
+        }
+        if (!leavePerYearIsValid) {
+            errorText = "Please fill leave per year"
+            return
+        }
+        if (!leavePerMonthIsValid) {
+            errorText = "Please fill leave per month"
+            return
+        }
+        if (!minimumDaysWorkedIsValid) {
+            errorText = "Please fill minimum days worked"
+            return
+        }
+        if (!permissionPerYearIsValid) {
+            errorText = "Please fill permission per year"
+            return
+        }
+        if (!toleranceWorkTimeIsValid) {
+            errorText = "Please fill tolerance work time"
+            return
+        }
+        if (!companyWorkTimeIsValid) {
+            errorText = "Please fill company work time"
+            return
+        }
+        if (!maxCompensateWorkTimeIsValid) {
+            errorText = "Please fill max compensation work time"
+            return
+        }
+        if (!wifiSSIDIsValid) {
+            errorText = "Please fill wifi SSID"
+            return
+        }
+        val companyParams = CompanyParams(
+            leaveleft = leaveLeft.toInt(),
+            maxtotalleaveleft = maxTotalLeaveLeft.toInt(),
+            minimumdaysworked = minimumDaysWorked.toInt(),
+            maxmonthlyleaveleft = maxMonthlyLeaveLeft.toInt(),
+            wifissid = wifiSSID,
+            tapintime = tapInTime,
+            tapouttime = tapOutTime,
+            companyworktime = companyWorkTime.toInt(),
+            toleranceworktime = toleranceWorkTime.toInt(),
+            maxcompensatetime = maxCompensateTime.toInt(),
+            maxpermissionsleft = maxPermissionLeft.toInt(),
+            )
+        updateCompanyParamsScope.launch {
+            postEditCompanyParams(companyParams)
+        }
     }
 
     fun onCancelClicked() {
-        mainViewModel.isEditCompanyParamsDialogShown = false
+        mainViewModel.toggleIsEditCompanyParamsDialogShown()
     }
 
     ClockDialog(
         state = clockTapInTimeState,
         selection = ClockSelection.HoursMinutes { hours, minutes ->
-            tapInTime = "$hours:$minutes"
+            tapInTime = "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
         })
     ClockDialog(
         state = clockTapOutTimeState,
         selection = ClockSelection.HoursMinutes { hours, minutes ->
-            tapOutTime = "$hours:$minutes"
+            tapOutTime = "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
         })
 
     Dialog(
@@ -78,6 +188,9 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
             usePlatformDefaultWidth = false
         )
     ) {
+        if (mainViewModel.isLoading) {
+            CircularLoadingBar()
+        }
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -129,6 +242,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
+                            isError = !tapInIsValid,
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledBorderColor = colorResource(id = R.color.black),
                                 disabledTextColor = colorResource(id = R.color.black),
@@ -164,6 +278,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
+                            isError = !tapOutIsValid,
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledBorderColor = colorResource(id = R.color.black),
                                 disabledTextColor = colorResource(id = R.color.black),
@@ -192,6 +307,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         OutlinedTextField(
                             modifier = Modifier.weight(2f),
                             value = maxTotalLeaveLeft,
+                            isError = !maxLeaveIsValid,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
@@ -217,12 +333,13 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         )
                         OutlinedTextField(
                             modifier = Modifier.weight(2f),
-                            value = leaveleft,
+                            value = leaveLeft,
+                            isError = !leavePerYearIsValid,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
                             onValueChange = { text ->
-                                leaveleft = text.replace(Regex("[^0-9]"), "")
+                                leaveLeft = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
                                 Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
@@ -244,6 +361,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         OutlinedTextField(
                             modifier = Modifier.weight(2f),
                             value = maxMonthlyLeaveLeft,
+                            isError = !leavePerMonthIsValid,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
@@ -270,6 +388,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         OutlinedTextField(
                             modifier = Modifier.weight(2f),
                             value = minimumDaysWorked,
+                            isError = !minimumDaysWorkedIsValid,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
@@ -299,6 +418,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
+                            isError = !permissionPerYearIsValid,
                             onValueChange = { text ->
                                 maxPermissionLeft = text.replace(Regex("[^0-9]"), "")
                             },
@@ -325,6 +445,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
+                            isError = !toleranceWorkTimeIsValid,
                             onValueChange = { text ->
                                 toleranceWorkTime = text.replace(Regex("[^0-9]"), "")
                             },
@@ -351,6 +472,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
+                            isError = !companyWorkTimeIsValid,
                             onValueChange = { text ->
                                 companyWorkTime = text.replace(Regex("[^0-9]"), "")
                             },
@@ -365,7 +487,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Work Time Compensation",
+                            text = "Max Compensation Work Time",
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
@@ -374,6 +496,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         OutlinedTextField(
                             modifier = Modifier.weight(2f),
                             value = maxCompensateTime,
+                            isError = !maxCompensateWorkTimeIsValid,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
@@ -381,7 +504,7 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                                 maxCompensateTime = text.replace(Regex("[^0-9]"), "")
                             },
                             trailingIcon = {
-                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Days", color = colorResource(id = R.color.blue_500))
+                                Text(modifier = Modifier.padding(end = MaterialTheme.spacing.spaceMedium), text = "Minutes", color = colorResource(id = R.color.blue_500))
                             }
                         )
                     }
@@ -403,9 +526,17 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             ),
+                            isError = !wifiSSIDIsValid,
                             onValueChange = { text ->
                                 wifiSSID = text
                             },
+                        )
+                    }
+                    if (errorText.isNotEmpty()) {
+                        Text(
+                            text = errorText,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
                         )
                     }
                     Row(

@@ -1339,20 +1339,19 @@ object db_util {
             }
     }
 
-    fun updateCompanyParams(db: FirebaseFirestore, companyParams: CompanyParams) {
+    suspend fun updateCompanyParams(db: FirebaseFirestore, companyParams: CompanyParams) {
         companyParams.companyworktime = Duration.between(
             LocalDateTime.now().withHour(companyParams.tapintime!!.split(":")[0].toInt())
                 .withMinute(companyParams.tapintime!!.split(":")[1].toInt()),
             LocalDateTime.now().withHour(companyParams.tapouttime!!.split(":")[0].toInt())
                 .withMinute(companyParams.tapouttime!!.split(":")[1].toInt())
         ).toMinutes().toInt()
-        db.collection("company_params").document("COMPANYPARAMS").set(companyParams)
-            .addOnSuccessListener {
-                Log.d("UPDATECOMPANYPARAMS", "Successfully updated company parameters")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Updating Data", "updateCompanyParams $exception")
-            }
+        try {
+            db.collection("company_params").document("COMPANYPARAMS").set(companyParams).await()
+            Log.d("UPDATECOMPANYPARAMS", "Successfully updated company parameters")
+        } catch (exception: Exception) {
+            Log.e("Error Updating Data", "updateCompanyParams $exception")
+        }
     }
 
     fun curDateTime(): Date {

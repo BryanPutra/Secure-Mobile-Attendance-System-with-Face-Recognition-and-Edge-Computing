@@ -199,8 +199,8 @@ class MainViewModel(val application: Application) : ViewModel() {
     }
 
     var isEditCompanyParamsDialogShown by mutableStateOf(false)
-    fun showEditCompanyParamsDialog() {
-        isEditCompanyParamsDialogShown = true
+    fun toggleIsEditCompanyParamsDialogShown() {
+        isEditCompanyParamsDialogShown = !isEditCompanyParamsDialogShown
     }
 
     //adminusers
