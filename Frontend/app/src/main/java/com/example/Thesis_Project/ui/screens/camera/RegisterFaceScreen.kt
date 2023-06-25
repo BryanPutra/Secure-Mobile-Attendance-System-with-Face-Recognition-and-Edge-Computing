@@ -49,7 +49,8 @@ fun RegisterFaceContainer(navController: NavController, mainViewModel: MainViewM
             CameraView(
                 executor = Executors.newSingleThreadExecutor(),
                 onError = { exception -> Log.e("Error taking photo", "$exception") },
-                mainViewModel = mainViewModel)
+                mainViewModel = mainViewModel, navController = navController
+            )
         }
     }
     // we will show camera preview once permission is granted

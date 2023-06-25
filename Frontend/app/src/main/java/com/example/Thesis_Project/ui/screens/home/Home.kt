@@ -1,8 +1,6 @@
 package com.example.Thesis_Project.ui.screens.home
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material.icons.rounded.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,7 +31,6 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.COMPANYVAR_KEY
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.PREFERENCES
-import com.example.Thesis_Project.TimerHelper
 import com.example.Thesis_Project.backend.camera.Model
 import com.example.Thesis_Project.backend.db.db_models.CompanyParams
 import com.example.Thesis_Project.backend.db.db_util
@@ -43,7 +39,6 @@ import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
-import com.example.Thesis_Project.ui.utils.checkHaveSameDates
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.gson.Gson
@@ -51,12 +46,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.io.File
-import java.text.SimpleDateFormat
 import java.time.LocalDate
-import java.util.*
 
 enum class homeTapState {
     TAPPEDIN, TAPPEDOUTWORKHOUR, TAPPEDOUTNOTWORKHOUR,
@@ -282,6 +272,11 @@ fun HomeContainer(
     }
 
     LaunchedEffect(Unit) {
+        if (!mainViewModel.isHomeInit) {
+            while (!mainViewModel.isHomeInit){
+                delay(1000)
+            }
+        }
         runBlocking {
             db_util.getAttendance(
                 mainViewModel.db,

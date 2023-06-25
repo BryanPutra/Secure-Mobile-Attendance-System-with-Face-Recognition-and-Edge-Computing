@@ -294,7 +294,7 @@ class MainViewModel(val application: Application) : ViewModel() {
     private val liveProbabilities = mutableStateListOf<Float>()
     private var status = 0
     fun checkLiveness(probLeft: Float, probRight: Float): Int {
-        if (liveProbabilities.size < 150) {
+        if (liveProbabilities.size < 100) {
             liveProbabilities.add(probLeft)
             liveProbabilities.add(probRight)
             return 0 // Not enough numbers

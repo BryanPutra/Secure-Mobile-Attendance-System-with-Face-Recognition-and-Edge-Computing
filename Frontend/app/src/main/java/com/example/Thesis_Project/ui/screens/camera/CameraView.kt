@@ -35,6 +35,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import com.example.Thesis_Project.SharedPreferencesConstants
 import com.example.Thesis_Project.backend.camera.BitmapUtils
 import com.example.Thesis_Project.backend.camera.Model
@@ -42,6 +43,7 @@ import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonHalfWidth
+import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.common.internal.ImageConvertUtils
@@ -58,7 +60,8 @@ import java.util.concurrent.Executor
 fun CameraView(
     executor: Executor,
     onError: (ImageCaptureException) -> Unit,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
+    navController: NavController
 ) {
 
     fun takePhoto(
@@ -188,8 +191,6 @@ fun CameraView(
         var bitmap = Bitmap.createScaledBitmap(mainViewModel.imgBitmap!!, 600, 800, true)
         bitmap = BitmapUtils.toGrayscale(bitmap)
         val inputImage = InputImage.fromBitmap(bitmap, 0)
-        val sharedPreferences =
-            context.getSharedPreferences(SharedPreferencesConstants.PREFERENCES, Context.MODE_PRIVATE)
 
         faceDetector.process(inputImage).addOnSuccessListener { faces ->
             if (faces.size == 0) {
@@ -212,14 +213,16 @@ fun CameraView(
                         Model.modelInput,
                         true
                     )
-                    Toast.makeText(context, "Face successfully saved", Toast.LENGTH_SHORT).show()
                     val model = Model(context)
                     model.registerFace(croppedBitmap)
                     val savedEmbs = File(context.filesDir, "embsKnown")
                     val contents = savedEmbs.readText()
                     mainViewModel.setUserEmbeddings(contents)
                     db_util.registerFace(mainViewModel.db, mainViewModel.userData?.userid!!, contents)
+                    Toast.makeText(context, "Face successfully saved", Toast.LENGTH_SHORT).show()
                     mainViewModel.setIsFaceRegistered(true)
+                    navController.popBackStack()
+                    navController.navigate(NavGraphs.HOME)
                 } catch (ex: IllegalArgumentException) {
                     Toast.makeText(context, "Face too close to camera", Toast.LENGTH_SHORT).show()
                     return@addOnSuccessListener
