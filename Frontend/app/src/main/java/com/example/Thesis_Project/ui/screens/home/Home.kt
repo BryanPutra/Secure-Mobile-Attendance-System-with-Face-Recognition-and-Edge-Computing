@@ -293,7 +293,7 @@ fun HomeContainer(
     }
 
     LaunchedEffect(Unit) {
-        if (mainViewModel.isHomeInit) {
+        if (mainViewModel.isHomeInit && mainViewModel.userData != null) {
             runBlocking {
                 db_util.getAttendance(
                     mainViewModel.db,
