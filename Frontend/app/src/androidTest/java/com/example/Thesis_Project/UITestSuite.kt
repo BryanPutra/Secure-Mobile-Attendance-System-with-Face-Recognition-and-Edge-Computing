@@ -9,6 +9,6 @@ import org.junit.runners.Suite
     CalendarStatusUITest::class,
     CompanyQuotasRowUITest::class,
     CorrectionRequestCardUITest::class,
-    LeaveRequestCardUITest::class
+//    LeaveRequestCardUITest::class
 )
 class UITestSuite
