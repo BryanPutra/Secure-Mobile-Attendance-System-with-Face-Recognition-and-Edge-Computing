@@ -281,6 +281,7 @@ fun Calendar(mainViewModel: MainViewModel) {
 fun CalendarContainer(navController: NavController? = null, mainViewModel: MainViewModel) {
 
     val currentDate = LocalDate.now()
+    val currentMonth = currentDate.month
     val isLaunched by rememberSaveable { mutableStateOf(mainViewModel.isCalendarInit) }
 
     val firstDateOfMonth by rememberSaveable {
@@ -338,6 +339,44 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
     val currentRoute = currentBackStackEntry?.destination?.route
     val currentAttendance =
         getAttendanceByDate(mainViewModel.calendarSelectedDate, mainViewModel)
+
+    var requestReminderDialogShown by rememberSaveable { mutableStateOf(false) }
+
+    fun onRequestLeaveClicked(){
+        if (mainViewModel.calendarSelectedDate.month == currentMonth){
+            mainViewModel.onRequestLeaveClicked()
+        }
+        else {
+            requestReminderDialogShown = true
+        }
+    }
+
+    fun onRequestCorrectionClicked(){
+        if (mainViewModel.calendarSelectedDate.month == currentMonth){
+            mainViewModel.onRequestCorrectionClicked()
+        }
+        else {
+            requestReminderDialogShown = true
+        }
+        mainViewModel.onRequestCorrectionClicked()
+    }
+
+    if (requestReminderDialogShown) {
+        AlertDialog(
+            onDismissRequest = { requestReminderDialogShown = false },
+            title = { Text(text = "Reminder") },
+            text = { Text(text = "You can only request leave and correction in the current month") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        requestReminderDialogShown = false
+                    }
+                ) {
+                    Text(text = "Dismiss")
+                }
+            },
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -455,14 +494,14 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
             ) {
                 Box(modifier = Modifier.weight(0.5f)) {
                     ButtonHalfWidth(
-                        onClick = { mainViewModel.onRequestLeaveClicked() },
+                        onClick = { onRequestLeaveClicked() },
                         buttonText = "Request Leave",
                         isEnabled = mainViewModel.isRequestLeaveButtonEnabled
                     )
                 }
                 Box(modifier = Modifier.weight(0.5f)) {
                     ButtonHalfWidth(
-                        onClick = { mainViewModel.onRequestCorrectionClicked() },
+                        onClick = { onRequestCorrectionClicked() },
                         buttonText = "Request Correction",
                         isEnabled = mainViewModel.isRequestCorrectionButtonEnabled
                     )

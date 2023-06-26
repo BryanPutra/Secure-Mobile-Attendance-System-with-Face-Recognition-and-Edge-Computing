@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.components
 
 import android.content.Context
 import android.util.Log
+import android.view.Window
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -32,8 +33,10 @@ import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
 import com.maxkeppeler.sheets.calendar.models.CalendarSelection
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.time.LocalDate
 import java.util.*
+import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun LeaveRequestDialog(mainViewModel: MainViewModel) {
@@ -52,13 +55,15 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
 
     var dateFromIsValid by remember { mutableStateOf(true) }
     var dateToIsValid by remember { mutableStateOf(true) }
-    var dateIsValid by remember { mutableStateOf(false)}
+    var dateIsValid by remember { mutableStateOf(false) }
+    var confirmLeaveRequest by remember { mutableStateOf(false) }
+
 
     var errorText by remember { mutableStateOf("") }
 
     fun addDisabledDates() {
         val attendanceList = mainViewModel.attendanceList ?: return
-        for (attendance in attendanceList){
+        for (attendance in attendanceList) {
             if (attendance.leaveflag != true && attendance.permissionflag != true) {
                 continue
             }
@@ -73,27 +78,112 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
     val postCreateLeaveRequest: suspend (leaveRequest: LeaveRequest) -> Unit = { leaveRequest ->
         mainViewModel.setIsLoading(true)
         try {
-            db_util.checkValidLeaveRequestDate(mainViewModel.db, mainViewModel.userData?.userid!!, leaveRequest.leavestart!!, leaveRequest.duration!!,) {isDateValid ->
-                dateIsValid = isDateValid == true
-            }
-            if (dateIsValid) {
-                db_util.createLeaveRequest(mainViewModel.db, leaveRequest)
-                db_util.getLeaveRequest(mainViewModel.db, mainViewModel.userData?.userid,mainViewModel.setLeaveRequestList)
-                errorText = ""
-                mainViewModel.showToast(context, "Leave Request has been created successfully")
-                mainViewModel.toggleRequestLeaveDialog()
-                dateIsValid = false
-            }
-            else {
-                mainViewModel.showToast(context, "There is a pending request in the selected date")
-                errorText = "There is a pending request in the selected date"
-            }
+            db_util.createLeaveRequest(mainViewModel.db, leaveRequest)
+            db_util.getLeaveRequest(
+                mainViewModel.db,
+                mainViewModel.userData?.userid,
+                mainViewModel.setLeaveRequestList
+            )
+            errorText = ""
+            mainViewModel.showToast(context, "Leave Request has been created successfully")
+            mainViewModel.toggleRequestLeaveDialog()
+            dateIsValid = false
+            confirmLeaveRequest = false
         } catch (e: Exception) {
             errorText = "Failed to create leave request: ${e.message}"
             Log.e("Error", "Failed to create leave request: $e")
         }
-        dateIsValid = false
         mainViewModel.setIsLoading(false)
+    }
+
+    val checkValidCreateLeaveRequest: suspend (leaveRequest: LeaveRequest) -> Unit =
+        { leaveRequest ->
+            mainViewModel.setIsLoading(true)
+            try {
+                db_util.checkValidLeaveRequestDate(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid!!,
+                    leaveRequest.leavestart!!,
+                    leaveRequest.duration!!,
+                ) { isDateValid ->
+                    dateIsValid = isDateValid == true
+                }
+                if (dateIsValid) {
+                    db_util.checkPendingRequestDuration(
+                        mainViewModel.db,
+                        mainViewModel.userData?.userid!!,
+                        leaveRequest.leavestart
+                    ) { leaveAmount, permissionAmount ->
+                        if (leaveAmount != null) {
+                            if (leaveRequest.permissionflag!!) {
+                                db_util.getTotalPermissionThisYear(
+                                    mainViewModel.db,
+                                    mainViewModel.userData?.userid!!
+                                ) { data ->
+                                    if (data != null) {
+                                        if (leaveRequest.duration!! + data + permissionAmount!! > mainViewModel.companyVariable?.maxpermissionsleft!!) {
+                                            confirmLeaveRequest = true
+                                        } else {
+                                            postCreateLeaveRequest(leaveRequest)
+                                        }
+                                    }
+                                }
+                            } else {
+                                db_util.getTotalLeaveThisMonth(
+                                    mainViewModel.db,
+                                    mainViewModel.userData?.userid!!
+                                ) { data ->
+                                    if (data != null) {
+                                        if (leaveRequest.duration!! + data + leaveAmount > mainViewModel.companyVariable?.maxmonthlyleaveleft!!) {
+                                            mainViewModel.showToast(
+                                                context,
+                                                "Leave request exceeds monthly quota"
+                                            )
+                                            errorText = "Leave request exceeds monthly quota"
+                                        } else if (leaveRequest.duration!! + leaveAmount > mainViewModel.userData?.leaveleft!!) {
+                                            // Put error popup here on frontend
+                                            mainViewModel.showToast(
+                                                context,
+                                                "Not enough leave left to create request"
+                                            )
+                                            errorText = "Not enough leave left to create request"
+                                        } else {
+                                            postCreateLeaveRequest(leaveRequest)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            postCreateLeaveRequest(leaveRequest)
+                        }
+                    }
+                } else {
+                    mainViewModel.showToast(
+                        context,
+                        "There is a pending request in the selected date"
+                    )
+                    errorText = "There is a pending request in the selected date"
+                }
+            } catch (e: Exception) {
+                errorText = "Leave request is not valid: ${e.message}"
+                Log.e("Error", "Failed to create leave request: $e")
+            }
+            dateIsValid = false
+            mainViewModel.setIsLoading(false)
+        }
+
+    fun onConfirmCreateLeaveRequestClicked() {
+        val leaveRequest = LeaveRequest(
+            userid = mainViewModel.userData?.userid,
+            leavestart = db_util.localDateToDate(dateFrom),
+            leaveend = db_util.localDateToDate(dateTo),
+            duration = getDurationFromDates(dateFrom, dateTo),
+            permissionflag = isPermission,
+            reason = detail,
+        )
+        createLeaveRequestScope.launch {
+            postCreateLeaveRequest(leaveRequest)
+        }
     }
 
     fun onRequestClicked() {
@@ -120,13 +210,41 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
         )
 
         createLeaveRequestScope.launch {
-            postCreateLeaveRequest(leaveRequest)
+            checkValidCreateLeaveRequest(leaveRequest)
         }
     }
 
     fun onCancelClicked() {
         mainViewModel.toggleRequestLeaveDialog()
     }
+
+    if (confirmLeaveRequest) {
+        AlertDialog(
+            onDismissRequest = { confirmLeaveRequest = false },
+            // Put popup permissions left not enough, can create but will deduct leave left
+            // If leaveleft not enough will count as absent
+            // If user agrees run createLeaveRequest
+            title = { Text(text = "Confirm Leave Request") },
+            text = { Text(text = "Not enough permissions left, you can still use your leave left to continue. If your leave left is not enough, the remaining dates will be counted as absent. Do you still want to continue?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onConfirmCreateLeaveRequestClicked()
+                    }
+                ) {
+                    Text(text = "Confirm")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { confirmLeaveRequest = false }
+                ) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
+    }
+
 
     CalendarDialog(
         state = calendarDateFromState,
@@ -228,10 +346,12 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                             textAlign = TextAlign.Right
                         )
                         OutlinedTextField(
-                            modifier = Modifier.weight(2f).clickable {
-                                calendarDateToState.show()
-                                addDisabledDates()
-                            },
+                            modifier = Modifier
+                                .weight(2f)
+                                .clickable {
+                                    calendarDateToState.show()
+                                    addDisabledDates()
+                                },
                             value = formatLocalDateToString(dateTo),
                             onValueChange = {},
                             readOnly = true,

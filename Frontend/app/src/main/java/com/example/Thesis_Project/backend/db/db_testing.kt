@@ -376,9 +376,9 @@ object db_testing {
     }
 
     // User here refers to the admin whose approving the request (current logged in user)
-    fun testApproveLeaveRequest(db: FirebaseFirestore, leaverequest: LeaveRequest, user: User, companyparams: CompanyParams){
-        db_util.approveLeaveRequest(db, leaverequest, user, companyparams)
-    }
+//    fun testApproveLeaveRequest(db: FirebaseFirestore, leaverequest: LeaveRequest, user: User, companyparams: CompanyParams){
+//        db_util.approveLeaveRequest(db, leaverequest, user, companyparams)
+//    }
 
     // User here refers to the admin whose approving the request (current logged in user)
     fun testApproveCorrectionRequest(db: FirebaseFirestore, correctionrequest: CorrectionRequest, user: User, companyparams: CompanyParams){

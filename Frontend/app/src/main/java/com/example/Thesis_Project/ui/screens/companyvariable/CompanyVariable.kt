@@ -177,7 +177,7 @@ fun CompanyVariableContainer(navController: NavController, mainViewModel: MainVi
                 ) {
                     CompanyQuotasRow(
                         name = "Leave left",
-                        value = "${mainViewModel.userData?.leaveleft ?: 0} Days"
+                        value = "${if (mainViewModel.userData?.leaveallow == false) 0 else { mainViewModel.userData?.leaveleft ?: 0}} Days"
                     )
                     CompanyQuotasRow(
                         name = "Permission left",
