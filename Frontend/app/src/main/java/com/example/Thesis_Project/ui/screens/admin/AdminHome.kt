@@ -296,10 +296,15 @@ fun AdminHomeContainer(rootNavController: NavHostController, navController: NavC
                 confirmButton = {
                     Button(
                         onClick = {
-                            logoutConfirmDialogShown = false
-                            mainViewModel.signOutFromAdmin()
-                            navController.popBackStack()
-                            rootNavController.navigate(NavGraphs.ROOT) {
+                            runBlocking {
+                                mainViewModel.setIsLoading(true)
+                                logoutConfirmDialogShown = false
+                                mainViewModel.signOutFromAdmin()
+                                navController.popBackStack()
+                                rootNavController.navigate(NavGraphs.ROOT) {
+                                    popUpTo(NavGraphs.ADMIN) { inclusive = true}
+                                }
+                                mainViewModel.setIsLoading(false)
                             }
                         }
                     ) {

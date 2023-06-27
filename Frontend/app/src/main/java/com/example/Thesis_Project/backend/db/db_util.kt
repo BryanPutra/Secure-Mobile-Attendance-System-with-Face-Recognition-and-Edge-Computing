@@ -127,7 +127,7 @@ object db_util {
     suspend fun checkUserIsAdmin(
         db: FirebaseFirestore,
         userid: String,
-        callback: (Boolean?) -> Unit
+        callback: suspend (Boolean?) -> Unit
     ) {
         withContext(
             Dispatchers.Main

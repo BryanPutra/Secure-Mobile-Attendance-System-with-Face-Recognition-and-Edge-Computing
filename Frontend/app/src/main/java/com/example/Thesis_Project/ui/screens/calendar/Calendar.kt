@@ -128,14 +128,37 @@ fun Calendar(mainViewModel: MainViewModel) {
         mainViewModel.setCalendarSelectedDate(mainViewModel.calendarSelectedDate.plusMonths(1))
         firstDateOfMonth = db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate)
         lastDateOfMonth = db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate)
-
         monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
         runBlocking {
             getAttendanceCurrentMonthScope.launch {
                 getAttendanceCurrentMonth()
+                addDaysInMonth()
+                val tempDayOfMonth = daysInMonth.toList().find { it.date?.isEqual(mainViewModel.calendarSelectedDate) ?: false }
+                if (tempDayOfMonth != null){
+                    mainViewModel.setIsRequestCorrectionButtonEnabled(
+                        tempDayOfMonth.attendance != null && (!(tempDayOfMonth.date?.isEqual(currentDate) == true || tempDayOfMonth.date?.isAfter(
+                            currentDate
+                        ) == true || checkIfAttendanceOnCorrectionPending(
+                            tempDayOfMonth.attendance,
+                            mainViewModel
+                        ))) && mainViewModel.attendanceList?.let {
+                            getAttendanceByDate(
+                                mainViewModel.calendarSelectedDate,
+                                it
+                            )?.timeout
+                        } != null
+                    )
+                    mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+                        getAttendanceByDate(
+                            mainViewModel.calendarSelectedDate,
+                            it
+                        )?.timein
+                    } == null)
+                }
             }
-            addDaysInMonth()
+
         }
+
         Log.d("nextMonth", "$daysInMonth")
     }
 
@@ -144,17 +167,39 @@ fun Calendar(mainViewModel: MainViewModel) {
         firstDateOfMonth = db_util.firstDateOfMonth(mainViewModel.calendarSelectedDate)
         lastDateOfMonth = db_util.lastDateOfMonth(mainViewModel.calendarSelectedDate)
         monthYear = formatMonthYearFromLocalDate(mainViewModel.calendarSelectedDate)
+
         runBlocking {
             getAttendanceCurrentMonthScope.launch {
                 getAttendanceCurrentMonth()
+                addDaysInMonth()
+                val tempDayOfMonth = daysInMonth.toList().find { it.date?.isEqual(mainViewModel.calendarSelectedDate) ?: false }
+                if (tempDayOfMonth != null){
+                    mainViewModel.setIsRequestCorrectionButtonEnabled(
+                        tempDayOfMonth.attendance != null && (!(tempDayOfMonth.date?.isEqual(currentDate) == true || tempDayOfMonth.date?.isAfter(
+                            currentDate
+                        ) == true || checkIfAttendanceOnCorrectionPending(
+                            tempDayOfMonth.attendance,
+                            mainViewModel
+                        ))) && mainViewModel.attendanceList?.let {
+                            getAttendanceByDate(
+                                mainViewModel.calendarSelectedDate,
+                                it
+                            )?.timeout
+                        } != null
+                    )
+                    mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+                        getAttendanceByDate(
+                            mainViewModel.calendarSelectedDate,
+                            it
+                        )?.timein
+                    } == null)
+                }
             }
-            addDaysInMonth()
         }
         Log.d("previousMonth", "${daysInMonth[0]}")
     }
 
     fun onDayClicked(dayOfMonth: DayOfMonthItem?, position: Int) {
-        val scope = CoroutineScope(Dispatchers.Main)
         if (dayOfMonth == null) {
             Log.d("DayOfMonth Clicked", "$dayOfMonth")
             return
@@ -323,6 +368,13 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     mainViewModel.setCorrectionRequestList
                 )
             }
+            launch {
+                db_util.getLeaveRequest(
+                    mainViewModel.db,
+                    mainViewModel.userData?.userid,
+                    mainViewModel.setLeaveRequestList
+                )
+            }
         }
     }
 
@@ -358,7 +410,6 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
         else {
             requestReminderDialogShown = true
         }
-        mainViewModel.onRequestCorrectionClicked()
     }
 
     if (requestReminderDialogShown) {

@@ -221,7 +221,10 @@ fun HomeContainer(
                 ) { user ->
                     mainViewModel.setUserData(user)
                 }
-                Log.e("getuserdataoninit", "${mainViewModel.userData}" + "${mainViewModel.currentUser}")
+                Log.e(
+                    "getuserdataoninit",
+                    "${mainViewModel.userData}" + "${mainViewModel.currentUser}"
+                )
                 db_util.getAttendance(
                     mainViewModel.db,
                     mainViewModel.userData!!.userid,
@@ -234,7 +237,10 @@ fun HomeContainer(
                         mainViewModel.setAttendanceList(attendances)
                     }
                 }
-                Log.e("getAttendanceInit", "${mainViewModel.userData}" + "${mainViewModel.attendanceList}")
+                Log.e(
+                    "getAttendanceInit",
+                    "${mainViewModel.userData}" + "${mainViewModel.attendanceList}"
+                )
                 if (mainViewModel.userData!!.embedding != null) {
                     //overwrite the embeddings di local with the one from database in case
                     // clear data in app
@@ -291,7 +297,10 @@ fun HomeContainer(
         if (!mainViewModel.isHomeInit) {
             runBlocking {
                 getInitData()
-                Log.e("getuserdataoninit", "${mainViewModel.userData}" + "${mainViewModel.currentUser}")
+                Log.e(
+                    "getuserdataoninit",
+                    "${mainViewModel.userData}" + "${mainViewModel.currentUser}"
+                )
                 mainViewModel.setIsHomeInit(true)
                 mainViewModel.setIsLoading(false)
             }
@@ -334,13 +343,18 @@ fun HomeContainer(
             confirmButton = {
                 Button(
                     onClick = {
-                        val editor = sharedPreferences.edit()
-                        editor.remove(COMPANYVAR_KEY)
-                        editor.apply()
-                        logoutConfirmDialogShown = false
-                        mainViewModel.signOutFromUser()
-                        navController.popBackStack()
-                        rootNavController.navigate(NavGraphs.ROOT) {
+                        runBlocking {
+                            mainViewModel.setIsLoading(true)
+                            val editor = sharedPreferences.edit()
+                            editor.remove(COMPANYVAR_KEY)
+                            editor.apply()
+                            logoutConfirmDialogShown = false
+                            mainViewModel.signOutFromUser()
+                            navController.popBackStack()
+                            rootNavController.navigate(NavGraphs.ROOT) {
+                                popUpTo(NavGraphs.HOME) { inclusive = true }
+                            }
+                            mainViewModel.setIsLoading(false)
                         }
                     }
                 ) {

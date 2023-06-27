@@ -67,8 +67,28 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
     var presentFlag by rememberSaveable { mutableStateOf(isAttended(selectedAttendance)) }
     var leaveFlag by rememberSaveable { mutableStateOf(selectedAttendance?.leaveflag == true) }
     var permissionFlag by rememberSaveable { mutableStateOf(selectedAttendance?.permissionflag == true) }
+    val getLeavePermission =
+        if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
+            if (selectedAttendance.leaveflag == true) {
+                mainViewModel.leaveRequestList?.find {
+                    it.permissionflag == false && it.approvedflag == true && (checkHaveSameDates(
+                        it.leavestart,
+                        selectedAttendance.timein
+                    ) || checkHaveSameDates(it.leaveend, selectedAttendance.timein))
+                }
+            } else {
+                mainViewModel.leaveRequestList?.find {
+                    it.permissionflag == true && it.approvedflag == true && (checkHaveSameDates(
+                        it.leavestart,
+                        selectedAttendance.timein
+                    ) || checkHaveSameDates(it.leaveend, selectedAttendance.timein))
+                }
+            }
+        } else {
+            null
+        }
 
-    var leavePermissionAttendance: LeaveRequest? by rememberSaveable { mutableStateOf(null)}
+    val leavePermissionAttendance by mutableStateOf(getLeavePermission)
 
     val disabledDatesState = rememberSaveable { mutableListOf<LocalDate>() }
 
@@ -84,7 +104,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
 
     fun addDisabledDates() {
         val attendanceList = mainViewModel.attendanceList ?: return
-        for (attendance in attendanceList){
+        for (attendance in attendanceList) {
             if (attendance.leaveflag != true && attendance.permissionflag != true) {
                 continue
             }
@@ -203,6 +223,32 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceLarge)
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Status",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Right
+                        )
+                        Text(
+                            text = when {
+                                selectedAttendance?.leaveflag == true -> "Change leave date"
+                                selectedAttendance?.permissionflag == true -> "Change permission date"
+                                isAttended(selectedAttendance) -> "Change attendance time"
+                                selectedAttendance?.absentflag == true -> "Absent to Permission/Leave/Present"
+                                else -> ""
+                            },
+                            modifier = Modifier.weight(2f),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                     if (!(selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -238,16 +284,6 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                         }
                     }
                     if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
-                        if (selectedAttendance.leaveflag == true){
-                            leavePermissionAttendance = mainViewModel.leaveRequestList?.find {
-                                it.permissionflag == false && it.approvedflag == true && (checkHaveSameDates(it.leavestart,selectedAttendance.timein) || checkHaveSameDates(it.leaveend, selectedAttendance.timein))
-                            }
-                        }
-                        if (selectedAttendance.permissionflag == true){
-                            leavePermissionAttendance = mainViewModel.leaveRequestList?.find {
-                                it.permissionflag == true && it.approvedflag == true && (checkHaveSameDates(it.leavestart,selectedAttendance.timein) || checkHaveSameDates(it.leaveend, selectedAttendance.timein))
-                            }
-                        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
@@ -267,8 +303,13 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                         calendarDateFromState.show()
                                         addDisabledDates()
                                     },
-                                value = formatLocalDateToString(db_util.dateToLocalDate(
-                                    leavePermissionAttendance?.leavestart!!)),
+                                value = if (leavePermissionAttendance != null) {
+                                    formatLocalDateToString(
+                                        db_util.dateToLocalDate(
+                                            leavePermissionAttendance?.leavestart!!
+                                        )
+                                    )
+                                } else "",
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,
@@ -298,12 +339,21 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 textAlign = TextAlign.Right
                             )
                             OutlinedTextField(
-                                modifier = Modifier.weight(2f).clickable {
-                                    calendarDateToState.show()
-                                    addDisabledDates()
+                                modifier = Modifier
+                                    .weight(2f)
+                                    .clickable {
+                                        calendarDateToState.show()
+                                        addDisabledDates()
+                                    },
+                                value = if (leavePermissionAttendance != null) {
+                                    formatLocalDateToString(
+                                        db_util.dateToLocalDate(
+                                            leavePermissionAttendance?.leaveend!!
+                                        )
+                                    )
+                                } else {
+                                    ""
                                 },
-                                value = formatLocalDateToString(db_util.dateToLocalDate(
-                                    leavePermissionAttendance?.leaveend!!)),
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,

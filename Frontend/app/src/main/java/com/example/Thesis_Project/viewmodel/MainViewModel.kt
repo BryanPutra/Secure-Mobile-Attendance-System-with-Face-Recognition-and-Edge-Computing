@@ -473,7 +473,7 @@ class MainViewModel(val application: Application) : ViewModel() {
         isCorrectionDialogShown = true
     }
 
-    fun signOutFromAdmin() {
+    suspend fun signOutFromAdmin() {
         setIsAdminHomeInit(false)
         setIsAdminUsersInit(false)
         setIsLoggedInAsAdmin(false)
@@ -483,13 +483,12 @@ class MainViewModel(val application: Application) : ViewModel() {
         auth.signOut()
     }
 
-    fun signOutFromUser() {
+    suspend fun signOutFromUser() {
         setIsHomeInit(false)
         setIsCalendarInit(false)
         setIsHistoryInit(false)
         setUserData(null)
         setCompanyVariable(null)
-
         currentUser = null
         correctionSelected = true
         leaveSelected = false
