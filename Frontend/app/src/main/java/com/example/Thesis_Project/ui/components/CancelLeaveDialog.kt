@@ -83,7 +83,7 @@ fun CancelLeaveDialog(
         AlertDialog(
             onDismissRequest = { cancelRequestConfirmDialogShown = false },
             title = { Text(text = "Cancel Leave Request") },
-            text = { Text(text = "Are you sure you want to cancel you leave request?") },
+            text = { Text(text = "Are you sure you want to cancel the leave request?") },
             confirmButton = {
                 Button(
                     onClick = {

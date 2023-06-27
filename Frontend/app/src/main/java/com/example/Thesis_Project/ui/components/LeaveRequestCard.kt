@@ -22,7 +22,7 @@ import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
 
 @Composable
-fun LeaveRequestCard(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel, onViewClick: (LeaveRequest) -> Unit) {
+fun LeaveRequestCard(leaveRequest: LeaveRequest?, onViewClick: (LeaveRequest) -> Unit) {
     val leaveTitle = "Leave Request";
 
     Box(
@@ -34,7 +34,6 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel, 
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .clickable{
-                    Log.d("leavecardlcick", "click: $leaveRequest")
                     if (leaveRequest?.approvedflag == null || leaveRequest.approvedflag == false) {
                         onViewClick(leaveRequest!!)
                     }
@@ -84,7 +83,7 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel, 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = formatDateToString(leaveRequest?.createdate) ?: "",
+                        text = "Created at: ${formatDateToString(leaveRequest?.createdate) ?: ""}",
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )

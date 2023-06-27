@@ -1,6 +1,8 @@
 package com.example.Thesis_Project.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
@@ -22,7 +24,7 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToString
 
 @Composable
-fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
+fun CorrectionRequestCard(correctionRequest: CorrectionRequest?, onViewClick: (CorrectionRequest) -> Unit) {
     val correctionTitle: String = "Correction Request";
 
     Box(
@@ -32,7 +34,11 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight(),
+                .wrapContentHeight().clickable {
+                    if (correctionRequest?.approvedflag == null || correctionRequest.approvedflag == false) {
+                        onViewClick(correctionRequest!!)
+                    }
+                },
             colors = CardDefaults.cardColors(
                 containerColor = colorResource(
                     id = R.color.white
@@ -59,7 +65,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                         .fillMaxHeight()
                 ) {
                     Text(
-                        text = correctionRequest.reason ?: "",
+                        text = correctionRequest?.reason ?: "",
                         color = colorResource(id = R.color.black),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -77,7 +83,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = formatDateToString(correctionRequest.createdate) ?: "",
+                        text = "Created at: ${formatDateToString(correctionRequest?.createdate) ?: ""}",
                         color = colorResource(id = R.color.gray_700),
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -87,7 +93,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                         horizontalArrangement = Arrangement.spacedBy(space = MaterialTheme.spacing.spaceSmall)
                     ) {
                         when {
-                            correctionRequest.approvedflag == true -> {
+                            correctionRequest?.approvedflag == true -> {
                                 Icon(
                                     imageVector = Icons.Filled.CheckCircle,
                                     contentDescription = null,
@@ -102,7 +108,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
-                            correctionRequest.rejectedflag == true -> {
+                            correctionRequest?.rejectedflag == true -> {
                                 Icon(
                                     imageVector = Icons.Filled.Block, contentDescription = null,
                                     tint = colorResource(
@@ -116,7 +122,7 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest) {
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
-                            correctionRequest.approvedflag == false && correctionRequest.rejectedflag == false -> {
+                            correctionRequest?.approvedflag == false && correctionRequest.rejectedflag == false -> {
                                 Icon(
                                     imageVector = Icons.Filled.Schedule, contentDescription = null,
                                     tint = colorResource(

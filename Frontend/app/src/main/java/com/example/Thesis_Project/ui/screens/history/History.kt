@@ -15,10 +15,7 @@ import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.components.CancelLeaveDialog
-import com.example.Thesis_Project.ui.components.CorrectionRequestCard
-import com.example.Thesis_Project.ui.components.LeaveRequestCard
-import com.example.Thesis_Project.ui.components.MainHeader
+import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -93,7 +90,10 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
                         )
                     }
                     items(mainViewModel.correctionRequestList!!) { correctionCardItem ->
-                        CorrectionRequestCard(correctionCardItem)
+                        CorrectionRequestCard(correctionCardItem){ correctionRequestItem ->
+                            selectedViewCorrectionRequest = correctionRequestItem
+                            mainViewModel.toggleCancelCorrectionDialog()
+                        }
                     }
                 }
             } else {
@@ -130,7 +130,6 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
                     items(mainViewModel.leaveRequestList!!) { leaveCardItem ->
                         LeaveRequestCard(
                             leaveRequest = leaveCardItem,
-                            mainViewModel
                         ) { leaveRequestItem ->
                             selectedViewLeaveRequest = leaveRequestItem
                             mainViewModel.toggleCancelLeaveDialog()
@@ -161,6 +160,12 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
             CancelLeaveDialog(selectedViewLeaveRequest, mainViewModel) {
                 mainViewModel.toggleCancelLeaveDialog()
                 selectedViewLeaveRequest = null
+            }
+        }
+        if (mainViewModel.isCancelCorrectionDialogShown) {
+            CancelCorrectionDialog(selectedViewCorrectionRequest, mainViewModel) {
+                mainViewModel.toggleCancelCorrectionDialog()
+                selectedViewCorrectionRequest = null
             }
         }
     }

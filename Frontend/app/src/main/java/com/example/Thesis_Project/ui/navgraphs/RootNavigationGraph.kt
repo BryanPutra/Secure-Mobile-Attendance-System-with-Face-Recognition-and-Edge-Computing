@@ -46,13 +46,11 @@ fun RootNavigationGraph(navController: NavHostController, mainViewModel: MainVie
                 if (mainViewModel.currentUser != null) {
                     Log.e("check logged in as admin", "${mainViewModel.isLoggedInAsAdmin}")
                     if (mainViewModel.isLoggedInAsAdmin) {
-                        navController.navigate(NavGraphs.ADMIN) {
-                            popUpTo(NavGraphs.AUTH) { inclusive = true }
-                        }
+                        navController.popBackStack()
+                        navController.navigate(NavGraphs.ADMIN)
                     } else {
-                        navController.navigate(NavGraphs.HOME) {
-                            popUpTo(NavGraphs.AUTH) { inclusive = true }
-                        }
+                        navController.popBackStack()
+                        navController.navigate(NavGraphs.HOME)
                     }
                 }
                 isLaunched = true

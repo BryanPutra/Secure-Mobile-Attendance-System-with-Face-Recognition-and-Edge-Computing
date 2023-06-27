@@ -123,7 +123,7 @@ class MainViewModel(val application: Application) : ViewModel() {
                     val errorMessage = exception.message
                     onFailure(errorMessage ?: "Login failed with error code: $errorCode")
                 } else {
-                    onFailure("Login failed")
+                    onFailure("Login failed: ${exception.message}")
                 }
             }
         }

@@ -63,7 +63,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
             )
         )
     }
-    var detail by rememberSaveable { mutableStateOf("I forgot my homework fuck this world") }
+    var detail by rememberSaveable { mutableStateOf("") }
     var presentFlag by rememberSaveable { mutableStateOf(isAttended(selectedAttendance)) }
     var leaveFlag by rememberSaveable { mutableStateOf(selectedAttendance?.leaveflag == true) }
     var permissionFlag by rememberSaveable { mutableStateOf(selectedAttendance?.permissionflag == true) }
@@ -240,16 +240,12 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                     if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
                         if (selectedAttendance.leaveflag == true){
                             leavePermissionAttendance = mainViewModel.leaveRequestList?.find {
-                                it.permissionflag == false && it.approvedflag == true && (it.leavestart == selectedAttendance.timein || it.leaveend == selectedAttendance.timein || (selectedAttendance.timein?.after(
-                                    it.leavestart
-                                ) == true && selectedAttendance.timein?.before(it.leaveend) == true))
+                                it.permissionflag == false && it.approvedflag == true && (checkHaveSameDates(it.leavestart,selectedAttendance.timein) || checkHaveSameDates(it.leaveend, selectedAttendance.timein))
                             }
                         }
                         if (selectedAttendance.permissionflag == true){
                             leavePermissionAttendance = mainViewModel.leaveRequestList?.find {
-                                it.permissionflag == true && it.approvedflag == true && (it.leavestart == selectedAttendance.timein || it.leaveend == selectedAttendance.timein || (selectedAttendance.timein?.after(
-                                    it.leavestart
-                                ) == true && selectedAttendance.timein?.before(it.leaveend) == true))
+                                it.permissionflag == true && it.approvedflag == true && (checkHaveSameDates(it.leavestart,selectedAttendance.timein) || checkHaveSameDates(it.leaveend, selectedAttendance.timein))
                             }
                         }
                         Row(

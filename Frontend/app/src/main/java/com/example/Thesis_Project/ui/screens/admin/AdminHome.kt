@@ -255,7 +255,7 @@ fun AdminHomeContainer(rootNavController: NavHostController, navController: NavC
                         )
                     )
                     CompanyQuotasRow(
-                        name = "Max Compensation Work Time", value = convertTimeMinutesIntToString(
+                        name = "Compensation Work Time", value = convertTimeMinutesIntToString(
                             mainViewModel.companyVariable?.maxcompensatetime
                         )
                     )

@@ -125,6 +125,7 @@ fun LoginAdminInputs(navController: NavController, mainViewModel: MainViewModel)
                 mainViewModel.setIsLoading(false)
             }
         }, { errorMessage -> errorText = errorMessage })
+        mainViewModel.setIsLoading(false)
     }
 
     fun onSubmitLogin() {

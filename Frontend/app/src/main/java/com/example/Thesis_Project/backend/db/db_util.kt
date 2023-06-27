@@ -998,6 +998,36 @@ object db_util {
 //            }
     }
 
+    fun getHolidayThisMonth(
+        db: FirebaseFirestore,
+        datestart:Date,
+        dateend:Date,
+        callback: (List<Holiday>?) -> Unit
+    ) {
+        db.collection("holidays")
+            .whereGreaterThanOrEqualTo("date",datestart)
+            .whereLessThanOrEqualTo("date",dateend)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val holidays = mutableListOf<Holiday>()
+                if (!snapshot.isEmpty) {
+                    for (i in snapshot) {
+                        val temp = i.toObject<Holiday>()
+                        temp.date = Date.from(
+                            dateToLocalDate(temp.date!!).atStartOfDay()
+                                .atZone(ZoneId.systemDefault()).toInstant()
+                        )
+                        holidays.add(temp)
+                    }
+                }
+                callback(holidays)
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Error Fetch Data", "getHolidays $exception")
+                callback(null)
+            }
+    }
+
     suspend fun getPendingRequestDates(
         db: FirebaseFirestore,
         userid: String,
@@ -1086,7 +1116,7 @@ object db_util {
     suspend fun cancelCorrectionRequest(
         db: FirebaseFirestore,
         correctionrequestid: String,
-        callback: (Boolean) -> Unit
+        callback: suspend (Boolean) -> Unit
     ) {
         val correctionref = db.collection("correction_requests").document(correctionrequestid)
         try {
