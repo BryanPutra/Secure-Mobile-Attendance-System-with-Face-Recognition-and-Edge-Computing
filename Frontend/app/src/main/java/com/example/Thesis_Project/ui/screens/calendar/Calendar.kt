@@ -387,7 +387,7 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
     ) {
         MainHeader(
             page = currentRoute,
-            userFullName = "Bryan Putra",
+            userFullName = mainViewModel.userData?.name,
             switchTabs = mainViewModel.switchHistoryTab,
             mainViewModel = mainViewModel
         )

@@ -100,11 +100,11 @@ fun isValidName(name: String): Boolean {
 
 fun isValidLeaveRequestDateFrom(date: LocalDate): Boolean {
     val currentDate = LocalDate.now()
-    return date.isAfter(currentDate) || date.isEqual(currentDate)
+    return (date.isAfter(currentDate) || date.isEqual(currentDate)) && checkLocalDateIsInCurrentMonth(date)
 }
 
 fun isValidLeaveRequestDateTo(dateFrom: LocalDate, dateTo: LocalDate): Boolean {
-    return dateTo.isAfter(dateFrom) || dateTo.isEqual(dateFrom)
+    return (dateTo.isAfter(dateFrom) || dateTo.isEqual(dateFrom)) && checkLocalDateIsInCurrentMonth(dateTo)
 }
 
 fun isValidCorrectionRequestDateFrom(date: LocalDate?, attendance: Attendance?): Boolean {

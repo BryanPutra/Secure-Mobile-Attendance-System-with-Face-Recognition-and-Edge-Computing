@@ -31,13 +31,16 @@ import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun CancelLeaveDialog(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel, onCancelClicked: () -> Unit) {
+fun CancelLeaveDialog(
+    leaveRequest: LeaveRequest?,
+    mainViewModel: MainViewModel,
+    onCancelClicked: () -> Unit
+) {
 
     val cancelLeaveScope = rememberCoroutineScope()
     val context: Context = LocalContext.current
 
     var cancelRequestConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
-    var successCancel by rememberSaveable { mutableStateOf(false) }
 
     val postCancelLeaveRequest: suspend (leaveRequest: LeaveRequest) -> Unit = { leaveRequestItem ->
         mainViewModel.setIsLoading(true)
@@ -47,24 +50,25 @@ fun CancelLeaveDialog(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel,
                 leaveRequestItem.leaverequestid!!
             ) { cancelLeaveSuccess ->
                 if (cancelLeaveSuccess) {
-                    successCancel = true
+                    db_util.getLeaveRequest(
+                        mainViewModel.db,
+                        mainViewModel.userData?.userid,
+                        mainViewModel.setLeaveRequestList
+                    )
+                    db_util.getUser(
+                        mainViewModel.db,
+                        mainViewModel.userData?.userid!!,
+                        mainViewModel.setUserData
+                    )
                     mainViewModel.showToast(context, "Leave Request cancelled successfully")
                     mainViewModel.toggleCancelLeaveDialog()
                 } else {
                     Log.e("Error", "Failed to cancel leave request")
                 }
             }
-            if (successCancel) {
-                db_util.getLeaveRequest(
-                    mainViewModel.db,
-                    mainViewModel.userData?.userid,
-                    mainViewModel.setLeaveRequestList
-                )
-            }
         } catch (e: Exception) {
             Log.e("Error", "Failed to cancel leave request: $e")
         }
-        successCancel = false
         mainViewModel.setIsLoading(false)
     }
 
@@ -76,9 +80,6 @@ fun CancelLeaveDialog(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel,
         }
     }
     if (cancelRequestConfirmDialogShown) {
-        if (mainViewModel.isLoading) {
-            CircularLoadingBar()
-        }
         AlertDialog(
             onDismissRequest = { cancelRequestConfirmDialogShown = false },
             title = { Text(text = "Cancel Leave Request") },
@@ -86,8 +87,8 @@ fun CancelLeaveDialog(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel,
             confirmButton = {
                 Button(
                     onClick = {
-                        onCancelRequestClicked()
                         cancelRequestConfirmDialogShown = false
+                        onCancelRequestClicked()
                     }
                 ) {
                     Text(text = "Cancel Leave")
@@ -110,7 +111,9 @@ fun CancelLeaveDialog(leaveRequest: LeaveRequest?, mainViewModel: MainViewModel,
             usePlatformDefaultWidth = false
         )
     ) {
-
+        if (mainViewModel.isLoading) {
+            CircularLoadingBar()
+        }
         Card(
             modifier = Modifier
                 .fillMaxWidth()

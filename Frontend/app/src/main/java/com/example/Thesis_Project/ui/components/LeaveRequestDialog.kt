@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.Window
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.*
@@ -84,6 +86,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                 mainViewModel.userData?.userid,
                 mainViewModel.setLeaveRequestList
             )
+            Log.d("getleaverequest after submit", "${mainViewModel.leaveRequestList}")
             errorText = ""
             mainViewModel.showToast(context, "Leave Request has been created successfully")
             mainViewModel.toggleRequestLeaveDialog()
@@ -141,7 +144,6 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                                             )
                                             errorText = "Leave request exceeds monthly quota"
                                         } else if (leaveRequest.duration!! + leaveAmount > mainViewModel.userData?.leaveleft!!) {
-                                            // Put error popup here on frontend
                                             mainViewModel.showToast(
                                                 context,
                                                 "Not enough leave left to create request"
@@ -153,8 +155,6 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                                     }
                                 }
                             }
-                        } else {
-                            postCreateLeaveRequest(leaveRequest)
                         }
                     }
                 } else {
@@ -191,12 +191,14 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
         dateToIsValid = isValidLeaveRequestDateTo(dateFrom, dateTo)
 
         if (!dateFromIsValid) {
-            errorText = "Date From cannot be earlier than today"
+            errorText =
+                "Date From cannot be earlier than today and can only request in the current month"
             return
         }
 
         if (!dateToIsValid) {
-            errorText = "Date To cannot be earlier than Date From"
+            errorText =
+                "Date To cannot be earlier than Date From and can only request in the current month"
             return
         }
 
@@ -229,6 +231,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
             confirmButton = {
                 Button(
                     onClick = {
+                        confirmLeaveRequest = false
                         onConfirmCreateLeaveRequestClicked()
                     }
                 ) {
@@ -286,7 +289,11 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
             elevation = CardDefaults.cardElevation(defaultElevation = MaterialTheme.elevation.medium)
         ) {
             Column(
-                modifier = Modifier.padding(MaterialTheme.spacing.spaceLarge),
+                modifier = Modifier
+                    .padding(MaterialTheme.spacing.spaceLarge)
+                    .verticalScroll(
+                        rememberScrollState()
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
             ) {

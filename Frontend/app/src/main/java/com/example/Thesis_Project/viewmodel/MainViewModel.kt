@@ -491,7 +491,7 @@ class MainViewModel(val application: Application) : ViewModel() {
         setCompanyVariable(null)
 
         currentUser = null
-        correctionSelected = false
+        correctionSelected = true
         leaveSelected = false
         auth.signOut()
     }

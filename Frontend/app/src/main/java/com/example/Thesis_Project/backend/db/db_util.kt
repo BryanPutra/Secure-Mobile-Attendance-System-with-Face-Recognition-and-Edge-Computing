@@ -1055,7 +1055,7 @@ object db_util {
     suspend fun cancelLeaveRequest(
         db: FirebaseFirestore,
         leaverequestid: String,
-        callback: (Boolean) -> Unit
+        callback: suspend (Boolean) -> Unit
     ) {
         val leaveref = db.collection("leave_requests").document(leaverequestid)
         try {

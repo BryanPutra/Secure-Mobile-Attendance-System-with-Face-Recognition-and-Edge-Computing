@@ -118,7 +118,7 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
         } else {
             if (mainViewModel.leaveRequestList?.isEmpty() == false) {
                 LazyColumn(
-                    modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium),
+                    modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium).padding(bottom = MaterialTheme.spacing.spaceExtraLarge),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
                 ) {
                     item {

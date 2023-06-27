@@ -29,7 +29,7 @@ fun ButtonHalfWidth(
         enabled = isEnabled,
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp),
+            .height(65.dp),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = MaterialTheme.elevation.medium,
             pressedElevation = MaterialTheme.elevation.large,

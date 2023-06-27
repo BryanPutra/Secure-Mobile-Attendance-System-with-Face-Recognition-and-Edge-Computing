@@ -260,7 +260,7 @@ object db_testing {
 
     // attendance is the date they choose for request
 //    fun testCreateCorrectionRequest(db: FirebaseFirestore,user: User, attendance:Attendance) {
-//        // Guideline for creating corretion request for all scenarios:
+//        // Guideline for creating correction request for all scenarios:
 //        // timein and timeout stores both date and time of every entry
 //        // date parameter in companyTimeIn and companyTimeOut should be set to date of new request
 //
@@ -365,15 +365,15 @@ object db_testing {
 //        }
 //    }
 
-    fun testCancelCorrectionRequest(db:FirebaseFirestore, correctionrequestid: String){
-        db_util.cancelCorrectionRequest(db, correctionrequestid) { result ->
-            if (result) {
-                // Delete success
-            } else {
-                // Admin has already approved/rejected the request
-            }
-        }
-    }
+//    fun testCancelCorrectionRequest(db:FirebaseFirestore, correctionrequestid: String){
+//        db_util.cancelCorrectionRequest(db, correctionrequestid) { result ->
+//            if (result) {
+//                // Delete success
+//            } else {
+//                // Admin has already approved/rejected the request
+//            }
+//        }
+//    }
 
     // User here refers to the admin whose approving the request (current logged in user)
 //    fun testApproveLeaveRequest(db: FirebaseFirestore, leaverequest: LeaveRequest, user: User, companyparams: CompanyParams){
@@ -381,15 +381,15 @@ object db_testing {
 //    }
 
     // User here refers to the admin whose approving the request (current logged in user)
-    fun testApproveCorrectionRequest(db: FirebaseFirestore, correctionrequest: CorrectionRequest, user: User, companyparams: CompanyParams){
-        db_util.approveCorrectionRequest(db, correctionrequest, user, companyparams)
-    }
-
-    fun testRejectLeaveRequest(db:FirebaseFirestore, leaverequestid: String, userid: String){
-        db_util.rejectLeaveRequest(db, leaverequestid, userid);
-    }
-
-    fun testRejectCorrectionRequest(db: FirebaseFirestore,correctionrequestid: String, userid: String){
-        db_util.rejectCorrectionRequest(db, correctionrequestid, userid);
-    }
+//    fun testApproveCorrectionRequest(db: FirebaseFirestore, correctionrequest: CorrectionRequest, user: User, companyparams: CompanyParams){
+//        db_util.approveCorrectionRequest(db, correctionrequest, user, companyparams)
+//    }
+//
+//    fun testRejectLeaveRequest(db:FirebaseFirestore, leaverequestid: String, userid: String){
+//        db_util.rejectLeaveRequest(db, leaverequestid, userid);
+//    }
+//
+//    fun testRejectCorrectionRequest(db: FirebaseFirestore,correctionrequestid: String, userid: String){
+//        db_util.rejectCorrectionRequest(db, correctionrequestid, userid);
+//    }
 }

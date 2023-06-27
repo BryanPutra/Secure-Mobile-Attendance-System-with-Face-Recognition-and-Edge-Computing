@@ -16,34 +16,6 @@ fun isAttended(attendance: Attendance?): Boolean {
     return attendance.absentflag == false && attendance.permissionflag == false && attendance.leaveflag == false && attendance.timeout != null
 }
 
-//fun getListOfAttendancesByMonth(
-//    attendances: List<Attendance>,
-//    month: Int
-//): MutableList<Attendance>? {
-//    if (attendances.isEmpty()) {
-//        return null
-//    }
-//    val attendedAttendances = mutableListOf<Attendance>()
-//    val filteredAttendances = mutableListOf<Attendance>()
-//    val calendar = Calendar.getInstance()
-//    val dateFormat = SimpleDateFormat("MM", Locale.ENGLISH)
-//
-//    for (attendance in attendances) {
-//        if (isAttended(attendance)) {
-//            attendedAttendances.add(attendance)
-//        }
-//    }
-//
-//    for (attendance in attendedAttendances) {
-//        calendar.time = attendance.timeout!!
-//        val dateMonth = dateFormat.format(calendar.time).toInt()
-//        if (dateMonth == month) {
-//            filteredAttendances.add(attendance)
-//        }
-//    }
-//    return filteredAttendances
-//}
-
 fun getAttendanceByDate(date: LocalDate?, attendances: List<Attendance>): Attendance? {
     if (date == null) {
         return null
@@ -146,6 +118,11 @@ fun getEndOfYearDate(): Date{
 
 fun convertHexToComposeColor(colorString: String): Color {
     return Color(android.graphics.Color.parseColor("#" + colorString))
+}
+
+fun checkLocalDateIsInCurrentMonth(date: LocalDate): Boolean {
+    val currentMonth = LocalDate.now().month
+    return date.month == currentMonth
 }
 
 fun checkHaveSameDates(date1: Date?, date2: Date?): Boolean{
