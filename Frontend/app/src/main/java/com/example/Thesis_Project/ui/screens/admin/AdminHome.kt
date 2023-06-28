@@ -29,10 +29,7 @@ import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.components.AdminBottomNavigationBar
-import com.example.Thesis_Project.ui.components.AdminEditCompanyParamsDialog
-import com.example.Thesis_Project.ui.components.ButtonHalfWidth
-import com.example.Thesis_Project.ui.components.CompanyQuotasRow
+import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.navgraphs.AdminNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.convertTimeMinutesIntToString
@@ -48,6 +45,9 @@ fun AdminHomeScreen(
     navController: NavHostController = rememberNavController(),
     mainViewModel: MainViewModel
 ) {
+    if (mainViewModel.isLoading) {
+        CircularLoadingBar()
+    }
     Scaffold(
         bottomBar = { AdminBottomNavigationBar(navController = navController) },
         content = { paddingValues ->

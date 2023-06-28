@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.Thesis_Project.routes.AdminBottomNavBarRoutes
+import com.example.Thesis_Project.ui.screens.admin.AdminHolidaysScreen
 import com.example.Thesis_Project.ui.screens.admin.AdminHomeContainer
 import com.example.Thesis_Project.ui.screens.admin.AdminHomeScreen
 import com.example.Thesis_Project.ui.screens.admin.AdminUsersScreen
@@ -22,6 +23,9 @@ fun AdminNavGraph(rootNavController: NavHostController, navController: NavHostCo
         }
         composable(route = AdminBottomNavBarRoutes.AdminUsersScreen.route) {
             AdminUsersScreen(navController = navController, mainViewModel = mainViewModel)
+        }
+        composable(route = AdminBottomNavBarRoutes.AdminHolidaysScreen.route) {
+            AdminHolidaysScreen(navController = navController, mainViewModel = mainViewModel)
         }
     }
 }

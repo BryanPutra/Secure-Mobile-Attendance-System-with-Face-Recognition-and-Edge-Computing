@@ -4,6 +4,8 @@ import android.util.Patterns
 import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_util
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 //edit company variables
 fun isValidTapIn(tapInTime: String?): Boolean {
@@ -107,17 +109,16 @@ fun isValidLeaveRequestDateTo(dateFrom: LocalDate, dateTo: LocalDate): Boolean {
     return (dateTo.isAfter(dateFrom) || dateTo.isEqual(dateFrom)) && checkLocalDateIsInCurrentMonth(dateTo)
 }
 
-fun isValidCorrectionRequestDateFrom(date: LocalDate?, attendance: Attendance?): Boolean {
-    if (date == null){
-        return false
-    }
-    if (attendance == null) {
-        return false
-    }
-    val attendanceDate = attendance.timein?.let { db_util.dateToLocalDate(it) } ?: return false
-    return attendanceDate.isEqual(date)
+fun isValidDetailRequest(detail: String): Boolean {
+    return detail.isNotEmpty()
 }
 
-//fun isValidCorrectionRequestDateTo(date: LocalDate, attendance: Attendance): Boolean {
-//
-//}
+fun isValidTimeOut(timeIn: String?, timeOut: String?): Boolean {
+    if (timeIn == null || timeOut == null){
+        return false
+    }
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val localTimeIn = LocalTime.parse(timeIn, formatter)
+    val localTimeOut = LocalTime.parse(timeOut, formatter)
+    return localTimeOut.isAfter(localTimeIn)
+}

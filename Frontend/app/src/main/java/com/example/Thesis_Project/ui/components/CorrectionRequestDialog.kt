@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
@@ -39,34 +41,13 @@ import com.maxkeppeler.sheets.clock.models.ClockConfig
 import com.maxkeppeler.sheets.clock.models.ClockSelection
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.util.*
 
 @Composable
 fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: Attendance? = null) {
     val createCorrectionRequestScope = rememberCoroutineScope()
     val context: Context = LocalContext.current
 
-    val date by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
-    var dateFrom: LocalDate by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
-    var dateTo: LocalDate by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
-
-    var tapInTime: String? by rememberSaveable {
-        mutableStateOf(
-            formatDateToStringTimeOnly(
-                selectedAttendance?.timein
-            )
-        )
-    }
-    var tapOutTime: String? by rememberSaveable {
-        mutableStateOf(
-            formatDateToStringTimeOnly(
-                selectedAttendance?.timeout
-            )
-        )
-    }
-    var detail by rememberSaveable { mutableStateOf("") }
-    var presentFlag by rememberSaveable { mutableStateOf(isAttended(selectedAttendance)) }
-    var leaveFlag by rememberSaveable { mutableStateOf(selectedAttendance?.leaveflag == true) }
-    var permissionFlag by rememberSaveable { mutableStateOf(selectedAttendance?.permissionflag == true) }
     val getLeavePermission =
         if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
             if (selectedAttendance.leaveflag == true) {
@@ -87,8 +68,40 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
         } else {
             null
         }
-
     val leavePermissionAttendance by mutableStateOf(getLeavePermission)
+    val date by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
+    var dateFrom: LocalDate by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
+    var dateTo: LocalDate by rememberSaveable {
+        mutableStateOf(
+            if (leavePermissionAttendance != null) {
+                db_util.dateToLocalDate(
+                    leavePermissionAttendance?.leaveend!!
+                )
+            } else {
+                mainViewModel.calendarSelectedDate.plusDays(1)
+            }
+        )
+    }
+
+
+    var tapInTime: String? by rememberSaveable {
+        mutableStateOf(
+            formatDateToStringTimeOnly(
+                selectedAttendance?.timein
+            )
+        )
+    }
+    var tapOutTime: String? by rememberSaveable {
+        mutableStateOf(
+            formatDateToStringTimeOnly(
+                selectedAttendance?.timeout
+            )
+        )
+    }
+    var detail by rememberSaveable { mutableStateOf("") }
+    var presentFlag by rememberSaveable { mutableStateOf(isAttended(selectedAttendance)) }
+    var leaveFlag by rememberSaveable { mutableStateOf(selectedAttendance?.leaveflag == true) }
+    var permissionFlag by rememberSaveable { mutableStateOf(selectedAttendance?.permissionflag == true) }
 
     val disabledDatesState = rememberSaveable { mutableListOf<LocalDate>() }
 
@@ -97,8 +110,10 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
     val clockTapInTimeState = rememberUseCaseState()
     val clockTapOutTimeState = rememberUseCaseState()
 
-//    var dateFromIsValid by remember { mutableStateOf(true) }
-//    var dateToIsValid by remember { mutableStateOf(true) }
+    var dateToIsValid by remember { mutableStateOf(true) }
+    var statusIsValid by remember { mutableStateOf(true) }
+    var detailIsValid by remember { mutableStateOf(true) }
+    var timeOutIsValid by remember { mutableStateOf(true) }
 
     var errorText by remember { mutableStateOf("") }
 
@@ -136,20 +151,230 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
             mainViewModel.setIsLoading(false)
         }
 
+    val checkValidCreateCorrectionRequest: suspend (correctionRequest: CorrectionRequest) -> Unit =
+        { correctionRequest ->
+            mainViewModel.setIsLoading(true)
+            try {
+                db_util.checkCorrectionRequestExist(
+                    mainViewModel.db,
+                    selectedAttendance?.attendanceid!!
+                ) { exist ->
+                    if (exist != null) {
+                        if (!exist) {
+                            db_util.checkPendingRequestDuration(
+                                mainViewModel.db,
+                                mainViewModel.userData?.userid!!,
+                                correctionRequest.timein!!
+                            ) { leaveamt, permamt ->
+                                if (leaveamt != null) {
+                                    if (correctionRequest.permissionflag!!) {
+                                        db_util.getTotalPermissionThisYear(
+                                            mainViewModel.db,
+                                            mainViewModel.userData?.userid!!,
+                                        ) { data ->
+                                            if (data != null) {
+                                                if (1 + data + permamt!! > mainViewModel.companyVariable?.maxpermissionsleft!!) {
+                                                    mainViewModel.showToast(
+                                                        context,
+                                                        "Not enough permissions left to create request"
+                                                    )
+                                                    errorText =
+                                                        "Not enough permissions left to create request"
+                                                } else {
+                                                    postCreateCorrectionRequest(correctionRequest)
+                                                }
+                                            }
+                                        }
+                                    } else if (correctionRequest.leaveflag!!) {
+                                        if (mainViewModel.userData?.leaveallow!!) {
+                                            db_util.getTotalLeaveThisMonth(
+                                                mainViewModel.db,
+                                                mainViewModel.userData?.userid!!,
+                                            ) { data ->
+                                                if (data != null) {
+                                                    if (1 + data + leaveamt > mainViewModel.companyVariable?.maxmonthlyleaveleft!!) {
+                                                        mainViewModel.showToast(
+                                                            context,
+                                                            "Leave request exceeds monthly quota"
+                                                        )
+                                                        errorText =
+                                                            "Leave request exceeds monthly quota"
+                                                    } else if (1 + leaveamt > mainViewModel.userData?.leaveleft!!) {
+                                                        mainViewModel.showToast(
+                                                            context,
+                                                            "Not enough leave left to create request"
+                                                        )
+                                                        errorText =
+                                                            "Not enough leave left to create request"
+                                                    } else {
+                                                        postCreateCorrectionRequest(
+                                                            correctionRequest
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            mainViewModel.showToast(
+                                                context,
+                                                "Leave not allowed for current user"
+                                            )
+                                            errorText = "Leave not allowed for current user"
+                                        }
+                                    } else if (correctionRequest.presentflag!!) {
+                                        postCreateCorrectionRequest(correctionRequest)
+                                    } else {
+                                        if (selectedAttendance.permissionflag!! || selectedAttendance.leaveflag!!) {
+                                            db_util.checkValidCorrectionRequestDate(
+                                                mainViewModel.db,
+                                                mainViewModel.userData?.userid!!,
+                                                correctionRequest.timein
+                                            ) { valid ->
+                                                if (valid != null) {
+                                                    if (valid == false) {
+                                                        mainViewModel.showToast(
+                                                            context,
+                                                            "New selected date overlaps with an existing attendance/request"
+                                                        )
+                                                        errorText =
+                                                            "New selected date overlaps with an existing attendance/request"
+                                                    } else {
+                                                        postCreateCorrectionRequest(
+                                                            correctionRequest
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            postCreateCorrectionRequest(correctionRequest)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            mainViewModel.showToast(
+                                context,
+                                "Correction request already exists for selected dat"
+                            )
+                            errorText = "Correction request already exists for selected dat"
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                errorText = "Correction request is not valid: ${e.message}"
+                Log.e("Error", "Failed to create correction request: $e")
+            }
+            mainViewModel.setIsLoading(false)
+        }
+
+
     fun onRequestClicked() {
-        val correctionRequest = CorrectionRequest(
-            userid = mainViewModel.userData?.userid,
-            attendanceid = selectedAttendance?.attendanceid,
-            timein = replaceTimeInDate(selectedAttendance?.timein, tapInTime),
-            timeout = replaceTimeInDate(selectedAttendance?.timein, tapOutTime),
-            leaveflag = leaveFlag,
-            permissionflag = permissionFlag,
-            presentflag = presentFlag,
-            reason = detail,
-        )
+
+        var tempCorrectionRequest: CorrectionRequest? = null
+
+        detailIsValid = isValidDetailRequest(detail)
+
+        if (!detailIsValid) {
+            errorText = "Please fill in the details"
+            return
+        }
+        if (selectedAttendance?.absentflag == true) {
+            statusIsValid = leaveFlag == true || permissionFlag == true || presentFlag == true
+            if (!statusIsValid) {
+                errorText = "Please check one of the status"
+                return
+            }
+            if (leaveFlag) {
+                tempCorrectionRequest = CorrectionRequest(
+                    userid = mainViewModel.userData?.userid,
+                    reason = detail,
+                    leaveflag = leaveFlag,
+                    attendanceid = selectedAttendance.attendanceid,
+                    timein = db_util.companyTimeIn(
+                        db_util.dateToLocalDateTime(selectedAttendance.timein!!),
+                        mainViewModel.companyVariable!!
+                    ),
+                    timeout = db_util.companyTimeOut(
+                        db_util.dateToLocalDateTime(selectedAttendance.timeout!!),
+                        mainViewModel.companyVariable!!
+                    )
+                )
+            }
+
+            if (permissionFlag) {
+                tempCorrectionRequest = CorrectionRequest(
+                    userid = mainViewModel.userData?.userid,
+                    reason = detail,
+                    permissionflag = permissionFlag,
+                    attendanceid = selectedAttendance.attendanceid,
+                    timein = db_util.companyTimeIn(
+                        db_util.dateToLocalDateTime(selectedAttendance.timein!!),
+                        mainViewModel.companyVariable!!
+                    ),
+                    timeout = db_util.companyTimeOut(
+                        db_util.dateToLocalDateTime(selectedAttendance.timeout!!),
+                        mainViewModel.companyVariable!!
+                    )
+                )
+            }
+
+            if (presentFlag) {
+                timeOutIsValid = isValidTimeOut(tapInTime, tapOutTime)
+                if (!timeOutIsValid) {
+                    errorText = "Tap out time has to be later than Tap in time"
+                    return
+                }
+                tempCorrectionRequest = CorrectionRequest(
+                    userid = mainViewModel.userData?.userid,
+                    reason = detail,
+                    presentflag = presentFlag,
+                    attendanceid = selectedAttendance.attendanceid,
+                    timein = replaceTimeInDate(selectedAttendance.timein, tapInTime),
+                    timeout = replaceTimeInDate(selectedAttendance.timein, tapOutTime)
+                )
+            }
+        }
+
+        if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
+            dateToIsValid = isValidLeaveRequestDateTo(dateFrom, dateTo)
+            if (!dateToIsValid) {
+                errorText =
+                    "Date To cannot be earlier than Date From"
+                return
+            }
+            tempCorrectionRequest = CorrectionRequest(
+                userid = mainViewModel.userData?.userid,
+                reason = detail,
+                attendanceid = selectedAttendance.attendanceid,
+                timein = db_util.companyTimeIn(
+                    db_util.localDateToLocalDateTime(dateFrom),
+                    mainViewModel.companyVariable!!
+                ),
+                timeout = db_util.companyTimeIn(
+                    db_util.localDateToLocalDateTime(dateTo),
+                    mainViewModel.companyVariable!!
+                )
+            )
+        }
+
+        if (isAttended(selectedAttendance)) {
+            timeOutIsValid = isValidTimeOut(tapInTime, tapOutTime)
+            if (!timeOutIsValid) {
+                errorText = "Tap out time has to be later than Tap in time"
+                return
+            }
+            tempCorrectionRequest = CorrectionRequest(
+                userid = mainViewModel.userData?.userid,
+                reason = detail,
+                attendanceid = selectedAttendance?.attendanceid,
+                timein = replaceTimeInDate(selectedAttendance?.timein, tapInTime),
+                timeout = replaceTimeInDate(selectedAttendance?.timein, tapOutTime)
+            )
+        }
 
         createCorrectionRequestScope.launch {
-            postCreateCorrectionRequest(correctionRequest)
+            if (tempCorrectionRequest != null) {
+                checkValidCreateCorrectionRequest(tempCorrectionRequest)
+            }
         }
     }
 
@@ -180,12 +405,12 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
             is24HourFormat = true
         ),
         selection = ClockSelection.HoursMinutes { hours, minutes ->
-            tapInTime = "$hours:$minutes"
+            tapInTime = "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
         })
     ClockDialog(
         state = clockTapOutTimeState,
         selection = ClockSelection.HoursMinutes { hours, minutes ->
-            tapOutTime = "$hours:$minutes"
+            tapOutTime = "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
         })
 
     Dialog(
@@ -222,16 +447,19 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceLarge)
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Status",
+                            text = "Correction",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -258,7 +486,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             Text(
                                 text = "Date",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Right
                             )
@@ -269,6 +497,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = colorResource(id = R.color.black),
                                     disabledTextColor = colorResource(id = R.color.black),
@@ -281,6 +510,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                         tint = colorResource(id = R.color.blue_500)
                                     )
                                 })
+
                         }
                     }
                     if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
@@ -292,17 +522,13 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             Text(
                                 text = "From",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Right
                             )
                             OutlinedTextField(
                                 modifier = Modifier
-                                    .weight(2f)
-                                    .clickable {
-                                        calendarDateFromState.show()
-                                        addDisabledDates()
-                                    },
+                                    .weight(2f),
                                 value = if (leavePermissionAttendance != null) {
                                     formatLocalDateToString(
                                         db_util.dateToLocalDate(
@@ -313,6 +539,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = colorResource(id = R.color.black),
                                     disabledTextColor = colorResource(id = R.color.black),
@@ -334,7 +561,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             Text(
                                 text = "To",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Right
                             )
@@ -345,18 +572,11 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                         calendarDateToState.show()
                                         addDisabledDates()
                                     },
-                                value = if (leavePermissionAttendance != null) {
-                                    formatLocalDateToString(
-                                        db_util.dateToLocalDate(
-                                            leavePermissionAttendance?.leaveend!!
-                                        )
-                                    )
-                                } else {
-                                    ""
-                                },
+                                value = formatLocalDateToString(dateTo),
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = colorResource(id = R.color.black),
                                     disabledTextColor = colorResource(id = R.color.black),
@@ -381,7 +601,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             Text(
                                 text = "Tap In",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Right
                             )
@@ -395,6 +615,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = colorResource(id = R.color.black),
                                     disabledTextColor = colorResource(id = R.color.black),
@@ -416,7 +637,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             Text(
                                 text = "Tap Out",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Right
                             )
@@ -430,6 +651,8 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 onValueChange = {},
                                 readOnly = true,
                                 enabled = false,
+                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+                                isError = !timeOutIsValid,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     disabledBorderColor = colorResource(id = R.color.black),
                                     disabledTextColor = colorResource(id = R.color.black),
@@ -453,7 +676,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                         Text(
                             text = "Detail",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -462,6 +685,8 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 .weight(2f)
                                 .height(120.dp),
                             value = detail,
+                            isError = !detailIsValid,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                             onValueChange = { newDetail -> detail = newDetail })
                     }
                     if (selectedAttendance?.absentflag == true) {
@@ -473,7 +698,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             Text(
                                 text = "Status",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Right
                             )
@@ -493,6 +718,8 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                             checked = presentFlag,
                                             onCheckedChange = { newPresentFlag ->
                                                 presentFlag = newPresentFlag
+                                                leaveFlag = false
+                                                permissionFlag = false
                                             },
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = colorResource(
@@ -504,7 +731,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                     Text(
                                         text = "Present",
                                         modifier = Modifier,
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Normal,
                                         textAlign = TextAlign.Left
                                     )
@@ -521,6 +748,8 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                             checked = leaveFlag,
                                             onCheckedChange = { newLeaveFlag ->
                                                 leaveFlag = newLeaveFlag
+                                                permissionFlag = false
+                                                presentFlag = false
                                             },
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = colorResource(
@@ -532,7 +761,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                     Text(
                                         text = "Leave",
                                         modifier = Modifier,
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Normal,
                                         textAlign = TextAlign.Left
                                     )
@@ -549,6 +778,8 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                             checked = permissionFlag,
                                             onCheckedChange = { newPermissionFlag ->
                                                 permissionFlag = newPermissionFlag
+                                                leaveFlag = false
+                                                presentFlag = false
                                             },
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = colorResource(
@@ -560,7 +791,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                     Text(
                                         text = "Permission",
                                         modifier = Modifier,
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Normal,
                                         textAlign = TextAlign.Left
                                     )

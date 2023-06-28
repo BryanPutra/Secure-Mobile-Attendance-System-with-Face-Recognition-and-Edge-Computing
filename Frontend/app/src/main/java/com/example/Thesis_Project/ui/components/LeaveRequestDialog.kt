@@ -19,6 +19,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
@@ -57,6 +58,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
 
     var dateFromIsValid by remember { mutableStateOf(true) }
     var dateToIsValid by remember { mutableStateOf(true) }
+    var detailIsValid by remember { mutableStateOf(true) }
     var dateIsValid by remember { mutableStateOf(false) }
     var confirmLeaveRequest by remember { mutableStateOf(false) }
 
@@ -189,6 +191,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
     fun onRequestClicked() {
         dateFromIsValid = isValidLeaveRequestDateFrom(dateFrom)
         dateToIsValid = isValidLeaveRequestDateTo(dateFrom, dateTo)
+        detailIsValid = isValidDetailRequest(detail)
 
         if (!dateFromIsValid) {
             errorText =
@@ -199,6 +202,11 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
         if (!dateToIsValid) {
             errorText =
                 "Date To cannot be earlier than Date From and can only request in the current month"
+            return
+        }
+
+        if (!detailIsValid){
+            errorText = "Please fill in the details"
             return
         }
 
@@ -223,9 +231,6 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
     if (confirmLeaveRequest) {
         AlertDialog(
             onDismissRequest = { confirmLeaveRequest = false },
-            // Put popup permissions left not enough, can create but will deduct leave left
-            // If leaveleft not enough will count as absent
-            // If user agrees run createLeaveRequest
             title = { Text(text = "Confirm Leave Request") },
             text = { Text(text = "Not enough permissions left, you can still use your leave left to continue. If your leave left is not enough, the remaining dates will be counted as absent. Do you still want to continue?") },
             confirmButton = {
@@ -303,7 +308,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceLarge)
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge), horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
@@ -312,7 +317,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "From",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -325,8 +330,10 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                                 },
                             value = formatLocalDateToString(dateFrom),
                             onValueChange = {},
+                            isError = !dateFromIsValid,
                             readOnly = true,
                             enabled = false,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledBorderColor = colorResource(id = R.color.black),
                                 disabledTextColor = colorResource(id = R.color.black),
@@ -348,7 +355,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "To",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -361,8 +368,10 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                                 },
                             value = formatLocalDateToString(dateTo),
                             onValueChange = {},
+                            isError = !dateToIsValid,
                             readOnly = true,
                             enabled = false,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledBorderColor = colorResource(id = R.color.black),
                                 disabledTextColor = colorResource(id = R.color.black),
@@ -384,7 +393,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Detail",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -392,7 +401,9 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                             modifier = Modifier
                                 .weight(2f)
                                 .height(120.dp),
+                            isError = !detailIsValid,
                             value = detail,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                             onValueChange = { newDetail -> detail = newDetail })
                     }
                     Row(
@@ -403,7 +414,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Permission",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )

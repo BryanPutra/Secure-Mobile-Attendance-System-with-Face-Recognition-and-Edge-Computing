@@ -199,6 +199,24 @@ object db_util {
         }
     }
 
+    suspend fun getAttendanceById(
+        db: FirebaseFirestore,
+        attendanceid: String,
+        callback: (Attendance?) -> Unit
+    ) {
+        try {
+            val documentSnapshot = db.collection("attendances").document(attendanceid).get().await()
+            if (documentSnapshot.exists()) {
+                callback(documentSnapshot.toObject<Attendance>())
+            } else {
+                callback(null)
+            }
+        } catch (exception: Exception) {
+            Log.e("Error Fetching Data", "getAttendanceById $exception")
+            callback(null)
+        }
+    }
+
     suspend fun getSuspendAttendance(
         db: FirebaseFirestore,
         userId: String?,
@@ -774,25 +792,23 @@ object db_util {
         }
     }
 
-    fun checkCorrectionRequestExist(
+    suspend fun checkCorrectionRequestExist(
         db: FirebaseFirestore,
         attendanceid: String,
-        callback: (Boolean?) -> Unit
+        callback: suspend (Boolean?) -> Unit
     ) {
-        db.collection("correction_requests").whereEqualTo("attendanceid", attendanceid)
-            .whereEqualTo("rejectedby", null)
-            .whereEqualTo("approvedby", null)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    callback(false)
-                } else {
-                    callback(true)
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e("Error Fetch Data", "checkCorrectionRequestExist $exception")
-            }
+        try {
+            val querySnapshot = db.collection("correction_requests")
+                .whereEqualTo("attendanceid", attendanceid)
+                .whereEqualTo("rejectedby", null)
+                .whereEqualTo("approvedby", null)
+                .get()
+                .await()
+            callback(!querySnapshot.isEmpty)
+        } catch (exception: Exception) {
+            Log.e("Error Fetch Data", "checkCorrectionRequestExist $exception")
+            callback(false)
+        }
     }
 
     suspend fun checkValidLeaveRequestDate(
@@ -1481,6 +1497,17 @@ object db_util {
 
     fun localDateTimeToDate(date: LocalDateTime): Date {
         return Date.from(date.atZone(ZoneId.systemDefault()).toInstant())
+    }
+
+    fun localDateToLocalDateTime(localDate: LocalDate): LocalDateTime {
+        val localTime = LocalTime.MIDNIGHT
+        return LocalDateTime.of(localDate, localTime)
+    }
+
+    fun dateToLocalDateTime(date: Date): LocalDateTime {
+        val instant = date.toInstant()
+        val zoneId = ZoneId.systemDefault()
+        return LocalDateTime.ofInstant(instant, zoneId)
     }
 
     fun calcWorkTime(timein: Date, timeout: Date, companyparams: CompanyParams): Int {

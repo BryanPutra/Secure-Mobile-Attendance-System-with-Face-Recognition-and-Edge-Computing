@@ -127,30 +127,6 @@ class MainViewModel(val application: Application) : ViewModel() {
                 }
             }
         }
-//        auth.signInWithEmailAndPassword(email, password)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    setCurrentUser(auth.currentUser)
-//                    if (currentUser != null) {
-//                        Log.d(
-//                            "currentUser",
-//                            "currentUser: ${currentUser}, uid: ${currentUser!!.uid}"
-//                        )
-//                        onSuccess()
-//                    } else {
-//                        onFailure("No user detected")
-//                    }
-//                } else {
-//                    val exception = task.exception
-//                    if (exception is FirebaseAuthException) {
-//                        val errorCode = exception.errorCode
-//                        val errorMessage = exception.message
-//                        onFailure(errorMessage ?: "Login failed with error code: $errorCode")
-//                    } else {
-//                        onFailure("Login failed")
-//                    }
-//                }
-//            }
     }
 
     fun changePassword(email: String) {
@@ -203,6 +179,26 @@ class MainViewModel(val application: Application) : ViewModel() {
         isEditCompanyParamsDialogShown = !isEditCompanyParamsDialogShown
     }
 
+    var isAdminHolidaysInit by mutableStateOf(false)
+        private set
+
+    val setIsAdminHolidaysInit: (Boolean?) -> Unit = { newIsAdminHolidaysInit ->
+        if (newIsAdminHolidaysInit != null) {
+            isAdminHolidaysInit = newIsAdminHolidaysInit
+        }
+        Log.d("isAdminHolidaysInit", "isAdminHolidaysInit: $isAdminHolidaysInit")
+    }
+
+    var holidaysList: List<Holiday>? by mutableStateOf(null)
+    val setHolidayList: (List<Holiday>?) -> Unit = { newHolidays ->
+        if (newHolidays != null) {
+            holidaysList = newHolidays
+            Log.d("Get Holidays list", "Holidays List: $holidaysList")
+        } else {
+            Log.d("Get Holidays list", "Holidays List not found")
+        }
+    }
+
     //adminusers
 
     var isCreateUserDialogShown by mutableStateOf(false)
@@ -215,6 +211,13 @@ class MainViewModel(val application: Application) : ViewModel() {
 
     fun toggleViewUserDialog() {
         isViewUserDialogShown = !isViewUserDialogShown
+    }
+
+    //adminholidays
+    var isCreateHolidayDialogShown by mutableStateOf(false)
+
+    fun toggleCreateHolidayDialog() {
+        isCreateHolidayDialogShown = !isCreateHolidayDialogShown
     }
 
     //main
@@ -455,6 +458,17 @@ class MainViewModel(val application: Application) : ViewModel() {
         }
     }
 
+    var selectedCorrectionRequestAttendance: Attendance? by mutableStateOf(null)
+    val setSelectedCorrectionRequestAttendance: (Attendance?) -> Unit = { newSelectedCorrectionRequestAttendance ->
+        if (newSelectedCorrectionRequestAttendance != null) {
+            selectedCorrectionRequestAttendance = newSelectedCorrectionRequestAttendance
+            Log.d("Get selected corretion request attendance", "selected corretion request attendance: $selectedCorrectionRequestAttendance")
+        } else {
+            Log.d("Get selected corretion request attendance", "selected corretion request attendance not found")
+        }
+    }
+
+
     var isRequestLeaveDialogShown: Boolean by mutableStateOf(false)
     var isCorrectionDialogShown: Boolean by mutableStateOf(false)
     fun toggleRequestLeaveDialog() {
@@ -476,6 +490,7 @@ class MainViewModel(val application: Application) : ViewModel() {
     suspend fun signOutFromAdmin() {
         setIsAdminHomeInit(false)
         setIsAdminUsersInit(false)
+        setIsAdminHolidaysInit(false)
         setIsLoggedInAsAdmin(false)
         isUserAdmin = false
         userData = null

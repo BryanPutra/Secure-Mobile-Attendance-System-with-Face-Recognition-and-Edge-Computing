@@ -27,8 +27,10 @@ import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringForInputs
+import com.example.Thesis_Project.ui.utils.formatDateToStringTimeOnly
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Composable
 fun CancelCorrectionDialog(
@@ -37,40 +39,50 @@ fun CancelCorrectionDialog(
     onCancelClicked: () -> Unit
 ) {
 
+    LaunchedEffect(Unit){
+        runBlocking {
+            db_util.getAttendanceById(mainViewModel.db, correctionRequest?.attendanceid!!, mainViewModel.setSelectedCorrectionRequestAttendance)
+        }
+    }
+
     val cancelCorrectionScope = rememberCoroutineScope()
     val context: Context = LocalContext.current
 
     var cancelRequestConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    val postCancelCorrectionRequest: suspend (leaveRequest: CorrectionRequest) -> Unit = { correctionRequestItem ->
-        mainViewModel.setIsLoading(true)
-        try {
-            db_util.cancelCorrectionRequest(
-                mainViewModel.db,
-                correctionRequestItem.correctionrequestid!!
-            ) { cancelCorrectionSuccess ->
-                if (cancelCorrectionSuccess) {
-                    db_util.getCorrectionRequest(
-                        mainViewModel.db,
-                        mainViewModel.userData?.userid,
-                        mainViewModel.setCorrectionRequestList
-                    )
-                    db_util.getUser(
-                        mainViewModel.db,
-                        mainViewModel.userData?.userid!!,
-                        mainViewModel.setUserData
-                    )
-                    mainViewModel.showToast(context, "Correction Request cancelled successfully")
-                    mainViewModel.toggleCancelCorrectionDialog()
-                } else {
-                    Log.e("Error", "Failed to cancel leave request")
+    val postCancelCorrectionRequest: suspend (correctionRequest: CorrectionRequest) -> Unit =
+        { correctionRequestItem ->
+            mainViewModel.setIsLoading(true)
+            try {
+                db_util.cancelCorrectionRequest(
+                    mainViewModel.db,
+                    correctionRequestItem.correctionrequestid!!
+                ) { cancelCorrectionSuccess ->
+                    if (cancelCorrectionSuccess) {
+                        db_util.getCorrectionRequest(
+                            mainViewModel.db,
+                            mainViewModel.userData?.userid,
+                            mainViewModel.setCorrectionRequestList
+                        )
+                        db_util.getUser(
+                            mainViewModel.db,
+                            mainViewModel.userData?.userid!!,
+                            mainViewModel.setUserData
+                        )
+                        mainViewModel.showToast(
+                            context,
+                            "Correction Request cancelled successfully"
+                        )
+                        mainViewModel.toggleCancelCorrectionDialog()
+                    } else {
+                        Log.e("Error", "Failed to cancel leave request")
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e("Error", "Failed to cancel leave request: $e")
             }
-        } catch (e: Exception) {
-            Log.e("Error", "Failed to cancel leave request: $e")
+            mainViewModel.setIsLoading(false)
         }
-        mainViewModel.setIsLoading(false)
-    }
 
     fun onCancelRequestClicked() {
         cancelCorrectionScope.launch {
@@ -141,128 +153,289 @@ fun CancelCorrectionDialog(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceLarge)
                 )
-//                Column(
-//                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text(
-//                            text = "From",
-//                            modifier = Modifier.weight(1f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.SemiBold,
-//                            textAlign = TextAlign.Left
-//                        )
-//                        Text(
-//                            text = formatDateToStringForInputs(leaveRequest?.leavestart) ?: "",
-//                            modifier = Modifier.weight(2f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.Normal,
-//                            textAlign = TextAlign.Left
-//                        )
-//                    }
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text(
-//                            text = "To",
-//                            modifier = Modifier.weight(1f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.SemiBold,
-//                            textAlign = TextAlign.Left
-//                        )
-//                        Text(
-//                            text = formatDateToStringForInputs(leaveRequest?.leaveend) ?: "",
-//                            modifier = Modifier.weight(2f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.Normal,
-//                            textAlign = TextAlign.Left
-//                        )
-//                    }
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text(
-//                            text = "Duration",
-//                            modifier = Modifier.weight(1f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.SemiBold,
-//                            textAlign = TextAlign.Left
-//                        )
-//                        Text(
-//                            text = "${leaveRequest?.duration} days",
-//                            modifier = Modifier.weight(2f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.Normal,
-//                            textAlign = TextAlign.Left
-//                        )
-//                    }
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text(
-//                            text = "Reason",
-//                            modifier = Modifier.weight(1f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.SemiBold,
-//                            textAlign = TextAlign.Left
-//                        )
-//                        Text(
-//                            text = leaveRequest?.reason ?: "",
-//                            modifier = Modifier.weight(2f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.Normal,
-//                            textAlign = TextAlign.Left
-//                        )
-//                    }
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text(
-//                            text = "Created At",
-//                            modifier = Modifier.weight(1f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.SemiBold,
-//                            textAlign = TextAlign.Left
-//                        )
-//                        Text(
-//                            text = formatDateToString(leaveRequest?.createdate) ?: "",
-//                            modifier = Modifier.weight(2f),
-//                            style = MaterialTheme.typography.titleLarge,
-//                            fontWeight = FontWeight.Normal,
-//                            textAlign = TextAlign.Left
-//                        )
-//                    }
-//                }
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Box(modifier = Modifier.weight(0.5f)) {
-//                        ButtonHalfWidth(
-//                            onClick = {
-//                                cancelRequestConfirmDialogShown = true
-//                            },
-//                            buttonText = "Cancel Request"
-//                        )
-//                    }
-//                    Box(modifier = Modifier.weight(0.5f)) {
-//                        ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
-//                    }
-//                }
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (correctionRequest?.leaveflag == true || correctionRequest?.permissionflag == true || correctionRequest?.presentflag == true) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Correction",
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Left
+                            )
+                            Text(
+                                text = when {
+                                    correctionRequest.leaveflag == true -> "Absent to Leave"
+                                    correctionRequest.permissionflag == true -> "Absent to Permission"
+                                    else -> "Absent to Present"
+                                },
+                                modifier = Modifier.weight(2f),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                textAlign = TextAlign.Left
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Date",
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Left
+                            )
+                            Text(
+                                text = formatDateToStringForInputs(correctionRequest.timein) ?: "",
+                                modifier = Modifier.weight(2f),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                textAlign = TextAlign.Left
+                            )
+                        }
+                        if (correctionRequest.presentflag == true) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Tap In",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringTimeOnly(correctionRequest.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Tap Out",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringTimeOnly(correctionRequest.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                        }
+//                        Row(
+//                            modifier = Modifier.fillMaxWidth(),
+//                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Text(
+//                                text = "To",
+//                                modifier = Modifier.weight(1f),
+//                                style = MaterialTheme.typography.titleLarge,
+//                                fontWeight = FontWeight.SemiBold,
+//                                textAlign = TextAlign.Left
+//                            )
+//                            Text(
+//                                text = formatDateToStringForInputs(correctionRequest?.leaveend) ?: "",
+//                                modifier = Modifier.weight(2f),
+//                                style = MaterialTheme.typography.titleLarge,
+//                                fontWeight = FontWeight.Normal,
+//                                textAlign = TextAlign.Left
+//                            )
+//                        }
+                    }
+                    else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Correction",
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Left
+                            )
+                            Text(
+                                text = when {
+                                    mainViewModel.selectedCorrectionRequestAttendance?.permissionflag == true -> "Change permission date"
+                                    mainViewModel.selectedCorrectionRequestAttendance?.leaveflag == true -> "Change leave date"
+                                    else -> "Change attendance time"
+                                },
+                                modifier = Modifier.weight(2f),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                textAlign = TextAlign.Left
+                            )
+                        }
+                        if (mainViewModel.selectedCorrectionRequestAttendance?.permissionflag == true || mainViewModel.selectedCorrectionRequestAttendance?.leaveflag == true){
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Date From",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringForInputs(correctionRequest?.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Date To",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringForInputs(correctionRequest?.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                        }
+                        else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Tap In",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringTimeOnly(correctionRequest?.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Tap Out",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringTimeOnly(correctionRequest?.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                        }
+                    }
+
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Reason",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Left
+                        )
+                        Text(
+                            text = correctionRequest?.reason ?: "",
+                            modifier = Modifier.weight(2f),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Left
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Created At",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Left
+                        )
+                        Text(
+                            text = formatDateToString(correctionRequest?.createdate) ?: "",
+                            modifier = Modifier.weight(2f),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Left
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(0.5f)) {
+                        ButtonHalfWidth(
+                            onClick = {
+                                cancelRequestConfirmDialogShown = true
+                            },
+                            buttonText = "Cancel Request"
+                        )
+                    }
+                    Box(modifier = Modifier.weight(0.5f)) {
+                        ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
+                    }
+                }
             }
         }
     }

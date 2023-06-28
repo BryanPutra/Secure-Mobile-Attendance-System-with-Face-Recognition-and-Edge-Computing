@@ -18,6 +18,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.suspendCancellableCoroutine
 import androidx.compose.ui.viewinterop.AndroidView
@@ -36,12 +38,14 @@ import androidx.compose.ui.zIndex
 import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.camera.BitmapUtils
 import com.example.Thesis_Project.backend.camera.Model
 import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonHalfWidth
+import com.example.Thesis_Project.ui.components.CircularLoadingBar
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.example.mvp.ui.detect.FrameAnalyzer
 import com.google.mlkit.vision.common.InputImage
@@ -109,6 +113,30 @@ fun TapInCameraView(
 
     // 3
     Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView({ previewView }, modifier = Modifier.fillMaxSize())
+        if (mainViewModel.isLoading){
+            CircularLoadingBar()
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            AndroidView({ previewView }, modifier = Modifier.fillMaxSize())
+        }
+        Box(
+            modifier = Modifier
+                .background(Color.Transparent)
+                .wrapContentHeight()
+                .zIndex(2f)
+                .align(Alignment.TopCenter)
+                .padding(bottom = MaterialTheme.spacing.spaceExtraLarge),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Scan your face",
+                style = MaterialTheme.typography.headlineSmall,
+                color = colorResource(
+                    id = R.color.blue_500
+                )
+            )
+        }
     }
+
+
 }

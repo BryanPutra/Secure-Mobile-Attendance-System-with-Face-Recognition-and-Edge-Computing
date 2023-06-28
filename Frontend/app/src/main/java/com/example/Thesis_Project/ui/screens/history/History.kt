@@ -1,15 +1,21 @@
 package com.example.Thesis_Project.ui.screens.history
 
+import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
 import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_models.User
@@ -77,22 +83,27 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
         if (mainViewModel.correctionSelected) {
             if (mainViewModel.correctionRequestList?.isEmpty() == false) {
                 LazyColumn(
-                    modifier = Modifier.padding(
-                        horizontal = MaterialTheme.spacing.spaceMedium,
-                        vertical = MaterialTheme.spacing.spaceLarge
-                    ),
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.spaceMedium),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
                 ) {
                     item {
                         Text(
-                            "Correction List",
+                            modifier = Modifier.padding(top = MaterialTheme.spacing.spaceLarge),
+                            text = "Correction List",
                             style = MaterialTheme.typography.headlineSmall,
                         )
                     }
-                    items(mainViewModel.correctionRequestList!!) { correctionCardItem ->
-                        CorrectionRequestCard(correctionCardItem){ correctionRequestItem ->
+                    itemsIndexed(mainViewModel.correctionRequestList!!) { index, correctionCardItem ->
+                        CorrectionRequestCard(correctionCardItem) { correctionRequestItem ->
                             selectedViewCorrectionRequest = correctionRequestItem
                             mainViewModel.toggleCancelCorrectionDialog()
+                        }
+                        if (index == mainViewModel.correctionRequestList?.size?.minus(1)) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(MaterialTheme.spacing.spaceMedium)
+                            )
                         }
                     }
                 }
@@ -118,21 +129,29 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
         } else {
             if (mainViewModel.leaveRequestList?.isEmpty() == false) {
                 LazyColumn(
-                    modifier = Modifier.padding(MaterialTheme.spacing.spaceMedium).padding(bottom = MaterialTheme.spacing.spaceExtraLarge),
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.spaceMedium),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge)
                 ) {
                     item {
                         Text(
-                            "Leave List",
+                            modifier = Modifier.padding(top = MaterialTheme.spacing.spaceLarge),
+                            text = "Leave List",
                             style = MaterialTheme.typography.headlineSmall,
                         )
                     }
-                    items(mainViewModel.leaveRequestList!!) { leaveCardItem ->
+                    itemsIndexed(mainViewModel.leaveRequestList!!) { index, leaveCardItem ->
                         LeaveRequestCard(
                             leaveRequest = leaveCardItem,
                         ) { leaveRequestItem ->
                             selectedViewLeaveRequest = leaveRequestItem
                             mainViewModel.toggleCancelLeaveDialog()
+                        }
+                        if (index == mainViewModel.leaveRequestList?.size?.minus(1)) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(MaterialTheme.spacing.spaceMedium)
+                            )
                         }
                     }
                 }

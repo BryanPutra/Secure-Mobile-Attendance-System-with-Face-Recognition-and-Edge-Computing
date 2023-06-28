@@ -60,7 +60,9 @@ fun HomeScreen(
     mainViewModel: MainViewModel
 ) {
     var currentScreen by rememberSaveable { mutableStateOf<String?>(null) }
-
+    if (mainViewModel.isLoading) {
+        CircularLoadingBar()
+    }
     Scaffold(
         bottomBar = {
             when (currentScreen) {

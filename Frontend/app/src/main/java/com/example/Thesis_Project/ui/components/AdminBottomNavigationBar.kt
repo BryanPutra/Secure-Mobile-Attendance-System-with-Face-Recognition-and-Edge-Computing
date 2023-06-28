@@ -32,6 +32,11 @@ private val bottomNavItems =
             route = AdminBottomNavBarRoutes.AdminUsersScreen.route,
             icon = Icons.Outlined.Group
         ),
+        BottomNavItem(
+            title = "Holidays",
+            route = AdminBottomNavBarRoutes.AdminHolidaysScreen.route,
+            icon = Icons.Outlined.CalendarMonth
+        ),
     )
 
 @Composable
