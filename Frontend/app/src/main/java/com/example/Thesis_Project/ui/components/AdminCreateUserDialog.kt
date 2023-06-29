@@ -69,7 +69,6 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
         }
         mainViewModel.setIsLoading(false)
     }
-
     fun onSubmitClicked() {
         nameIsValid = isValidName(name)
         emailIsValid = isValidEmail(email)
@@ -99,6 +98,8 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
         createUserScope.launch {
             postCreateUser(user)
         }
+        // uncomment to check user's input with firestore database
+//        AdminCreateUserDialogIntegrationTest.logUserInputs(name, email, password, adminFlag)
     }
 
     fun onCancelClicked() {
