@@ -153,7 +153,11 @@ fun Calendar(mainViewModel: MainViewModel) {
                             mainViewModel.calendarSelectedDate,
                             it
                         )?.timein
-                    } == null)
+                    } == null && (if (tempDayOfMonth.attendance == null) { checkDateIsWeekend(tempDayOfMonth.date?.let {
+                        db_util.localDateToDate(
+                            it
+                        )
+                    }) && checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else true) )
                 }
             }
 
@@ -192,7 +196,11 @@ fun Calendar(mainViewModel: MainViewModel) {
                             mainViewModel.calendarSelectedDate,
                             it
                         )?.timein
-                    } == null)
+                    } == null && (if (tempDayOfMonth.attendance == null) { checkDateIsWeekend(tempDayOfMonth.date?.let {
+                        db_util.localDateToDate(
+                            it
+                        )
+                    }) && checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else true) )
                 }
             }
         }
@@ -231,7 +239,11 @@ fun Calendar(mainViewModel: MainViewModel) {
                 mainViewModel.calendarSelectedDate,
                 it
             )?.timein
-        } == null)
+        } == null && (if (dayOfMonth.attendance == null) { checkDateIsWeekend(dayOfMonth.date?.let {
+            db_util.localDateToDate(
+                it
+            )
+        }) && checkDateIsHoliday(dayOfMonth.date, mainViewModel.holidaysList) } else true) )
     }
     addDaysInMonth()
 
@@ -302,7 +314,9 @@ fun Calendar(mainViewModel: MainViewModel) {
                                 checkIsSelected(dayOfMonth, mainViewModel),
                                 checkIsAttended(dayOfMonth, mainViewModel),
                                 checkIsAbsent(dayOfMonth, mainViewModel),
-                                checkIsLeaveOrPermission(dayOfMonth, mainViewModel)
+                                checkIsLeaveOrPermission(dayOfMonth, mainViewModel),
+                                checkIsWeekend(dayOfMonth),
+                                checkDateIsHoliday(dayOfMonth.date, mainViewModel.holidaysList)
                             )
                         ),
                         modifier = Modifier
@@ -373,6 +387,13 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     mainViewModel.db,
                     mainViewModel.userData?.userid,
                     mainViewModel.setLeaveRequestList
+                )
+            }
+            launch {
+                db_util.getHolidays(
+                    mainViewModel.db,
+                    null,
+                    mainViewModel.setHolidayList
                 )
             }
         }

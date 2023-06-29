@@ -2,6 +2,7 @@ package com.example.Thesis_Project.ui.utils
 
 import androidx.compose.ui.graphics.Color
 import com.example.Thesis_Project.backend.db.db_models.Attendance
+import com.example.Thesis_Project.backend.db.db_models.Holiday
 import com.example.Thesis_Project.backend.db.db_util
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -96,6 +97,16 @@ fun checkDateIsWeekend(date: Date?): Boolean {
     calendar.time = date
     val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
     return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY
+}
+
+fun checkDateIsHoliday(date: LocalDate?, holidays: List<Holiday>?): Boolean {
+    if (date == null){
+        return false
+    }
+    if (holidays == null || holidays.isEmpty()) {
+        return false
+    }
+    return holidays.any { it.date == db_util.localDateToDate(date) }
 }
 
 fun checkSixMonthsLeft(startDate: Date, endDate: Date): Boolean {

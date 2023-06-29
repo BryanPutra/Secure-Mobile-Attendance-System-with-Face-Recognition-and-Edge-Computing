@@ -6,6 +6,7 @@ import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
 import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.ui.component_item_model.DayOfMonthItem
+import com.example.Thesis_Project.ui.utils.checkDateIsWeekend
 import com.example.Thesis_Project.ui.utils.isAttended
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import java.time.LocalDate
@@ -82,17 +83,34 @@ fun checkIsLeaveOrPermission(dayOfMonth: DayOfMonthItem, mainViewModel: MainView
     return false
 }
 
+fun checkIsWeekend(dayOfMonth: DayOfMonthItem): Boolean {
+    if (dayOfMonth.date == null) {
+        return false
+    }
+    return checkDateIsWeekend(db_util.localDateToDate(dayOfMonth.date))
+}
+
+fun checkIsHoliday(dayOfMonth: DayOfMonthItem, mainViewModel: MainViewModel): Boolean {
+    if (dayOfMonth.date == null) {
+        return false
+    }
+    return checkDateIsWeekend(db_util.localDateToDate(dayOfMonth.date))
+}
+
 fun setDateTextColor(
     isSelected: Boolean,
     isAttended: Boolean,
     isAbsent: Boolean,
-    isLeave: Boolean
+    isLeave: Boolean,
+    isWeekend: Boolean,
+    isHoliday: Boolean
 ): Int {
     return when {
         isSelected -> R.color.white
         isAbsent -> R.color.red_800
         isLeave -> R.color.purple_500
         isAttended -> R.color.teal_600
+        isWeekend || isHoliday -> R.color.gray_400
         else -> R.color.black
     }
 }
