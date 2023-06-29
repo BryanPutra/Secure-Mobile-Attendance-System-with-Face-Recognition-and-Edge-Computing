@@ -1275,19 +1275,19 @@ object db_util {
         }
     }
 
-    suspend fun addHolidayManual(db: FirebaseFirestore, date: Date) {
+    suspend fun addHolidayManual(db: FirebaseFirestore, holiday: Holiday) {
         val document = db.collection("holidays").document()
-        val temp = Holiday(document.id, date)
+        val temp = Holiday(document.id, holiday.holidayname, holiday.date)
         val deleteAttendances = mutableListOf<Attendance>()
         try {
             val snapshot = db.collection("attendances")
                 .whereGreaterThanOrEqualTo(
                     "timein",
-                    localDateTimeToDate(dateToLocalDate(date).atStartOfDay())
+                    localDateTimeToDate(dateToLocalDate(holiday.date!!).atStartOfDay())
                 )
                 .whereLessThanOrEqualTo(
                     "timein",
-                    localDateTimeToDate(dateToLocalDate(date).atTime(LocalTime.MAX))
+                    localDateTimeToDate(dateToLocalDate(holiday.date!!).atTime(LocalTime.MAX))
                 )
                 .whereEqualTo("absentflag", true)
                 .get()
@@ -1345,7 +1345,7 @@ object db_util {
     suspend fun adminYearlyMaintenance(
         db: FirebaseFirestore,
         companyparams: CompanyParams,
-        dates: List<Date>
+        holidays: List<Holiday>
     ) {
         try {
             val map: MutableMap<String, Int> = mutableMapOf<String, Int>()
@@ -1353,7 +1353,7 @@ object db_util {
                 map[i.toString()] = companyparams.toleranceworktime!!
             }
             val users = mutableListOf<User>()
-            val holidays = mutableListOf<Holiday>()
+            val holidaydelete = mutableListOf<Holiday>()
 
             val userSnapshot = db.collection("users").get().await()
             if (!userSnapshot.isEmpty) {
@@ -1364,7 +1364,7 @@ object db_util {
                 val holidaySnapshot = db.collection("holidays").get().await()
                 if (!holidaySnapshot.isEmpty) {
                     for (i in holidaySnapshot) {
-                        holidays.add(i.toObject<Holiday>())
+                        holidaydelete.add(i.toObject<Holiday>())
                     }
 
                     db.runTransaction { transaction ->
@@ -1401,13 +1401,13 @@ object db_util {
                                 leaveleft
                             )
                         }
-                        for (i in holidays) {
+                        for (i in holidaydelete) {
                             val holidayref = db.collection("holidays").document(i.holidayid!!)
                             transaction.delete(holidayref)
                         }
-                        for (i in dates) {
+                        for (i in holidays) {
                             val collection = db.collection("holidays").document()
-                            val holidaytemp = dateToLocalDate(i)
+                            val holidaytemp = dateToLocalDate(i.date!!)
                             val holidaynew = Date.from(
                                 LocalDate.of(
                                     LocalDate.now().year,
@@ -1416,7 +1416,7 @@ object db_util {
                                 ).atStartOfDay().atZone(ZoneId.systemDefault())
                                     .toInstant()
                             )
-                            val temp = Holiday(collection.id, holidaynew)
+                            val temp = Holiday(collection.id, i.holidayname,holidaynew)
                             transaction.set(collection, temp)
                         }
 
