@@ -125,12 +125,12 @@ fun TapInCameraView(
                 .wrapContentHeight()
                 .zIndex(2f)
                 .align(Alignment.TopCenter)
-                .padding(bottom = MaterialTheme.spacing.spaceExtraLarge),
+                .padding(top = MaterialTheme.spacing.spaceXXXLarge),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Scan your face",
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 color = colorResource(
                     id = R.color.blue_500
                 )

@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.Attendance
@@ -49,7 +50,7 @@ fun TapOutCard(navController: NavController, mainViewModel: MainViewModel) {
             mainViewModel.showToast(context, "Tapped out successfully")
             navController.popBackStack()
             navController.navigate(NavGraphs.HOME)
-            mainViewModel.setTapInDisabled(false)
+            mainViewModel.setTapInDisabled(true)
             mainViewModel.setIsTappedIn(false)
         } catch (e: Exception) {
             Log.e("Error", "Failed to tap out: $e")
@@ -93,11 +94,11 @@ fun TapOutCard(navController: NavController, mainViewModel: MainViewModel) {
                 ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Work hours left", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(text = "Hours worked", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             }
             Text(
                 text = mainViewModel.workHourTime,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineSmall, letterSpacing = 1.sp,
                 color = colorResource(id = R.color.blue_500)
             )
             ButtonMaxWidth(onClickCallback = { onTapOut() }, buttonText = "Tap Out")

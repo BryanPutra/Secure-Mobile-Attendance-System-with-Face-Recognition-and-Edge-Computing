@@ -499,11 +499,18 @@ class MainViewModel(val application: Application) : ViewModel() {
     }
 
     suspend fun signOutFromUser() {
-        setIsHomeInit(false)
-        setIsCalendarInit(false)
-        setIsHistoryInit(false)
-        setUserData(null)
-        setCompanyVariable(null)
+//        setIsHomeInit(false)
+//        setIsCalendarInit(false)
+//        setIsHistoryInit(false)
+//        setUserData(null)
+//        setCompanyVariable(null)
+//        setTodayAttendance(null)
+        isHomeInit = false
+        isCalendarInit = false
+        isHistoryInit = false
+        userData = null
+        companyVariable = null
+        todayAttendance = null
         currentUser = null
         correctionSelected = true
         leaveSelected = false

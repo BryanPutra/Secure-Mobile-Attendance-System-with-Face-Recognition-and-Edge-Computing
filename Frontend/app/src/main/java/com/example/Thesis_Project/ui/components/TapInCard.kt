@@ -32,10 +32,10 @@ fun TapInCard(navController: NavController, mainViewModel: MainViewModel) {
         while (true) {
             currentDateTime = Date()
             if (mainViewModel.todayAttendance?.timeout == null && currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime && !checkDateIsWeekend(currentDateTime)){
-                mainViewModel.setTapInDisabled(true)
+                mainViewModel.setTapInDisabled(false)
             }
             else {
-                mainViewModel.setTapInDisabled(false)
+                mainViewModel.setTapInDisabled(true)
             }
             delay(1000) // Delay for 1 minute (60000 milliseconds)
         }
@@ -89,7 +89,7 @@ fun TapInCard(navController: NavController, mainViewModel: MainViewModel) {
                 style = MaterialTheme.typography.headlineLarge,
                 color = colorResource(id = R.color.blue_500)
             )
-            ButtonHalfWidth(onClick = { onTapIn() }, buttonText = "Tap In", isEnabled = mainViewModel.tapInDisabled)
+            ButtonHalfWidth(onClick = { onTapIn() }, buttonText = "Tap In", isEnabled = !mainViewModel.tapInDisabled)
         }
     }
 }

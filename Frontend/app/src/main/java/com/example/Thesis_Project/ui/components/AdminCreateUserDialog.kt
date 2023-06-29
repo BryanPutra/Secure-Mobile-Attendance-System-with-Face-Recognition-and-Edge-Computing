@@ -154,7 +154,7 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Name",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -174,7 +174,7 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Email",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -198,7 +198,7 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Password",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -220,7 +220,7 @@ fun AdminCreateUserDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Admin",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )

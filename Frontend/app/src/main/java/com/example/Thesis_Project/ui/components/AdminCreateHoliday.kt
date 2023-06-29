@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
@@ -44,7 +45,9 @@ fun AdminCreateHolidayDialog(mainViewModel: MainViewModel) {
     val context: Context = LocalContext.current
 
     var date by rememberSaveable { mutableStateOf(LocalDate.now()) }
+    var name by rememberSaveable { mutableStateOf("") }
     var dateIsValid by remember { mutableStateOf(true) }
+    var nameIsValid by remember { mutableStateOf(true) }
 
     var errorText by remember { mutableStateOf("") }
 
@@ -55,7 +58,7 @@ fun AdminCreateHolidayDialog(mainViewModel: MainViewModel) {
         try {
             db_util.addHolidayManual(
                 mainViewModel.db,
-                holiday.date!!,
+                holiday,
             )
             db_util.getHolidays(mainViewModel.db, null, mainViewModel.setHolidayList)
             errorText = ""
@@ -71,14 +74,21 @@ fun AdminCreateHolidayDialog(mainViewModel: MainViewModel) {
     fun onSubmitClicked() {
         dateIsValid =
             !(mainViewModel.holidaysList?.any { it.date == db_util.localDateToDate(date) } ?: false)
+        nameIsValid = isValidName(name)
 
         if (!dateIsValid) {
             errorText = "Date already exists"
             return
         }
 
+        if (!nameIsValid) {
+            errorText = "Name needs to be at least 3 characters"
+            return
+        }
+
         val holiday = Holiday(
-            date = db_util.localDateToDate(date)
+            date = db_util.localDateToDate(date),
+            holidayname = name
         )
         createHolidayScope.launch {
             postCreateHoliday(holiday)
@@ -146,7 +156,7 @@ fun AdminCreateHolidayDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Date",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -161,6 +171,7 @@ fun AdminCreateHolidayDialog(mainViewModel: MainViewModel) {
                             isError = !dateIsValid,
                             readOnly = true,
                             enabled = false,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 disabledBorderColor = colorResource(id = R.color.black),
                                 disabledTextColor = colorResource(id = R.color.black),
@@ -173,6 +184,26 @@ fun AdminCreateHolidayDialog(mainViewModel: MainViewModel) {
                                     tint = colorResource(id = R.color.blue_500)
                                 )
                             })
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Name",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Right
+                        )
+                        OutlinedTextField(
+                            modifier = Modifier
+                                .weight(2f),
+                            value = name,
+                            onValueChange = { newName -> name = newName },
+                            isError = !nameIsValid,
+                        )
                     }
                     if (errorText.isNotEmpty()) {
                         Text(

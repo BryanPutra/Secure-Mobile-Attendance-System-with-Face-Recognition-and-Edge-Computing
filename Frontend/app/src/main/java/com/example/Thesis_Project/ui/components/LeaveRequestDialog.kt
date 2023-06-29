@@ -317,7 +317,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "From",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -355,7 +355,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "To",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -393,7 +393,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Detail",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )
@@ -414,7 +414,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                         Text(
                             text = "Permission",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Right
                         )

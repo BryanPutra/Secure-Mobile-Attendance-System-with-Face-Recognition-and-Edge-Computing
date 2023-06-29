@@ -239,22 +239,6 @@ fun HomeContainer(
                         mainViewModel.setAttendanceList(attendances)
                     }
                 }
-                Log.e(
-                    "getAttendanceInit",
-                    "${mainViewModel.userData}" + "${mainViewModel.attendanceList}"
-                )
-                if (mainViewModel.userData!!.embedding != null) {
-                    //overwrite the embeddings di local with the one from database in case
-                    // clear data in app
-                    context.openFileOutput(Model.fileName, Context.MODE_PRIVATE).use {
-                        it.write(mainViewModel.userData!!.embedding?.toByteArray())
-                    }
-                    mainViewModel.setIsFaceRegistered(true)
-                    return@launch
-                }
-                //kalau check local lagi nanti ktemunya muka orang lain because reset embedding on registerface
-                mainViewModel.setIsFaceRegistered(false)
-
                 db_util.getAttendance(
                     mainViewModel.db,
                     mainViewModel.userData!!.userid,
@@ -268,6 +252,7 @@ fun HomeContainer(
                     }
                 }
                 if (mainViewModel.todayAttendance == null) {
+                    Log.d("todayattendancenotnull", "settapindisabled")
                     mainViewModel.setTapInDisabled(false)
                 } else {
                     if (mainViewModel.todayAttendance!!.timeout == null) {
@@ -276,6 +261,17 @@ fun HomeContainer(
                         mainViewModel.setTapInDisabled(true)
                     }
                 }
+                if (mainViewModel.userData!!.embedding != null) {
+                    //overwrite the embeddings di local with the one from database in case
+                    // clear data in app
+                    context.openFileOutput(Model.fileName, Context.MODE_PRIVATE).use {
+                        it.write(mainViewModel.userData!!.embedding?.toByteArray())
+                    }
+                    mainViewModel.setIsFaceRegistered(true)
+                    return@launch
+                }
+                //kalau check local lagi nanti ktemunya muka orang lain because reset embedding on registerface
+                mainViewModel.setIsFaceRegistered(false)
             }
             launch {
                 if (sharedPreferences.contains(COMPANYVAR_KEY)) {
@@ -299,10 +295,6 @@ fun HomeContainer(
         if (!mainViewModel.isHomeInit) {
             runBlocking {
                 getInitData()
-                Log.e(
-                    "getuserdataoninit",
-                    "${mainViewModel.userData}" + "${mainViewModel.currentUser}"
-                )
                 mainViewModel.setIsHomeInit(true)
                 mainViewModel.setIsLoading(false)
             }
@@ -312,6 +304,18 @@ fun HomeContainer(
     LaunchedEffect(Unit) {
         if (mainViewModel.isHomeInit) {
             initHomeScope.launch {
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData!!.userid,
+                    db_util.firstDateOfMonth(),
+                    db_util.lastDateOfMonth(),
+                ) { attendances ->
+                    if (attendances == null) {
+                        mainViewModel.setAttendanceList(null)
+                    } else {
+                        mainViewModel.setAttendanceList(attendances)
+                    }
+                }
                 db_util.getAttendance(
                     mainViewModel.db,
                     mainViewModel.currentUser?.uid,
@@ -325,6 +329,7 @@ fun HomeContainer(
                     }
                 }
                 if (mainViewModel.todayAttendance == null) {
+                    Log.d("todayattendancenotnull", "settapindisabled")
                     mainViewModel.setTapInDisabled(false)
                 } else {
                     if (mainViewModel.todayAttendance!!.timeout == null) {
@@ -376,10 +381,6 @@ fun HomeContainer(
     if (!mainViewModel.isHomeInit) {
         CircularLoadingBar()
     } else {
-        if (mainViewModel.isLoading) {
-            CircularLoadingBar()
-        }
-
         if (!mainViewModel.isFaceRegistered) {
             RegisterFaceDialog(mainViewModel = mainViewModel, navController = navController)
         }

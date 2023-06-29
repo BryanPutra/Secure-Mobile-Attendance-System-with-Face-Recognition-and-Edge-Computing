@@ -69,6 +69,7 @@ class FrameAnalyzer (private val context: Context, val mainViewModel: MainViewMo
                             db_util.createAttendance(mainViewModel.db, attendance ,
                                 mainViewModel.userData!!
                             )
+                            Toast.makeText(context, "Face recognized", Toast.LENGTH_SHORT).show()
                             mainViewModel.startWorkHourTimer(mainViewModel.timerHelper)
                             mainViewModel.setIsTappedIn(true)
                             mainViewModel.setTapInDisabled(true)
@@ -76,9 +77,9 @@ class FrameAnalyzer (private val context: Context, val mainViewModel: MainViewMo
                             navController.navigate(NavGraphs.HOME)
                             // create attendance
                         } else{
-                            Toast.makeText(context,"Fail " + result[1] , Toast.LENGTH_SHORT).show()
+//                            Toast.makeText(context,"Fail " + result[1] , Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context,"Invalid face detected", Toast.LENGTH_SHORT).show()
                         }
-
                     } catch (ex: IllegalArgumentException){
                         Toast.makeText(context,"Face too close to camera",Toast.LENGTH_SHORT).show()
                         return@addOnSuccessListener

@@ -36,11 +36,17 @@ fun AdminHolidaysRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = formatDateToStringForInputs(holiday.date) ?: "date not found",
-            color = colorResource(id = R.color.black),
-            fontWeight = FontWeight.Bold
-        )
+        Column(
+            modifier = Modifier,
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceSmall)
+        ) {
+            Text(text = holiday.holidayname ?: "holiday not found", color = colorResource(id = R.color.black), fontWeight = FontWeight.Bold)
+            Text(
+                text = formatDateToStringForInputs(holiday.date) ?: "date not found",
+                color = colorResource(id = R.color.gray_400),
+                fontSize = 12.sp
+            )
+        }
         Row(
             modifier = Modifier,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),

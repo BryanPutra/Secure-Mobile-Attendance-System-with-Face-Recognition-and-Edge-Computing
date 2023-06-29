@@ -68,14 +68,14 @@ fun AdminViewUserDialog(mainViewModel: MainViewModel, user: User?, onCancelClick
                         Text(
                             text = "Name",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Left
                         )
                         Text(
                             text = user?.name ?: "",
                             modifier = Modifier.weight(2f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Left
                         )
@@ -88,14 +88,14 @@ fun AdminViewUserDialog(mainViewModel: MainViewModel, user: User?, onCancelClick
                         Text(
                             text = "Email",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Left
                         )
                         Text(
                             text = user?.email ?: "",
                             modifier = Modifier.weight(2f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Left
                         )
@@ -109,14 +109,14 @@ fun AdminViewUserDialog(mainViewModel: MainViewModel, user: User?, onCancelClick
                         Text(
                             text = "Leave Allowed",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Left
                         )
                         Text(
                             text = if(user?.leaveallow == true) "Allowed" else "Not Allowed",
                             modifier = Modifier.weight(2f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Left
                         )
@@ -129,14 +129,14 @@ fun AdminViewUserDialog(mainViewModel: MainViewModel, user: User?, onCancelClick
                         Text(
                             text = "Leave Left",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Left
                         )
                         Text(
                             text = user?.leaveleft.toString(),
                             modifier = Modifier.weight(2f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Left
                         )
@@ -149,14 +149,14 @@ fun AdminViewUserDialog(mainViewModel: MainViewModel, user: User?, onCancelClick
                         Text(
                             text = "Tolerance Work Time",
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Left
                         )
                         Text(
                             text = getUserMonthlyToleranceWorkTime(user?.monthlytoleranceworktime) ?: "",
                             modifier = Modifier.weight(2f),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Left
                         )
