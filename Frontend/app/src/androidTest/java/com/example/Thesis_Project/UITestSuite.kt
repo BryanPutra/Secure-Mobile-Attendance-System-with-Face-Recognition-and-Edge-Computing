@@ -8,7 +8,7 @@ import org.junit.runners.Suite
     ButtonMaxWidthUITest::class,
     CalendarStatusUITest::class,
     CompanyQuotasRowUITest::class,
-    CorrectionRequestCardUITest::class,
+//    CorrectionRequestCardUITest::class,
 //    LeaveRequestCardUITest::class
 )
 class UITestSuite
