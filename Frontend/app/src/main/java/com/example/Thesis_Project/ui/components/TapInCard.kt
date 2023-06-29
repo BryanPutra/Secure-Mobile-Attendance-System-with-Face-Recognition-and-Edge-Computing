@@ -11,9 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.navigation.NavController
 import com.example.Thesis_Project.R
+import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
+import com.example.Thesis_Project.ui.utils.checkDateIsHoliday
 import com.example.Thesis_Project.ui.utils.checkDateIsWeekend
 import com.example.Thesis_Project.ui.utils.replaceTimeInDate
 import com.example.Thesis_Project.viewmodel.MainViewModel
@@ -31,7 +33,7 @@ fun TapInCard(navController: NavController, mainViewModel: MainViewModel) {
     LaunchedEffect(Unit) {
         while (true) {
             currentDateTime = Date()
-            if (mainViewModel.todayAttendance?.timeout == null && currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime && !checkDateIsWeekend(currentDateTime)){
+            if (mainViewModel.todayAttendance?.timeout == null && currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime && !checkDateIsWeekend(currentDateTime) && checkDateIsHoliday(db_util.dateToLocalDate(currentDateTime), mainViewModel.holidaysList)){
                 mainViewModel.setTapInDisabled(false)
             }
             else {

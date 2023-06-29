@@ -289,6 +289,13 @@ fun HomeContainer(
                 editor.putString(COMPANYVAR_KEY, companyParamString)
                 editor.apply()
             }
+            launch {
+                db_util.getHolidays(
+                    mainViewModel.db,
+                    null,
+                    mainViewModel.setHolidayList
+                )
+            }
         }
     }
     LaunchedEffect(Unit) {
