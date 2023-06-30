@@ -40,6 +40,8 @@ import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
+import com.example.Thesis_Project.ui.utils.checkDateIsHoliday
+import com.example.Thesis_Project.ui.utils.checkDateIsWeekend
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.gson.Gson
@@ -48,6 +50,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
+import java.util.*
 
 enum class homeTapState {
     TAPPEDIN, TAPPEDOUTWORKHOUR, TAPPEDOUTNOTWORKHOUR,
@@ -213,6 +216,8 @@ fun HomeContainer(
         context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
     val gson = Gson()
 
+    var currentDateTime by rememberSaveable { mutableStateOf(Date()) }
+
     suspend fun getInitData() {
         mainViewModel.setIsLoading(true)
         coroutineScope {
@@ -226,6 +231,11 @@ fun HomeContainer(
                 Log.e(
                     "getuserdataoninit",
                     "${mainViewModel.userData}" + "${mainViewModel.currentUser}"
+                )
+                db_util.getHolidays(
+                    mainViewModel.db,
+                    null,
+                    mainViewModel.setHolidayList
                 )
                 db_util.getAttendance(
                     mainViewModel.db,
@@ -246,21 +256,34 @@ fun HomeContainer(
                     db_util.endOfDay(LocalDate.now()),
                 ) { attendances ->
                     if (attendances == null) {
+                        if (checkDateIsWeekend(currentDateTime) && checkDateIsHoliday(
+                                db_util.dateToLocalDate(
+                                    currentDateTime
+                                ), mainViewModel.holidaysList
+                            )
+                        ) {
+                            mainViewModel.setTapInDisabled(true)
+                        }
                         mainViewModel.setTodayAttendance(null)
                     } else {
+                        if (attendances[0].timeout == null) {
+                            mainViewModel.setIsTappedIn(true)
+                        } else {
+                            mainViewModel.setTapInDisabled(true)
+                        }
                         mainViewModel.setTodayAttendance(attendances[0])
                     }
                 }
-                if (mainViewModel.todayAttendance == null) {
-                    Log.d("todayattendancenotnull", "settapindisabled")
-                    mainViewModel.setTapInDisabled(false)
-                } else {
-                    if (mainViewModel.todayAttendance!!.timeout == null) {
-                        mainViewModel.setIsTappedIn(true)
-                    } else {
-                        mainViewModel.setTapInDisabled(true)
-                    }
-                }
+//                if (mainViewModel.todayAttendance == null) {
+//                    Log.d("todayattendancenotnull", "settapindisabled")
+//                    mainViewModel.setTapInDisabled(false)
+//                } else {
+//                    if (mainViewModel.todayAttendance!!.timeout == null) {
+//                        mainViewModel.setIsTappedIn(true)
+//                    } else {
+//                        mainViewModel.setTapInDisabled(true)
+//                    }
+//                }
                 if (mainViewModel.userData!!.embedding != null) {
                     //overwrite the embeddings di local with the one from database in case
                     // clear data in app
@@ -288,13 +311,6 @@ fun HomeContainer(
                 val editor = sharedPreferences.edit()
                 editor.putString(COMPANYVAR_KEY, companyParamString)
                 editor.apply()
-            }
-            launch {
-                db_util.getHolidays(
-                    mainViewModel.db,
-                    null,
-                    mainViewModel.setHolidayList
-                )
             }
         }
     }
@@ -330,21 +346,34 @@ fun HomeContainer(
                     db_util.endOfDay(LocalDate.now()),
                 ) { attendances ->
                     if (attendances == null) {
+                        if (checkDateIsWeekend(currentDateTime) && checkDateIsHoliday(
+                                db_util.dateToLocalDate(
+                                    currentDateTime
+                                ), mainViewModel.holidaysList
+                            )
+                        ) {
+                            mainViewModel.setTapInDisabled(true)
+                        }
                         mainViewModel.setTodayAttendance(null)
                     } else {
+                        if (attendances[0].timeout == null) {
+                            mainViewModel.setIsTappedIn(true)
+                        } else {
+                            mainViewModel.setTapInDisabled(true)
+                        }
                         mainViewModel.setTodayAttendance(attendances[0])
                     }
                 }
-                if (mainViewModel.todayAttendance == null) {
-                    Log.d("todayattendancenotnull", "settapindisabled")
-                    mainViewModel.setTapInDisabled(false)
-                } else {
-                    if (mainViewModel.todayAttendance!!.timeout == null) {
-                        mainViewModel.setIsTappedIn(true)
-                    } else {
-                        mainViewModel.setTapInDisabled(true)
-                    }
-                }
+//                if (mainViewModel.todayAttendance == null) {
+//                    Log.d("todayattendancenull", "settapindisabled")
+//                    mainViewModel.setTapInDisabled(false)
+//                } else {
+//                    if (mainViewModel.todayAttendance!!.timeout == null) {
+//                        mainViewModel.setIsTappedIn(true)
+//                    } else {
+//                        mainViewModel.setTapInDisabled(true)
+//                    }
+//                }
             }
         }
     }

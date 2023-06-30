@@ -109,10 +109,24 @@ fun isValidLeaveRequestDateTo(dateFrom: LocalDate, dateTo: LocalDate): Boolean {
     return (dateTo.isAfter(dateFrom) || dateTo.isEqual(dateFrom)) && checkLocalDateIsInCurrentMonth(dateTo)
 }
 
+fun isValidLeaveRequestDateLeavePermission(date: LocalDate): Boolean {
+    return checkLocalDateIsInCurrentMonth(date)
+}
+
 fun isValidDetailRequest(detail: String): Boolean {
     return detail.isNotEmpty()
 }
 
+fun isValidPresentTimeIn(time: String?, companyTimeIn: String?, companyTimeOut: String?): Boolean{
+    if (time == null || time.isEmpty()){
+        return false
+    }
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val localTime = LocalTime.parse(time, formatter)
+    val localTimeIn = LocalTime.parse(companyTimeIn, formatter)
+    val localTimeOut = LocalTime.parse(companyTimeOut, formatter)
+    return localTime.isAfter(localTimeIn) && localTime.isBefore(localTimeOut)
+}
 fun isValidTimeOut(timeIn: String?, timeOut: String?): Boolean {
     if (timeIn == null || timeOut == null){
         return false

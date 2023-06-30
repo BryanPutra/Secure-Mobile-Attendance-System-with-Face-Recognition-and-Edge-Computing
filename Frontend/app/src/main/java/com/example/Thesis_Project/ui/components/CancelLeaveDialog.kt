@@ -208,7 +208,6 @@ fun CancelLeaveDialog(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Reason",

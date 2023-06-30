@@ -784,10 +784,9 @@ object db_util {
                     leaveCount += temp.duration ?: 0
                 }
             }
-
             callback(leaveCount, permCount)
         } catch (exception: Exception) {
-            Log.e("Error Fetch Data", "checkPendingRequestDuration $exception")
+            Log.e("Error Fetch Data", "checkPendingRequestDuration ${exception}")
             callback(null, null)
         }
     }

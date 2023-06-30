@@ -162,12 +162,11 @@ fun CancelCorrectionDialog(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Correction",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Left
                             )
@@ -178,7 +177,7 @@ fun CancelCorrectionDialog(
                                     else -> "Absent to Present"
                                 },
                                 modifier = Modifier.weight(2f),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Left
                             )
@@ -186,19 +185,18 @@ fun CancelCorrectionDialog(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Date",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Left
                             )
                             Text(
                                 text = formatDateToStringForInputs(correctionRequest.timein) ?: "",
                                 modifier = Modifier.weight(2f),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Left
                             )
@@ -207,19 +205,18 @@ fun CancelCorrectionDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "Tap In",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Left
                                 )
                                 Text(
                                     text = formatDateToStringTimeOnly(correctionRequest.timein) ?: "",
                                     modifier = Modifier.weight(2f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Left
                                 )
@@ -227,19 +224,18 @@ fun CancelCorrectionDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "Tap Out",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Left
                                 )
                                 Text(
                                     text = formatDateToStringTimeOnly(correctionRequest.timein) ?: "",
                                     modifier = Modifier.weight(2f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Left
                                 )
@@ -248,7 +244,7 @@ fun CancelCorrectionDialog(
 //                        Row(
 //                            modifier = Modifier.fillMaxWidth(),
 //                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//                            verticalAlignment = Alignment.CenterVertically
+//
 //                        ) {
 //                            Text(
 //                                text = "To",
@@ -270,12 +266,11 @@ fun CancelCorrectionDialog(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Correction",
                                 modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 textAlign = TextAlign.Left
                             )
@@ -286,7 +281,7 @@ fun CancelCorrectionDialog(
                                     else -> "Change attendance time"
                                 },
                                 modifier = Modifier.weight(2f),
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.Left
                             )
@@ -295,19 +290,18 @@ fun CancelCorrectionDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Date From",
+                                    text = "From",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Left
                                 )
                                 Text(
-                                    text = formatDateToStringForInputs(correctionRequest?.timein) ?: "",
+                                    text = formatDateToStringForInputs(mainViewModel.selectedCorrectionRequestAttendance?.timein) ?: "",
                                     modifier = Modifier.weight(2f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Left
                                 )
@@ -315,19 +309,18 @@ fun CancelCorrectionDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Date To",
+                                    text = "To",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Left
                                 )
                                 Text(
                                     text = formatDateToStringForInputs(correctionRequest?.timein) ?: "",
                                     modifier = Modifier.weight(2f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Left
                                 )
@@ -337,19 +330,18 @@ fun CancelCorrectionDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "Tap In",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Left
                                 )
                                 Text(
                                     text = formatDateToStringTimeOnly(correctionRequest?.timein) ?: "",
                                     modifier = Modifier.weight(2f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Left
                                 )
@@ -357,19 +349,18 @@ fun CancelCorrectionDialog(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = "Tap Out",
                                     modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.SemiBold,
                                     textAlign = TextAlign.Left
                                 )
                                 Text(
                                     text = formatDateToStringTimeOnly(correctionRequest?.timein) ?: "",
                                     modifier = Modifier.weight(2f),
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Normal,
                                     textAlign = TextAlign.Left
                                 )
@@ -381,7 +372,6 @@ fun CancelCorrectionDialog(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Reason",
@@ -401,7 +391,6 @@ fun CancelCorrectionDialog(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Created At",
@@ -422,7 +411,6 @@ fun CancelCorrectionDialog(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(modifier = Modifier.weight(0.5f)) {
                         ButtonHalfWidth(

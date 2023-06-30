@@ -25,15 +25,15 @@ import java.util.*
 
 @Composable
 fun TapInCard(navController: NavController, mainViewModel: MainViewModel) {
-
     var currentDateTime by rememberSaveable { mutableStateOf(Date()) }
+
     val companyTimeInTime by rememberSaveable { mutableStateOf(replaceTimeInDate(currentDateTime, mainViewModel.companyVariable?.tapintime))}
     val companyTimeOutTime by rememberSaveable { mutableStateOf(replaceTimeInDate(currentDateTime, mainViewModel.companyVariable?.tapouttime))}
 
     LaunchedEffect(Unit) {
         while (true) {
             currentDateTime = Date()
-            if (mainViewModel.todayAttendance?.timeout == null && currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime && !checkDateIsWeekend(currentDateTime) && checkDateIsHoliday(db_util.dateToLocalDate(currentDateTime), mainViewModel.holidaysList)){
+            if (mainViewModel.todayAttendance?.timeout == null && currentDateTime >= companyTimeInTime && currentDateTime <= companyTimeOutTime && !checkDateIsWeekend(currentDateTime) && !checkDateIsHoliday(db_util.dateToLocalDate(currentDateTime), mainViewModel.holidaysList)){
                 mainViewModel.setTapInDisabled(false)
             }
             else {

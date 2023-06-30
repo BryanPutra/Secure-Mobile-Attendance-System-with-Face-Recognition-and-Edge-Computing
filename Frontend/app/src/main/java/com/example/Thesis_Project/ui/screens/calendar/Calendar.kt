@@ -153,11 +153,11 @@ fun Calendar(mainViewModel: MainViewModel) {
                             mainViewModel.calendarSelectedDate,
                             it
                         )?.timein
-                    } == null && (if (tempDayOfMonth.attendance == null) { checkDateIsWeekend(tempDayOfMonth.date?.let {
+                    } == null && (if (tempDayOfMonth.attendance == null) { !checkDateIsWeekend(tempDayOfMonth.date?.let {
                         db_util.localDateToDate(
                             it
                         )
-                    }) && checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else true) )
+                    }) && !checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else false) )
                 }
             }
 
@@ -196,11 +196,11 @@ fun Calendar(mainViewModel: MainViewModel) {
                             mainViewModel.calendarSelectedDate,
                             it
                         )?.timein
-                    } == null && (if (tempDayOfMonth.attendance == null) { checkDateIsWeekend(tempDayOfMonth.date?.let {
+                    } == null && (if (tempDayOfMonth.attendance == null) { !checkDateIsWeekend(tempDayOfMonth.date?.let {
                         db_util.localDateToDate(
                             it
                         )
-                    }) && checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else true) )
+                    }) && !checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else false) )
                 }
             }
         }
@@ -239,11 +239,11 @@ fun Calendar(mainViewModel: MainViewModel) {
                 mainViewModel.calendarSelectedDate,
                 it
             )?.timein
-        } == null && (if (dayOfMonth.attendance == null) { checkDateIsWeekend(dayOfMonth.date?.let {
+        } == null && (if (dayOfMonth.attendance == null) { !checkDateIsWeekend(dayOfMonth.date?.let {
             db_util.localDateToDate(
                 it
             )
-        }) && checkDateIsHoliday(dayOfMonth.date, mainViewModel.holidaysList) } else true) )
+        }) && !checkDateIsHoliday(dayOfMonth.date, mainViewModel.holidaysList) } else false) )
     }
     addDaysInMonth()
 
@@ -366,7 +366,11 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                         mainViewModel.calendarSelectedDate,
                         it
                     )?.timein
-                } == null)
+                } == null && !checkDateIsWeekend(db_util.localDateToDate(mainViewModel.calendarSelectedDate)) && !checkDateIsHoliday(
+                    db_util.dateToLocalDate(
+                        db_util.localDateToDate(mainViewModel.calendarSelectedDate)
+                    ), mainViewModel.holidaysList
+                ))
                 mainViewModel.setIsRequestCorrectionButtonEnabled(mainViewModel.attendanceList?.let {
                     getAttendanceByDate(
                         mainViewModel.calendarSelectedDate,

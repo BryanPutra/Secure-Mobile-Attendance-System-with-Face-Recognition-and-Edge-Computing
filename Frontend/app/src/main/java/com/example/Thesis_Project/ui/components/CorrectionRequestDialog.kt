@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -26,7 +25,6 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
-import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
@@ -41,7 +39,6 @@ import com.maxkeppeler.sheets.clock.models.ClockConfig
 import com.maxkeppeler.sheets.clock.models.ClockSelection
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.util.*
 
 @Composable
 fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: Attendance? = null) {
@@ -70,19 +67,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
         }
     val leavePermissionAttendance by mutableStateOf(getLeavePermission)
     val date by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
-    var dateFrom: LocalDate by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
-    var dateTo: LocalDate by rememberSaveable {
-        mutableStateOf(
-            if (leavePermissionAttendance != null) {
-                db_util.dateToLocalDate(
-                    leavePermissionAttendance?.leaveend!!
-                )
-            } else {
-                mainViewModel.calendarSelectedDate.plusDays(1)
-            }
-        )
-    }
-
+    var dateLeavePermission: LocalDate by rememberSaveable { mutableStateOf(mainViewModel.calendarSelectedDate) }
 
     var tapInTime: String? by rememberSaveable {
         mutableStateOf(
@@ -105,14 +90,14 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
 
     val disabledDatesState = rememberSaveable { mutableListOf<LocalDate>() }
 
-    val calendarDateFromState = rememberUseCaseState()
-    val calendarDateToState = rememberUseCaseState()
+    val calendarDateLeavePermissionState = rememberUseCaseState()
     val clockTapInTimeState = rememberUseCaseState()
     val clockTapOutTimeState = rememberUseCaseState()
 
-    var dateToIsValid by remember { mutableStateOf(true) }
+    var dateLeavePermissionIsValid by remember { mutableStateOf(true) }
     var statusIsValid by remember { mutableStateOf(true) }
     var detailIsValid by remember { mutableStateOf(true) }
+    var timeInPresentIsValid by remember { mutableStateOf(true) }
     var timeOutIsValid by remember { mutableStateOf(true) }
 
     var errorText by remember { mutableStateOf("") }
@@ -145,8 +130,8 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                 mainViewModel.showToast(context, "Correction Request has been created successfully")
                 mainViewModel.toggleCorrectionDialog()
             } catch (e: Exception) {
-                errorText = "Failed to create leave request: ${e.message}"
-                Log.e("Error", "Failed to create leave request: $e")
+                errorText = "Failed to create correction request: ${e.message}"
+                Log.e("Error", "Failed to create correction request: $e")
             }
             mainViewModel.setIsLoading(false)
         }
@@ -154,10 +139,11 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
     val checkValidCreateCorrectionRequest: suspend (correctionRequest: CorrectionRequest) -> Unit =
         { correctionRequest ->
             mainViewModel.setIsLoading(true)
+            Log.d("RUNNING CHECKCORRECTIONREQUEST", "$correctionRequest")
             try {
                 db_util.checkCorrectionRequestExist(
                     mainViewModel.db,
-                    selectedAttendance?.attendanceid!!
+                    correctionRequest.attendanceid!!
                 ) { exist ->
                     if (exist != null) {
                         if (!exist) {
@@ -167,7 +153,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                 correctionRequest.timein!!
                             ) { leaveamt, permamt ->
                                 if (leaveamt != null) {
-                                    if (correctionRequest.permissionflag!!) {
+                                    if (correctionRequest.permissionflag == true) {
                                         db_util.getTotalPermissionThisYear(
                                             mainViewModel.db,
                                             mainViewModel.userData?.userid!!,
@@ -185,7 +171,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                                 }
                                             }
                                         }
-                                    } else if (correctionRequest.leaveflag!!) {
+                                    } else if (correctionRequest.leaveflag == true) {
                                         if (mainViewModel.userData?.leaveallow!!) {
                                             db_util.getTotalLeaveThisMonth(
                                                 mainViewModel.db,
@@ -220,10 +206,10 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                             )
                                             errorText = "Leave not allowed for current user"
                                         }
-                                    } else if (correctionRequest.presentflag!!) {
+                                    } else if (correctionRequest.presentflag == true) {
                                         postCreateCorrectionRequest(correctionRequest)
                                     } else {
-                                        if (selectedAttendance.permissionflag!! || selectedAttendance.leaveflag!!) {
+                                        if (selectedAttendance?.permissionflag!! || selectedAttendance?.leaveflag!!) {
                                             db_util.checkValidCorrectionRequestDate(
                                                 mainViewModel.db,
                                                 mainViewModel.userData?.userid!!,
@@ -253,9 +239,9 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                         } else {
                             mainViewModel.showToast(
                                 context,
-                                "Correction request already exists for selected dat"
+                                "A request is found on the selected date, please choose an another date"
                             )
-                            errorText = "Correction request already exists for selected dat"
+                            errorText = "A request is found on the selected date, please choose an another date"
                         }
                     }
                 }
@@ -290,11 +276,11 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                     leaveflag = leaveFlag,
                     attendanceid = selectedAttendance.attendanceid,
                     timein = db_util.companyTimeIn(
-                        db_util.dateToLocalDateTime(selectedAttendance.timein!!),
+                        db_util.localDateToLocalDateTime(dateLeavePermission),
                         mainViewModel.companyVariable!!
                     ),
                     timeout = db_util.companyTimeOut(
-                        db_util.dateToLocalDateTime(selectedAttendance.timeout!!),
+                        db_util.localDateToLocalDateTime(dateLeavePermission),
                         mainViewModel.companyVariable!!
                     )
                 )
@@ -307,17 +293,22 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                     permissionflag = permissionFlag,
                     attendanceid = selectedAttendance.attendanceid,
                     timein = db_util.companyTimeIn(
-                        db_util.dateToLocalDateTime(selectedAttendance.timein!!),
+                        db_util.localDateToLocalDateTime(dateLeavePermission),
                         mainViewModel.companyVariable!!
                     ),
                     timeout = db_util.companyTimeOut(
-                        db_util.dateToLocalDateTime(selectedAttendance.timeout!!),
+                        db_util.localDateToLocalDateTime(dateLeavePermission),
                         mainViewModel.companyVariable!!
                     )
                 )
             }
 
             if (presentFlag) {
+                timeInPresentIsValid = isValidPresentTimeIn(
+                    tapInTime,
+                    mainViewModel.companyVariable?.tapintime,
+                    mainViewModel.companyVariable?.tapouttime
+                )
                 timeOutIsValid = isValidTimeOut(tapInTime, tapOutTime)
                 if (!timeOutIsValid) {
                     errorText = "Tap out time has to be later than Tap in time"
@@ -335,10 +326,10 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
         }
 
         if (selectedAttendance?.leaveflag == true || selectedAttendance?.permissionflag == true) {
-            dateToIsValid = isValidLeaveRequestDateTo(dateFrom, dateTo)
-            if (!dateToIsValid) {
+            dateLeavePermissionIsValid = isValidLeaveRequestDateLeavePermission(dateLeavePermission)
+            if (!dateLeavePermissionIsValid) {
                 errorText =
-                    "Date To cannot be earlier than Date From"
+                    "Date needs to be in the current month"
                 return
             }
             tempCorrectionRequest = CorrectionRequest(
@@ -346,11 +337,11 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                 reason = detail,
                 attendanceid = selectedAttendance.attendanceid,
                 timein = db_util.companyTimeIn(
-                    db_util.localDateToLocalDateTime(dateFrom),
+                    db_util.localDateToLocalDateTime(dateLeavePermission),
                     mainViewModel.companyVariable!!
                 ),
-                timeout = db_util.companyTimeIn(
-                    db_util.localDateToLocalDateTime(dateTo),
+                timeout = db_util.companyTimeOut(
+                    db_util.localDateToLocalDateTime(dateLeavePermission),
                     mainViewModel.companyVariable!!
                 )
             )
@@ -369,6 +360,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                 timein = replaceTimeInDate(selectedAttendance?.timein, tapInTime),
                 timeout = replaceTimeInDate(selectedAttendance?.timein, tapOutTime)
             )
+            Log.d("tempCorrectionRequest", "$tempCorrectionRequest")
         }
 
         createCorrectionRequestScope.launch {
@@ -383,20 +375,14 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
     }
 
     CalendarDialog(
-        state = calendarDateFromState,
+        state = calendarDateLeavePermissionState,
         config = CalendarConfig(
             monthSelection = true,
             disabledDates = disabledDatesState
         ),
-        selection = CalendarSelection.Date { newDateFrom -> dateFrom = newDateFrom }
-    )
-    CalendarDialog(
-        state = calendarDateToState,
-        config = CalendarConfig(
-            monthSelection = true,
-            disabledDates = disabledDatesState
-        ),
-        selection = CalendarSelection.Date { newDateTo -> dateTo = newDateTo }
+        selection = CalendarSelection.Date { newDateLeavePermission ->
+            dateLeavePermission = newDateLeavePermission
+        }
     )
 
     ClockDialog(
@@ -405,12 +391,17 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
             is24HourFormat = true
         ),
         selection = ClockSelection.HoursMinutes { hours, minutes ->
-            tapInTime = "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
+            tapInTime =
+                "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
         })
     ClockDialog(
         state = clockTapOutTimeState,
+        config = ClockConfig(
+            is24HourFormat = true
+        ),
         selection = ClockSelection.HoursMinutes { hours, minutes ->
-            tapOutTime = "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
+            tapOutTime =
+                "${if (hours < 10) "0" else ""}$hours:${if (minutes < 10) "0" else ""}$minutes"
         })
 
     Dialog(
@@ -420,6 +411,9 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
             usePlatformDefaultWidth = false
         )
     ) {
+        if (mainViewModel.isLoading) {
+            CircularLoadingBar()
+        }
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -520,7 +514,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "From",
+                                text = "Date",
                                 modifier = Modifier.weight(1f),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Normal,
@@ -528,12 +522,14 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                             )
                             OutlinedTextField(
                                 modifier = Modifier
-                                    .weight(2f),
-                                value = if (leavePermissionAttendance != null) {
+                                    .weight(2f)
+                                    .clickable {
+                                        calendarDateLeavePermissionState.show()
+                                    },
+                                value =
+                                if (leavePermissionAttendance != null) {
                                     formatLocalDateToString(
-                                        db_util.dateToLocalDate(
-                                            leavePermissionAttendance?.leavestart!!
-                                        )
+                                        dateLeavePermission
                                     )
                                 } else "",
                                 onValueChange = {},
@@ -553,45 +549,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                                     )
                                 })
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "To",
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Normal,
-                                textAlign = TextAlign.Right
-                            )
-                            OutlinedTextField(
-                                modifier = Modifier
-                                    .weight(2f)
-                                    .clickable {
-                                        calendarDateToState.show()
-                                        addDisabledDates()
-                                    },
-                                value = formatLocalDateToString(dateTo),
-                                onValueChange = {},
-                                readOnly = true,
-                                enabled = false,
-                                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    disabledBorderColor = colorResource(id = R.color.black),
-                                    disabledTextColor = colorResource(id = R.color.black),
-                                    disabledLabelColor = colorResource(id = R.color.black)
-                                ),
-                                trailingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Outlined.CalendarMonth,
-                                        contentDescription = null,
-                                        tint = colorResource(id = R.color.blue_500)
-                                    )
-                                })
-                        }
                     }
-
                     if (selectedAttendance?.let { isAttended(it) } == true || selectedAttendance?.absentflag == true) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),

@@ -2,7 +2,6 @@ package com.example.Thesis_Project.ui.components
 
 import android.content.Context
 import android.util.Log
-import android.view.Window
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,7 +23,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
-import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
@@ -36,10 +34,7 @@ import com.maxkeppeler.sheets.calendar.CalendarDialog
 import com.maxkeppeler.sheets.calendar.models.CalendarConfig
 import com.maxkeppeler.sheets.calendar.models.CalendarSelection
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import java.time.LocalDate
-import java.util.*
-import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun LeaveRequestDialog(mainViewModel: MainViewModel) {
