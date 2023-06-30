@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -18,10 +19,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
@@ -34,15 +39,14 @@ import com.example.Thesis_Project.SharedPreferencesConstants.Companion.COMPANYVA
 import com.example.Thesis_Project.SharedPreferencesConstants.Companion.PREFERENCES
 import com.example.Thesis_Project.backend.camera.Model
 import com.example.Thesis_Project.backend.db.db_models.CompanyParams
+import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.routes.BottomNavBarRoutes
 import com.example.Thesis_Project.routes.HomeSubGraphRoutes
 import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.ui.navgraphs.HomeNavGraph
 import com.example.Thesis_Project.ui.navgraphs.NavGraphs
-import com.example.Thesis_Project.ui.utils.checkDateIsHoliday
-import com.example.Thesis_Project.ui.utils.checkDateIsWeekend
-import com.example.Thesis_Project.ui.utils.formatDateToString
+import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.gson.Gson
 import kotlinx.coroutines.coroutineScope
@@ -92,27 +96,74 @@ fun HomeScreen(
 
 @Composable
 fun NotesSection(mainViewModel: MainViewModel) {
+
+    val saveUserNoteScope = rememberCoroutineScope()
+    val context: Context = LocalContext.current
+
     var isEditing by rememberSaveable { mutableStateOf(false) }
-    val notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note) }
+    var notesValue by rememberSaveable { mutableStateOf(mainViewModel.userData?.note) }
 
     val bulletPoint = "\u2022 "
-    val annotatedText = buildAnnotatedString {
-        val lines = mainViewModel.userData?.note?.trim()?.split("\n")
-        lines?.forEachIndexed { index, line ->
-            append(bulletPoint)
-            append(line)
-            if (index < lines.size - 1) {
-                append("\n")
+    var annotatedText by remember {
+        mutableStateOf(
+            buildAnnotatedString {
+                val lines = mainViewModel.userData?.note?.trim()?.split("\n")
+                lines?.forEachIndexed { index, line ->
+                    append(bulletPoint)
+                    append(line)
+                    if (index < lines.size - 1) {
+                        append("\n")
+                    }
+                }
             }
-        }
+        )
     }
 
     fun switchEditing() {
         isEditing = !isEditing
     }
 
-    fun submitNote() {
+    val postSaveUserNote: suspend (user: User) -> Unit = { user ->
+        mainViewModel.setIsLoading(true)
+        mainViewModel.companyVariable?.let {
+            try {
+                db_util.updateUserNote(mainViewModel.db, user)
+                db_util.getUser(
+                    mainViewModel.db,
+                    mainViewModel.currentUser!!.uid,
 
+                    ) { user ->
+                    annotatedText = buildAnnotatedString {
+                        val lines = user?.note?.trim()?.split("\n")
+                        lines?.forEachIndexed { index, line ->
+                            append(bulletPoint)
+                            append(line)
+                            if (index < lines.size - 1) {
+                                append("\n")
+                            }
+                        }
+                    }
+                    mainViewModel.setUserData(user)
+                }
+
+                mainViewModel.showToast(context, "Note has been updated successfully")
+                switchEditing()
+            } catch (e: Exception) {
+                Log.e("Error", "Failed to update user note: $e")
+                switchEditing()
+            }
+        }
+        mainViewModel.setIsLoading(false)
+    }
+
+    fun onSubmitClicked() {
+        val user = User(
+            userid = mainViewModel.userData?.userid,
+            note = notesValue,
+        )
+        saveUserNoteScope.launch {
+            postSaveUserNote(user)
+        }
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -150,9 +201,15 @@ fun NotesSection(mainViewModel: MainViewModel) {
                 if (isEditing) {
                     notesValue?.let {
                         OutlinedTextField(
-                            modifier = Modifier.fillMaxWidth(1f),
+                            modifier = Modifier
+                                .fillMaxWidth(1f)
+                                .onKeyEvent {
+                                    it.key == Key.Enter
+                                },
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+                            singleLine = false,
                             value = it,
-                            onValueChange = { newNotes -> mainViewModel.userData?.note = newNotes })
+                            onValueChange = { newNotes -> notesValue = newNotes })
                     }
                 } else {
                     Text(
@@ -180,7 +237,7 @@ fun NotesSection(mainViewModel: MainViewModel) {
                     )
                     if (isEditing) {
                         Button(
-                            onClick = { switchEditing() },
+                            onClick = { onSubmitClicked() },
                             modifier = Modifier.fillMaxWidth(),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = MaterialTheme.elevation.medium,
