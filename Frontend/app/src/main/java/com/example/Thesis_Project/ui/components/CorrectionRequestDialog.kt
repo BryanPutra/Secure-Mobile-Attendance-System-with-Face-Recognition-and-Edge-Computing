@@ -143,7 +143,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
             try {
                 db_util.checkCorrectionRequestExist(
                     mainViewModel.db,
-                    correctionRequest.attendanceid!!
+                    selectedAttendance?.attendanceid!!
                 ) { exist ->
                     if (exist != null) {
                         if (!exist) {
@@ -239,9 +239,9 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                         } else {
                             mainViewModel.showToast(
                                 context,
-                                "A request is found on the selected date, please choose an another date"
+                                "Correction request already exists for selected date"
                             )
-                            errorText = "A request is found on the selected date, please choose an another date"
+                            errorText = "Correction request already exists for selected date"
                         }
                     }
                 }
@@ -309,6 +309,10 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                     mainViewModel.companyVariable?.tapintime,
                     mainViewModel.companyVariable?.tapouttime
                 )
+                if (!timeInPresentIsValid) {
+                    errorText = "Tap in time has to be in between company tap in time and company tap out time"
+                    return
+                }
                 timeOutIsValid = isValidTimeOut(tapInTime, tapOutTime)
                 if (!timeOutIsValid) {
                     errorText = "Tap out time has to be later than Tap in time"
