@@ -545,13 +545,13 @@ fun AdminEditCompanyParamsDialog(mainViewModel: MainViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(modifier = Modifier.weight(0.5f)) {
+                            ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Cancel")
+                        }
+                        Box(modifier = Modifier.weight(0.5f)) {
                             ButtonHalfWidth(
                                 onClick = { onSubmitClicked() },
                                 buttonText = "Submit"
                             )
-                        }
-                        Box(modifier = Modifier.weight(0.5f)) {
-                            ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Cancel")
                         }
                     }
                 }

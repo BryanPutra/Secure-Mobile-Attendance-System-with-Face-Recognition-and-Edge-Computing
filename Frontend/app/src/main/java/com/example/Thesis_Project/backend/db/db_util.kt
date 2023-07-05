@@ -271,25 +271,6 @@ object db_util {
             Log.e("Error Fetching Data", "getLeaveRequest $exception")
             callback(null)
         }
-//        val col = db.collection("leave_requests")
-//        var query: Query = col
-//        if (userId != null) {
-//            query = query.whereEqualTo("userid", userId)
-//        }
-//
-//        query.orderBy("createdate", Query.Direction.DESCENDING).get()
-//            .addOnSuccessListener { querySnapshot ->
-//                val leaverequests = mutableListOf<LeaveRequest>()
-//                for (i in querySnapshot) {
-//                    val temp = i.toObject<LeaveRequest>()
-//                    leaverequests.add(temp)
-//                }
-//                callback(leaverequests)
-//            }
-//            .addOnFailureListener { exception ->
-//                Log.e("Error Fetching Data", "getLeaveRequest $exception")
-//                callback(null)
-//            }
     }
 
     // userid == null -> get all users
@@ -464,7 +445,12 @@ object db_util {
         }
     }
 
-    suspend fun rejectLeaveRequest(db: FirebaseFirestore, leaverequestid: String, userid: String) {
+    suspend fun rejectLeaveRequest(
+        db: FirebaseFirestore,
+        leaverequestid: String,
+        userid: String,
+        callback: suspend (Boolean) -> Unit
+    ) {
         try {
             db.collection("leave_requests").document(leaverequestid)
                 .update(
@@ -473,12 +459,14 @@ object db_util {
                     "rejectedby", userid
                 )
                 .await()
+            callback(true)
             Log.d(
                 "REJECTLEAVEREQUEST",
                 "Leave request id $leaverequestid successfully rejected"
             )
         } catch (exception: Exception) {
             Log.e("Error Updating Data", "rejectLeaveRequest $exception")
+            callback(false)
         }
 
     }
@@ -486,7 +474,8 @@ object db_util {
     suspend fun rejectCorrectionRequest(
         db: FirebaseFirestore,
         correctionrequestid: String,
-        userid: String
+        userid: String,
+        callback: suspend (Boolean) -> Unit
     ) {
         try {
             db.collection("correction_requests").document(correctionrequestid)
@@ -496,12 +485,14 @@ object db_util {
                     "rejectedby", userid
                 )
                 .await()
+            callback(true)
             Log.d(
                 "REJECTCORRECTIONREQUEST",
                 "Correction request id $correctionrequestid successfully rejected"
             )
         } catch (exception: Exception) {
             Log.e("Error Updating Data", "rejectCorrectionRequest $exception")
+            callback(false)
         }
     }
 
@@ -510,102 +501,67 @@ object db_util {
         db: FirebaseFirestore,
         leaverequest: LeaveRequest,
         user: User,
-        companyparams: CompanyParams
+        companyparams: CompanyParams,
+        callback: suspend (Boolean) -> Unit
     ) {
         val leavereqref = db.collection("leave_requests").document(leaverequest.leaverequestid!!)
         val userref = db.collection("users").document(leaverequest.userid!!)
-        getTotalPermissionThisYear(db, leaverequest.userid) { data ->
-            if (data != null) {
-                var permissionsleft = data
-                db.runTransaction { transaction ->
-                    val usersnapshot = transaction.get(userref)
-                    val startdate = leaverequest.leavestart
-                    val duration = leaverequest.duration
-                    val permissionflag = leaverequest.permissionflag
-                    val tapintime = companyparams.tapintime!!.split(":")
-                    val tapouttime = companyparams.tapouttime!!.split(":")
-                    val worktime = companyparams.companyworktime!!.toInt()
-                    val maxpermissionsleft = companyparams.maxpermissionsleft!!.toInt()
-                    var leaveleft = usersnapshot.getLong("leaveleft")!!.toInt()
-                    permissionsleft = maxpermissionsleft - permissionsleft!!
-                    transaction.update(
-                        leavereqref,
-                        "approvedby",
-                        user.userid,
-                        "approvedflag",
-                        true,
-                        "approvedtime",
-                        curDateTime()
-                    )
-                    if (permissionflag!!) {
-                        var leavecount = 0
 
-                        for (i in 0 until duration!!) {
-                            val timein = dateToLocalDate(startdate!!).plusDays(i.toLong())
-                                .atTime(tapintime[0].toInt(), tapintime[1].toInt())
-                            val timeout =
-                                timein.withHour(tapouttime[0].toInt())
-                                    .withMinute(tapouttime[1].toInt())
-                            val collection = db.collection("attendances").document()
-                            val attendanceref = db.collection("attendances").document(collection.id)
-                            if (permissionsleft!! > 0) {
-                                permissionsleft = permissionsleft!! - 1
-                                val attendance = Attendance(
-                                    attendanceid = collection.id,
-                                    timein = localDateTimeToDate(timein),
-                                    timeout = localDateTimeToDate(timeout),
-                                    userid = leaverequest.userid,
-                                    leaveflag = false,
-                                    permissionflag = true,
-                                    absentflag = false,
-                                    worktime = worktime
-                                )
-                                transaction.set(attendanceref, attendance)
-                            } else if (leaveleft > 0) {
-                                leaveleft -= 1
-                                leavecount += 1
-                                val attendance = Attendance(
-                                    attendanceid = collection.id,
-                                    timein = localDateTimeToDate(timein),
-                                    timeout = localDateTimeToDate(timeout),
-                                    userid = leaverequest.userid,
-                                    leaveflag = true,
-                                    permissionflag = false,
-                                    absentflag = false,
-                                    worktime = worktime
-                                )
-                                transaction.set(attendanceref, attendance)
-                            } else {
-                                val attendance = Attendance(
-                                    attendanceid = collection.id,
-                                    timein = localDateTimeToDate(
-                                        timein.toLocalDate().atStartOfDay()
-                                    ),
-                                    timeout = localDateTimeToDate(
-                                        timein.toLocalDate().atStartOfDay()
-                                    ),
-                                    userid = leaverequest.userid,
-                                    leaveflag = false,
-                                    permissionflag = false,
-                                    absentflag = true,
-                                    worktime = 0
-                                )
-                                transaction.set(attendanceref, attendance)
-                            }
-                        }
-                        transaction.update(
-                            userref,
-                            "leaveleft",
-                            FieldValue.increment((-1 * leavecount).toLong())
-                        )
-                    } else {
-                        for (i in 0 until duration!!) {
-                            val timein = dateToLocalDate(startdate!!).plusDays(i.toLong())
-                                .atTime(tapintime[0].toInt(), tapintime[1].toInt())
-                            val timeout =
-                                timein.withHour(tapouttime[0].toInt())
-                                    .withMinute(tapouttime[1].toInt())
-                            val collection = db.collection("attendances").document()
+        try {
+            var permissionsleft = db.collection("attendances")
+                .whereEqualTo("userid", leaverequest.userid)
+                .whereGreaterThanOrEqualTo("timein", firstDateOfYear())
+                .whereLessThanOrEqualTo("timein", lastDateOfYear())
+                .whereEqualTo("permissionflag", true)
+                .get()
+                .await().size()
+            db.runTransaction { transaction ->
+                val usersnapshot = transaction.get(userref)
+                val startdate = leaverequest.leavestart
+                val duration = leaverequest.duration
+                val permissionflag = leaverequest.permissionflag
+                val tapintime = companyparams.tapintime!!.split(":")
+                val tapouttime = companyparams.tapouttime!!.split(":")
+                val worktime = companyparams.companyworktime!!.toInt()
+                val maxpermissionsleft = companyparams.maxpermissionsleft!!.toInt()
+                var leaveleft = usersnapshot.getLong("leaveleft")!!.toInt()
+                permissionsleft = maxpermissionsleft - permissionsleft
+                transaction.update(
+                    leavereqref,
+                    "approvedby",
+                    user.userid,
+                    "approvedflag",
+                    true,
+                    "approvedtime",
+                    curDateTime()
+                )
+                if (permissionflag!!) {
+                    var leavecount = 0
+
+                    for (i in 0 until duration!!) {
+                        val timein = dateToLocalDate(startdate!!).plusDays(i.toLong())
+                            .atTime(tapintime[0].toInt(), tapintime[1].toInt())
+                        val timeout =
+                            timein.withHour(tapouttime[0].toInt())
+                                .withMinute(tapouttime[1].toInt())
+                        val collection = db.collection("attendances").document()
+                        val attendanceref = db.collection("attendances").document(collection.id)
+                        if (permissionsleft!! > 0) {
+                            permissionsleft = permissionsleft!! - 1
+                            val attendance = Attendance(
+                                attendanceid = collection.id,
+                                timein = localDateTimeToDate(timein),
+                                timeout = localDateTimeToDate(timeout),
+                                userid = leaverequest.userid,
+                                leaveflag = false,
+                                permissionflag = true,
+                                absentflag = false,
+                                worktime = worktime
+                            )
+                            transaction.set(attendanceref, attendance)
+                        } else if (leaveleft > 0) {
+                            leaveleft -= 1
+                            leavecount += 1
                             val attendance = Attendance(
                                 attendanceid = collection.id,
                                 timein = localDateTimeToDate(timein),
@@ -616,27 +572,68 @@ object db_util {
                                 absentflag = false,
                                 worktime = worktime
                             )
-                            val attendanceref = db.collection("attendances").document(collection.id)
+                            transaction.set(attendanceref, attendance)
+                        } else {
+                            val attendance = Attendance(
+                                attendanceid = collection.id,
+                                timein = localDateTimeToDate(
+                                    timein.toLocalDate().atStartOfDay()
+                                ),
+                                timeout = localDateTimeToDate(
+                                    timein.toLocalDate().atStartOfDay()
+                                ),
+                                userid = leaverequest.userid,
+                                leaveflag = false,
+                                permissionflag = false,
+                                absentflag = true,
+                                worktime = 0
+                            )
                             transaction.set(attendanceref, attendance)
                         }
-                        transaction.update(
-                            userref,
-                            "leaveleft",
-                            FieldValue.increment((-1 * duration).toLong())
-                        )
                     }
-                    null
-                }.addOnSuccessListener {
-                    Log.d(
-                        "APPROVELEAVEREQUEST",
-                        "Leave request id ${leaverequest.leaverequestid} successfully approved"
+                    transaction.update(
+                        userref,
+                        "leaveleft",
+                        FieldValue.increment((-1 * leavecount).toLong())
                     )
-                }.addOnFailureListener { exception ->
-                    Log.e("Error Updating Data", "approveLeaveRequest $exception")
+                } else {
+                    for (i in 0 until duration!!) {
+                        val timein = dateToLocalDate(startdate!!).plusDays(i.toLong())
+                            .atTime(tapintime[0].toInt(), tapintime[1].toInt())
+                        val timeout =
+                            timein.withHour(tapouttime[0].toInt())
+                                .withMinute(tapouttime[1].toInt())
+                        val collection = db.collection("attendances").document()
+                        val attendance = Attendance(
+                            attendanceid = collection.id,
+                            timein = localDateTimeToDate(timein),
+                            timeout = localDateTimeToDate(timeout),
+                            userid = leaverequest.userid,
+                            leaveflag = true,
+                            permissionflag = false,
+                            absentflag = false,
+                            worktime = worktime
+                        )
+                        val attendanceref = db.collection("attendances").document(collection.id)
+                        transaction.set(attendanceref, attendance)
+                    }
+                    transaction.update(
+                        userref,
+                        "leaveleft",
+                        FieldValue.increment((-1 * duration).toLong())
+                    )
                 }
-            }
+                null
+            }.await()
+            Log.d(
+                "APPROVELEAVEREQUEST",
+                "Leave request id ${leaverequest.leaverequestid} successfully approved"
+            )
+            callback(true)
+        } catch (exception: Exception) {
+            callback(false)
+            Log.e("Error Updating Data", "approveLeaveRequest $exception")
         }
-
     }
 
     // User here refers to the admin whose approving the request
@@ -644,13 +641,16 @@ object db_util {
         db: FirebaseFirestore,
         correctionrequest: CorrectionRequest,
         user: User,
-        companyparams: CompanyParams
+        companyparams: CompanyParams,
+        callback: suspend (Boolean) -> Unit
     ) {
         try {
             val userref = db.collection("users").document(correctionrequest.userid!!)
-            val attendanceref = db.collection("attendances").document(correctionrequest.attendanceid!!)
+            val attendanceref =
+                db.collection("attendances").document(correctionrequest.attendanceid!!)
             val correctionreqref =
-                db.collection("correction_requests").document(correctionrequest.correctionrequestid!!)
+                db.collection("correction_requests")
+                    .document(correctionrequest.correctionrequestid!!)
 
             db.runTransaction { transaction ->
                 val attendancesnapshot = transaction.get(attendanceref)
@@ -668,12 +668,12 @@ object db_util {
                     curDateTime()
                 )
 
-                if (correctionrequest.permissionflag!!) {
+                if (correctionrequest.permissionflag == true) {
                     transaction.update(attendanceref, "permissionflag", true, "absentflag", false)
-                } else if (correctionrequest.leaveflag!!) {
+                } else if (correctionrequest.leaveflag == true) {
                     transaction.update(attendanceref, "leaveflag", true, "absentflag", false)
                     transaction.update(userref, "leaveleft", FieldValue.increment(-1))
-                } else if (correctionrequest.presentflag!!) {
+                } else if (correctionrequest.presentflag == true) {
                     val worktime = calcWorkTime(
                         correctionrequest.timein!!,
                         correctionrequest.timeout!!,
@@ -697,7 +697,7 @@ object db_util {
                         transaction.update(userref, "monthlytoleranceworktime", newmap)
                     }
                 } else {
-                    if (leaveflag!! || permissionflag!!) {
+                    if (leaveflag == true || permissionflag == true) {
                         transaction.update(
                             attendanceref,
                             "timein",
@@ -728,12 +728,13 @@ object db_util {
                 }
                 null
             }.await()
-
+            callback(true)
             Log.d(
                 "APPROVECORRECTIONREQUEST",
                 "Correction request id ${correctionrequest.correctionrequestid} successfully approved"
             )
         } catch (exception: Exception) {
+            callback(false)
             Log.e("Error Updating Data", "approveCorrectionRequest $exception")
         }
     }
@@ -898,7 +899,7 @@ object db_util {
                     callback(null)
                 }
             }
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Log.e("Error Fetch Data", "get pending request dates $e")
             callback(null)
         }
@@ -1015,13 +1016,13 @@ object db_util {
 
     fun getHolidayThisMonth(
         db: FirebaseFirestore,
-        datestart:Date,
-        dateend:Date,
+        datestart: Date,
+        dateend: Date,
         callback: (List<Holiday>?) -> Unit
     ) {
         db.collection("holidays")
-            .whereGreaterThanOrEqualTo("date",datestart)
-            .whereLessThanOrEqualTo("date",dateend)
+            .whereGreaterThanOrEqualTo("date", datestart)
+            .whereLessThanOrEqualTo("date", dateend)
             .get()
             .addOnSuccessListener { snapshot ->
                 val holidays = mutableListOf<Holiday>()
@@ -1415,7 +1416,7 @@ object db_util {
                                 ).atStartOfDay().atZone(ZoneId.systemDefault())
                                     .toInstant()
                             )
-                            val temp = Holiday(collection.id, i.holidayname,holidaynew)
+                            val temp = Holiday(collection.id, i.holidayname, holidaynew)
                             transaction.set(collection, temp)
                         }
 

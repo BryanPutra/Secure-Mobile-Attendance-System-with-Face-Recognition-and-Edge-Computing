@@ -113,8 +113,6 @@ fun CameraView(
         .requireLensFacing(lensFacing)
         .build()
 
-//    val mainViewModel.imgBitmap by rememberSaveable { mutableStateOf(mainViewModel.imgBitmap) }
-
     // 2
     LaunchedEffect(mainViewModel.hasTakenPicture) {
         val cameraProvider = context.getCameraProvider()
@@ -262,13 +260,13 @@ fun CameraView(
                 ) {
                     Box(modifier = Modifier.weight(0.5f)) {
                         ButtonHalfWidth(onClick = {
-                            savePicture()
-                        }, buttonText = "Save")
+                            mainViewModel.setHasTakenPicture(false)
+                        }, buttonText = "Retake")
                     }
                     Box(modifier = Modifier.weight(0.5f)) {
                         ButtonHalfWidth(onClick = {
-                            mainViewModel.setHasTakenPicture(false)
-                        }, buttonText = "Retake")
+                            savePicture()
+                        }, buttonText = "Save")
                     }
                 }
             }

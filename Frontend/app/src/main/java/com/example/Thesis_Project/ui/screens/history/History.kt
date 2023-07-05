@@ -1,24 +1,17 @@
 package com.example.Thesis_Project.ui.screens.history
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.Thesis_Project.R
 import com.example.Thesis_Project.backend.db.db_models.CorrectionRequest
 import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
-import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.*
@@ -77,7 +70,6 @@ fun HistoryContainer(navController: NavController, mainViewModel: MainViewModel)
             userFullName = mainViewModel.userData?.name,
             correctionSelected = mainViewModel.correctionSelected,
             leaveSelected = mainViewModel.leaveSelected,
-            switchTabs = mainViewModel.switchHistoryTab,
             mainViewModel = mainViewModel
         )
         if (mainViewModel.correctionSelected) {

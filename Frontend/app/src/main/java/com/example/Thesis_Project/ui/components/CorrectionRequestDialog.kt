@@ -776,13 +776,13 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(modifier = Modifier.weight(0.5f)) {
+                            ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Cancel")
+                        }
+                        Box(modifier = Modifier.weight(0.5f)) {
                             ButtonHalfWidth(
                                 onClick = { onRequestClicked() },
                                 buttonText = "Request"
                             )
-                        }
-                        Box(modifier = Modifier.weight(0.5f)) {
-                            ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Cancel")
                         }
                     }
                 }

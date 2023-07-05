@@ -28,6 +28,7 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToString
 import com.example.Thesis_Project.ui.utils.formatDateToStringForInputs
 import com.example.Thesis_Project.ui.utils.formatDateToStringTimeOnly
+import com.example.Thesis_Project.ui.utils.isAttended
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -75,11 +76,21 @@ fun CancelCorrectionDialog(
                         )
                         mainViewModel.toggleCancelCorrectionDialog()
                     } else {
-                        Log.e("Error", "Failed to cancel leave request")
+                        mainViewModel.showToast(
+                            context,
+                            "Failed to cancel correction request"
+                        )
+                        mainViewModel.toggleCancelCorrectionDialog()
+                        Log.e("Error", "Failed to cancel correction request")
                     }
                 }
             } catch (e: Exception) {
-                Log.e("Error", "Failed to cancel leave request: $e")
+                mainViewModel.showToast(
+                    context,
+                    "Failed to cancel correction request: $e"
+                )
+                mainViewModel.toggleCancelCorrectionDialog()
+                Log.e("Error", "Failed to cancel correction request: $e")
             }
             mainViewModel.setIsLoading(false)
         }
@@ -241,50 +252,33 @@ fun CancelCorrectionDialog(
                                 )
                             }
                         }
-//                        Row(
-//                            modifier = Modifier.fillMaxWidth(),
-//                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-//
-//                        ) {
-//                            Text(
-//                                text = "To",
-//                                modifier = Modifier.weight(1f),
-//                                style = MaterialTheme.typography.titleLarge,
-//                                fontWeight = FontWeight.SemiBold,
-//                                textAlign = TextAlign.Left
-//                            )
-//                            Text(
-//                                text = formatDateToStringForInputs(correctionRequest?.leaveend) ?: "",
-//                                modifier = Modifier.weight(2f),
-//                                style = MaterialTheme.typography.titleLarge,
-//                                fontWeight = FontWeight.Normal,
-//                                textAlign = TextAlign.Left
-//                            )
-//                        }
                     }
                     else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
-                        ) {
-                            Text(
-                                text = "Correction",
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Left
-                            )
-                            Text(
-                                text = when {
-                                    mainViewModel.selectedCorrectionRequestAttendance?.permissionflag == true -> "Change permission date"
-                                    mainViewModel.selectedCorrectionRequestAttendance?.leaveflag == true -> "Change leave date"
-                                    else -> "Change attendance time"
-                                },
-                                modifier = Modifier.weight(2f),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Normal,
-                                textAlign = TextAlign.Left
-                            )
+                        if (mainViewModel.selectedCorrectionRequestAttendance != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                            ) {
+                                Text(
+                                    text = "Correction",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = when {
+                                        mainViewModel.selectedCorrectionRequestAttendance?.permissionflag == true -> "Change permission date"
+                                        mainViewModel.selectedCorrectionRequestAttendance?.leaveflag == true -> "Change leave date"
+                                        isAttended(mainViewModel.selectedCorrectionRequestAttendance) -> "Change attendance time"
+                                        else -> " "
+                                    },
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
                         }
                         if (mainViewModel.selectedCorrectionRequestAttendance?.permissionflag == true || mainViewModel.selectedCorrectionRequestAttendance?.leaveflag == true){
                             Row(
@@ -412,16 +406,23 @@ fun CancelCorrectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
                 ) {
-                    Box(modifier = Modifier.weight(0.5f)) {
-                        ButtonHalfWidth(
-                            onClick = {
-                                cancelRequestConfirmDialogShown = true
-                            },
-                            buttonText = "Cancel Request"
-                        )
+                    if (correctionRequest?.approvedflag == true) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
+                        }
                     }
-                    Box(modifier = Modifier.weight(0.5f)) {
-                        ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
+                    else {
+                        Box(modifier = Modifier.weight(0.5f)) {
+                            ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
+                        }
+                        Box(modifier = Modifier.weight(0.5f)) {
+                            ButtonHalfWidth(
+                                onClick = {
+                                    cancelRequestConfirmDialogShown = true
+                                },
+                                buttonText = "Cancel Request"
+                            )
+                        }
                     }
                 }
             }

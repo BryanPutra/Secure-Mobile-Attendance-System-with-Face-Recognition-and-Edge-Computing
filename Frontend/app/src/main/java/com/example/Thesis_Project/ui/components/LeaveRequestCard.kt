@@ -33,12 +33,9 @@ fun LeaveRequestCard(leaveRequest: LeaveRequest?, onViewClick: (LeaveRequest) ->
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .clickable{
-                    if (leaveRequest?.approvedflag == null || leaveRequest.approvedflag == false) {
-                        onViewClick(leaveRequest!!)
-                    }
-                }
-            ,
+                .clickable {
+                    onViewClick(leaveRequest!!)
+                },
             colors = CardDefaults.cardColors(
                 containerColor = colorResource(
                     id = R.color.white

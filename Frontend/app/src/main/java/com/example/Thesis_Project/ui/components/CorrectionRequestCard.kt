@@ -24,7 +24,10 @@ import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.utils.formatDateToString
 
 @Composable
-fun CorrectionRequestCard(correctionRequest: CorrectionRequest?, onViewClick: (CorrectionRequest) -> Unit) {
+fun CorrectionRequestCard(
+    correctionRequest: CorrectionRequest?,
+    onViewClick: (CorrectionRequest) -> Unit
+) {
     val correctionTitle: String = "Correction Request";
 
     Box(
@@ -34,10 +37,9 @@ fun CorrectionRequestCard(correctionRequest: CorrectionRequest?, onViewClick: (C
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight().clickable {
-                    if (correctionRequest?.approvedflag == null || correctionRequest.approvedflag == false) {
-                        onViewClick(correctionRequest!!)
-                    }
+                .wrapContentHeight()
+                .clickable {
+                    onViewClick(correctionRequest!!)
                 },
             colors = CardDefaults.cardColors(
                 containerColor = colorResource(

@@ -27,6 +27,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
@@ -178,7 +179,6 @@ fun NotesSection(mainViewModel: MainViewModel) {
         modifier = Modifier
             .fillMaxWidth()
     ) {
-
         Card(
             onClick = { switchEditing() },
             modifier = Modifier
@@ -331,16 +331,6 @@ fun HomeContainer(
                         mainViewModel.setTodayAttendance(attendances[0])
                     }
                 }
-//                if (mainViewModel.todayAttendance == null) {
-//                    Log.d("todayattendancenotnull", "settapindisabled")
-//                    mainViewModel.setTapInDisabled(false)
-//                } else {
-//                    if (mainViewModel.todayAttendance!!.timeout == null) {
-//                        mainViewModel.setIsTappedIn(true)
-//                    } else {
-//                        mainViewModel.setTapInDisabled(true)
-//                    }
-//                }
                 if (mainViewModel.userData!!.embedding != null) {
                     //overwrite the embeddings di local with the one from database in case
                     // clear data in app
@@ -438,8 +428,8 @@ fun HomeContainer(
     if (logoutConfirmDialogShown) {
         AlertDialog(
             onDismissRequest = { logoutConfirmDialogShown = false },
-            title = { Text(text = "Logout") },
-            text = { Text(text = "Are you sure you want to log out?") },
+            title = { Text(text = "Logout", textAlign = TextAlign.Center) },
+            text = { Text(text = "Are you sure you want to log out?", textAlign = TextAlign.Center) },
             confirmButton = {
                 Button(
                     onClick = {

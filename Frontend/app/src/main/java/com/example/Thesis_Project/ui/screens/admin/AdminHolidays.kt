@@ -47,9 +47,9 @@ fun AdminHolidaysContainer(navController: NavController, mainViewModel: MainView
 
     var holidayQuerySearch by rememberSaveable { mutableStateOf("") }
     var searchIsActive by rememberSaveable { mutableStateOf(false) }
-    val lastHolidayItemIndex by rememberSaveable { mutableStateOf((mainViewModel.holidaysList?.size)) }
     val searchedItems = remember { mutableStateListOf<String>() }
     val filteredHolidayQuery = remember { mutableStateListOf<Holiday>() }
+    val lastHolidayItemIndex by rememberSaveable { mutableStateOf((mainViewModel.holidaysList?.size)) }
 
     var selectedHoliday by remember { mutableStateOf<Holiday?>(null) }
 
@@ -85,7 +85,7 @@ fun AdminHolidaysContainer(navController: NavController, mainViewModel: MainView
 
         val tempFilteredHolidays =
             mainViewModel.holidaysList?.filter {
-                formatDateToStringForInputs(it.date)?.contains(searchValue.lowercase()) ?: false
+                it.holidayname?.lowercase()?.contains(searchValue.lowercase()) ?: false
             }
         if (tempFilteredHolidays != null) {
             for (i in tempFilteredHolidays) {
@@ -97,7 +97,6 @@ fun AdminHolidaysContainer(navController: NavController, mainViewModel: MainView
     }
 
     val postDeleteHoliday: suspend (holiday: Holiday) -> Unit = { holiday ->
-        Log.d("IM HERE BRO", "FUCK")
         mainViewModel.setIsLoading(true)
         try {
             db_util.deleteHolidayManual(mainViewModel.db, holiday.holidayid!!)

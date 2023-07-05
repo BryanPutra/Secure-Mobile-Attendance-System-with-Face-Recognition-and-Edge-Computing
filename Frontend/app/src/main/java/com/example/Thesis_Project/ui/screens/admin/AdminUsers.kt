@@ -28,6 +28,7 @@ import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
+import com.example.Thesis_Project.ui.components.AdminApproveUserDialog
 import com.example.Thesis_Project.ui.components.AdminCreateUserDialog
 import com.example.Thesis_Project.ui.components.AdminUsersRow
 import com.example.Thesis_Project.ui.components.AdminViewUserDialog
@@ -168,9 +169,13 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
         if (mainViewModel.usersList != null) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
                 itemsIndexed(filteredUserQuery) { index, userItem ->
-                    AdminUsersRow(user = userItem, mainViewModel) { viewItem ->
+                    AdminUsersRow(user = userItem, onViewClick = { viewItem ->
                         selectedViewUser = viewItem
                         mainViewModel.toggleViewUserDialog()
+                    }) {
+                        approveItem ->
+                        selectedViewUser = approveItem
+                        mainViewModel.toggleApproveUserRequestDialog()
                     }
                     if (index != lastUserItemIndex?.minus(1)) {
                         Box(
@@ -188,8 +193,14 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
         }
         if (mainViewModel.isViewUserDialogShown) {
             AdminViewUserDialog(mainViewModel = mainViewModel, user = selectedViewUser) {
-                mainViewModel.toggleViewUserDialog()
                 selectedViewUser = null
+                mainViewModel.toggleViewUserDialog()
+            }
+        }
+        if (mainViewModel.isApproveUserRequestDialogShown) {
+            AdminApproveUserDialog(mainViewModel = mainViewModel, user = selectedViewUser) {
+                selectedViewUser = null
+                mainViewModel.toggleApproveUserRequestDialog()
             }
         }
     }

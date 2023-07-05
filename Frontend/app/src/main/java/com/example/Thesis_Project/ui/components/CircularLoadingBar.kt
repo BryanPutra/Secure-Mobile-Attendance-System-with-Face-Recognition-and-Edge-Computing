@@ -19,9 +19,8 @@ fun CircularLoadingBar() {
             .fillMaxSize()
             .alpha(0.5f)
             .background(colorResource(id = R.color.black))
-            .zIndex(2f)
+            .zIndex(10f)
             .clickable {
-
             },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally

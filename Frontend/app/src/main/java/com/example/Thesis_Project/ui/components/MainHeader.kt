@@ -26,19 +26,36 @@ import java.util.*
 fun HistoryNavButton(
     isSelected: Boolean,
     historyType: String,
-    onClicked: () -> Unit
+    onClicked: () -> Unit,
+    isAdminApprovePage: Boolean = false
 ) {
 
-    val buttonColor: Color = if (isSelected) {
-        colorResource(id = R.color.blue_500)
+    val buttonColor: Color = if (isAdminApprovePage) {
+        if (isSelected) {
+            colorResource(id = R.color.white)
+        } else {
+            colorResource(id = R.color.blue_500)
+        }
     } else {
-        colorResource(id = R.color.white)
+        if (isSelected) {
+            colorResource(id = R.color.blue_500)
+        } else {
+            colorResource(id = R.color.white)
+        }
     }
 
-    val inverseButtonColor: Color = if (isSelected) {
-        colorResource(id = R.color.white)
+    val inverseButtonColor: Color = if (isAdminApprovePage) {
+        if (isSelected) {
+            colorResource(id = R.color.blue_500)
+        } else {
+            colorResource(id = R.color.white)
+        }
     } else {
-        colorResource(id = R.color.blue_500)
+        if (isSelected) {
+            colorResource(id = R.color.white)
+        } else {
+            colorResource(id = R.color.blue_500)
+        }
     }
 
     val boxModifier: Modifier =
@@ -58,10 +75,31 @@ fun HistoryNavButton(
             .padding(MaterialTheme.spacing.spaceSmall)
             .clickable { onClicked() }
 
+    val boxModifierAdminPage: Modifier = Modifier
+        .width(130.dp)
+        .height(50.dp)
+        .clip(RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge))
+        .border(
+            border = BorderStroke(
+                width = 1.dp,
+                color = buttonColor
+            ),
+            shape = RoundedCornerShape(MaterialTheme.spacing.borderRadiusExtraLarge)
+        )
+        .background(
+            color = inverseButtonColor,
+        )
+        .padding(MaterialTheme.spacing.spaceSmall)
+        .clickable { onClicked() }
+
     Box(
-        modifier = boxModifier, contentAlignment = Alignment.Center
+        modifier = if (isAdminApprovePage) {
+            boxModifierAdminPage
+        } else {
+            boxModifier
+        }, contentAlignment = Alignment.Center
     ) {
-        Text(text = historyType, color = buttonColor, style = MaterialTheme.typography.bodySmall)
+        Text(text = historyType, color = buttonColor, style = if(isAdminApprovePage) {MaterialTheme.typography.bodyLarge} else {MaterialTheme.typography.bodySmall} )
     }
 }
 
@@ -71,12 +109,12 @@ fun MainHeader(
     userFullName: String?,
     correctionSelected: Boolean? = null,
     leaveSelected: Boolean? = null,
-    switchTabs: () -> Unit,
     mainViewModel: MainViewModel
 ) {
 
     val currentDate by remember { mutableStateOf(Date()) }
-    val currentDateString = if (page == BottomNavBarRoutes.HistoryScreen.route) formatDateToStringWithDay(currentDate) else "Leave Left: ${mainViewModel.userData?.leaveleft ?: 0} Days"
+    val currentDateString =
+        if (page == BottomNavBarRoutes.HistoryScreen.route) formatDateToStringWithDay(currentDate) else "Leave Left: ${mainViewModel.userData?.leaveleft ?: 0} Days"
 
     Column(
         modifier = Modifier
@@ -114,12 +152,12 @@ fun MainHeader(
                 HistoryNavButton(
                     isSelected = correctionSelected ?: false,
                     historyType = "Correction",
-                    onClicked = switchTabs
+                    onClicked = mainViewModel.onCorrectionTabClicked
                 )
                 HistoryNavButton(
                     isSelected = leaveSelected ?: false,
                     historyType = "Leave",
-                    onClicked = switchTabs
+                    onClicked = mainViewModel.onLeaveTabClicked
                 )
             }
         }

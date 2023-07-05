@@ -213,6 +213,12 @@ class MainViewModel(val application: Application) : ViewModel() {
         isViewUserDialogShown = !isViewUserDialogShown
     }
 
+    var isApproveUserRequestDialogShown by mutableStateOf(false)
+
+    fun toggleApproveUserRequestDialog() {
+        isApproveUserRequestDialogShown = !isApproveUserRequestDialogShown
+    }
+
     //adminholidays
     var isCreateHolidayDialogShown by mutableStateOf(false)
 
@@ -371,9 +377,14 @@ class MainViewModel(val application: Application) : ViewModel() {
     var correctionSelected by mutableStateOf(true)
     var leaveSelected by mutableStateOf(false)
 
-    val switchHistoryTab: () -> Unit = {
-        correctionSelected = !correctionSelected
-        leaveSelected = !leaveSelected
+    val onCorrectionTabClicked: () -> Unit = {
+        correctionSelected = true
+        leaveSelected = false
+    }
+
+    val onLeaveTabClicked: () -> Unit = {
+        leaveSelected = true
+        correctionSelected = false
     }
 
     var isCancelLeaveDialogShown by mutableStateOf(false)
