@@ -1322,17 +1322,20 @@ object db_util {
         }
     }
 
-    suspend fun checkYearlyMaintenanceDone(db: FirebaseFirestore, callback: (Boolean?) -> Unit) {
+    suspend fun checkYearlyMaintenanceDone(db: FirebaseFirestore, callback: suspend (Boolean?) -> Unit) {
         try {
             val querySnapshot = db.collection("holidays").get().await()
             if (!querySnapshot.isEmpty) {
                 val temp = querySnapshot.documents[0].toObject<Holiday>()
                 if (dateToLocalDate(temp!!.date!!).year == LocalDate.now().year) {
+                    Log.d("CHECKYEARLYMAINTENANCEDONE", "YEARLYMAINTENANCEDONE")
                     callback(true)
                 } else {
+                    Log.d("CHECKYEARLYMAINTENANCEDONE", "YEARLYMAINTENANCENOTDONE")
                     callback(false)
                 }
             } else {
+                Log.d("CHECKYEARLYMAINTENANCEDONE", "YEARLYMAINTENANCENOTDONE, HOLIDAY EMPTY")
                 callback(false)
             }
         } catch (exception: Exception) {
@@ -1345,7 +1348,8 @@ object db_util {
     suspend fun adminYearlyMaintenance(
         db: FirebaseFirestore,
         companyparams: CompanyParams,
-        holidays: List<Holiday>
+        holidays: List<Holiday>,
+        callback: suspend (Boolean?) -> Unit
     ) {
         try {
             val map: MutableMap<String, Int> = mutableMapOf<String, Int>()
@@ -1423,9 +1427,11 @@ object db_util {
                         null
                     }.await()
                     Log.d("YEARLYMAINTENANCE", "Successfully performed maintenance")
+                    callback(true)
                 }
             }
         } catch (exception: Exception) {
+            callback(false)
             Log.e("Error Updating Data", "adminYearlyMaintenance $exception")
         }
     }

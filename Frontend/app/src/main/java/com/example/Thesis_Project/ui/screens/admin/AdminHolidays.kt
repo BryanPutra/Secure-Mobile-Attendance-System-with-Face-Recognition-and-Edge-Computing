@@ -111,7 +111,6 @@ fun AdminHolidaysContainer(navController: NavController, mainViewModel: MainView
     }
 
     fun onConfirmDeleteHolidayClicked() {
-        Log.d("checkselectedholiday", "$selectedHoliday")
         deleteHolidayScope.launch {
             postDeleteHoliday(selectedHoliday!!)
         }

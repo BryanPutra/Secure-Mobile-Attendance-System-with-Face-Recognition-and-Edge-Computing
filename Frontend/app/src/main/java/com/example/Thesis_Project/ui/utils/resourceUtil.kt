@@ -79,7 +79,7 @@ fun replaceTimeInDate(date: Date?, time: String?): Date? {
     val calendar = Calendar.getInstance()
     calendar.time = date
     val timeCalendar = Calendar.getInstance()
-    timeCalendar.time = time?.let { timeFormat.parse(it) } as Date
+    timeCalendar.time = time.let { timeFormat.parse(it) } as Date
 
     calendar.apply {
         set(Calendar.HOUR_OF_DAY, timeCalendar.get(Calendar.HOUR_OF_DAY))
@@ -154,6 +154,11 @@ fun checkHaveSameDates(date1: Date?, date2: Date?): Boolean{
     val day2 = calendar2.get(Calendar.DAY_OF_MONTH)
 
     return year1 == year2 && month1 == month2 && day1 == day2
+}
+
+fun formatStringDateToDate(date: String): Date? {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    return dateFormat.parse(date)
 }
 
 fun formatDateToStringForInputs(date: Date?): String? {
