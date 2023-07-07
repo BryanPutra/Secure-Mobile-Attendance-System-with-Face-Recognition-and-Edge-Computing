@@ -61,7 +61,7 @@ class FrameAnalyzer (private val context: Context, val mainViewModel: MainViewMo
                                 absentflag = false,
                                 timein = db_util.curDateTime()
                             )
-                            Toast.makeText(context, "Pass " +result[1], Toast.LENGTH_SHORT).show()
+//                            Toast.makeText(context, "Pass " +result[1], Toast.LENGTH_SHORT).show()
                             val savedEmbs = File(context.filesDir, "embsKnown")
                             val contents = savedEmbs.readText()
                             mainViewModel.setUserEmbeddings(contents)

@@ -1,5 +1,10 @@
 package com.example.Thesis_Project.ui.utils
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.wifi.WifiManager
+import android.os.Build
 import androidx.compose.ui.graphics.Color
 import com.example.Thesis_Project.backend.db.db_models.Attendance
 import com.example.Thesis_Project.backend.db.db_models.Holiday
@@ -9,7 +14,29 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+fun isConnectedToCompanyWifi(context: Context, ssid: String): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+    // For devices running Android 10 (API level 29) or higher
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val currentSsid = wifiManager.connectionInfo.bssid
+        return networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+                && currentSsid.equals(ssid, ignoreCase = true)
+    }
+
+    // For devices running Android 9 (API level 28) or lower
+    val networkInfo = connectivityManager.activeNetworkInfo
+    return networkInfo?.type == ConnectivityManager.TYPE_WIFI
+            && networkInfo.extraInfo.equals("\"$ssid\"", ignoreCase = true)
+}
+fun minusOneDayDate(date: Date): Date {
+    val calendar = Calendar.getInstance()
+    calendar.time = date
+    calendar.add(Calendar.DAY_OF_YEAR, -1)
+    return calendar.time
+}
 fun isAttended(attendance: Attendance?): Boolean {
     if (attendance == null) {
         return false

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -26,6 +28,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -133,10 +136,13 @@ fun Calendar(mainViewModel: MainViewModel) {
             getAttendanceCurrentMonthScope.launch {
                 getAttendanceCurrentMonth()
                 addDaysInMonth()
-                val tempDayOfMonth = daysInMonth.toList().find { it.date?.isEqual(mainViewModel.calendarSelectedDate) ?: false }
-                if (tempDayOfMonth != null){
+                val tempDayOfMonth = daysInMonth.toList()
+                    .find { it.date?.isEqual(mainViewModel.calendarSelectedDate) ?: false }
+                if (tempDayOfMonth != null) {
                     mainViewModel.setIsRequestCorrectionButtonEnabled(
-                        tempDayOfMonth.attendance != null && (!(tempDayOfMonth.date?.isEqual(currentDate) == true || tempDayOfMonth.date?.isAfter(
+                        tempDayOfMonth.attendance != null && (!(tempDayOfMonth.date?.isEqual(
+                            currentDate
+                        ) == true || tempDayOfMonth.date?.isAfter(
                             currentDate
                         ) == true || checkIfAttendanceOnCorrectionPending(
                             tempDayOfMonth.attendance,
@@ -148,16 +154,23 @@ fun Calendar(mainViewModel: MainViewModel) {
                             )?.timeout
                         } != null
                     )
-                    mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
-                        getAttendanceByDate(
-                            mainViewModel.calendarSelectedDate,
-                            it
-                        )?.timein
-                    } == null && (if (tempDayOfMonth.attendance == null) { !checkDateIsWeekend(tempDayOfMonth.date?.let {
-                        db_util.localDateToDate(
-                            it
-                        )
-                    }) && !checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else false) )
+                    mainViewModel.setIsRequestLeaveButtonEnabled(
+                        !currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+                            getAttendanceByDate(
+                                mainViewModel.calendarSelectedDate,
+                                it
+                            )?.timein
+                        } == null && (if (tempDayOfMonth.attendance == null) {
+                            !checkDateIsWeekend(tempDayOfMonth.date?.let {
+                                db_util.localDateToDate(
+                                    it
+                                )
+                            }) && !checkDateIsHoliday(
+                                tempDayOfMonth.date,
+                                mainViewModel.holidaysList
+                            )
+                        } else false)
+                    )
                 }
             }
 
@@ -176,10 +189,13 @@ fun Calendar(mainViewModel: MainViewModel) {
             getAttendanceCurrentMonthScope.launch {
                 getAttendanceCurrentMonth()
                 addDaysInMonth()
-                val tempDayOfMonth = daysInMonth.toList().find { it.date?.isEqual(mainViewModel.calendarSelectedDate) ?: false }
-                if (tempDayOfMonth != null){
+                val tempDayOfMonth = daysInMonth.toList()
+                    .find { it.date?.isEqual(mainViewModel.calendarSelectedDate) ?: false }
+                if (tempDayOfMonth != null) {
                     mainViewModel.setIsRequestCorrectionButtonEnabled(
-                        tempDayOfMonth.attendance != null && (!(tempDayOfMonth.date?.isEqual(currentDate) == true || tempDayOfMonth.date?.isAfter(
+                        tempDayOfMonth.attendance != null && (!(tempDayOfMonth.date?.isEqual(
+                            currentDate
+                        ) == true || tempDayOfMonth.date?.isAfter(
                             currentDate
                         ) == true || checkIfAttendanceOnCorrectionPending(
                             tempDayOfMonth.attendance,
@@ -191,16 +207,23 @@ fun Calendar(mainViewModel: MainViewModel) {
                             )?.timeout
                         } != null
                     )
-                    mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
-                        getAttendanceByDate(
-                            mainViewModel.calendarSelectedDate,
-                            it
-                        )?.timein
-                    } == null && (if (tempDayOfMonth.attendance == null) { !checkDateIsWeekend(tempDayOfMonth.date?.let {
-                        db_util.localDateToDate(
-                            it
-                        )
-                    }) && !checkDateIsHoliday(tempDayOfMonth.date, mainViewModel.holidaysList) } else false) )
+                    mainViewModel.setIsRequestLeaveButtonEnabled(
+                        !currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+                            getAttendanceByDate(
+                                mainViewModel.calendarSelectedDate,
+                                it
+                            )?.timein
+                        } == null && (if (tempDayOfMonth.attendance == null) {
+                            !checkDateIsWeekend(tempDayOfMonth.date?.let {
+                                db_util.localDateToDate(
+                                    it
+                                )
+                            }) && !checkDateIsHoliday(
+                                tempDayOfMonth.date,
+                                mainViewModel.holidaysList
+                            )
+                        } else false)
+                    )
                 }
             }
         }
@@ -234,16 +257,20 @@ fun Calendar(mainViewModel: MainViewModel) {
             } != null
         )
 
-        mainViewModel.setIsRequestLeaveButtonEnabled(!currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
-            getAttendanceByDate(
-                mainViewModel.calendarSelectedDate,
-                it
-            )?.timein
-        } == null && (if (dayOfMonth.attendance == null) { !checkDateIsWeekend(dayOfMonth.date?.let {
-            db_util.localDateToDate(
-                it
-            )
-        }) && !checkDateIsHoliday(dayOfMonth.date, mainViewModel.holidaysList) } else false) )
+        mainViewModel.setIsRequestLeaveButtonEnabled(
+            !currentDate.isAfter(mainViewModel.calendarSelectedDate) && mainViewModel.attendanceList?.let {
+                getAttendanceByDate(
+                    mainViewModel.calendarSelectedDate,
+                    it
+                )?.timein
+            } == null && (if (dayOfMonth.attendance == null) {
+                !checkDateIsWeekend(dayOfMonth.date?.let {
+                    db_util.localDateToDate(
+                        it
+                    )
+                }) && !checkDateIsHoliday(dayOfMonth.date, mainViewModel.holidaysList)
+            } else false)
+        )
     }
     addDaysInMonth()
 
@@ -419,20 +446,18 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
 
     var requestReminderDialogShown by rememberSaveable { mutableStateOf(false) }
 
-    fun onRequestLeaveClicked(){
-        if (mainViewModel.calendarSelectedDate.month == currentMonth){
+    fun onRequestLeaveClicked() {
+        if (mainViewModel.calendarSelectedDate.month == currentMonth) {
             mainViewModel.onRequestLeaveClicked()
-        }
-        else {
+        } else {
             requestReminderDialogShown = true
         }
     }
 
-    fun onRequestCorrectionClicked(){
-        if (mainViewModel.calendarSelectedDate.month == currentMonth){
+    fun onRequestCorrectionClicked() {
+        if (mainViewModel.calendarSelectedDate.month == currentMonth) {
             mainViewModel.onRequestCorrectionClicked()
-        }
-        else {
+        } else {
             requestReminderDialogShown = true
         }
     }
@@ -490,76 +515,142 @@ fun CalendarContainer(navController: NavController? = null, mainViewModel: MainV
                     CalendarStatus(calendarStatusItem)
                 }
             }
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                columns = GridCells.Fixed(4),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+
+            if (checkDateIsHoliday(
+                    mainViewModel.calendarSelectedDate,
+                    mainViewModel.holidaysList
+                )
             ) {
-                item {
-                    Text(
-                        text = "Date",
-                        textAlign = TextAlign.Center,
-                        color = colorResource(id = R.color.gray_400)
-                    )
-                }
-                item {
-                    Text(
-                        text = "Tap In",
-                        textAlign = TextAlign.Center,
-                        color = colorResource(id = R.color.gray_400)
-                    )
-                }
-                item {
-                    Text(
-                        text = "Tap Out",
-                        textAlign = TextAlign.Center,
-                        color = colorResource(id = R.color.gray_400)
-                    )
-                }
-                item {
-                    Text(
-                        text = "Duration",
-                        textAlign = TextAlign.Center,
-                        color = colorResource(id = R.color.gray_400)
-                    )
-                }
-                item {
-                    Box(contentAlignment = Alignment.Center) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceXXSmall)) {
-                            Text(
-                                text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate),
-                                textAlign = TextAlign.Center,
-                            )
-                            Text(
-                                text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate),
-                                textAlign = TextAlign.Center,
-                            )
+                LazyVerticalGrid(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    columns = object : GridCells {
+                        override fun Density.calculateCrossAxisCellSizes(
+                            availableSize: Int,
+                            spacing: Int
+                        ): List<Int> {
+                            val biggerColumn = (availableSize - spacing) * 3 / 4
+                            val smallerColumn = availableSize - spacing - biggerColumn
+                            return listOf(smallerColumn, biggerColumn)
+                        }
+                    }, horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+                ) {
+                    item {
+                        Text(
+                            text = "Date",
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.gray_400)
+                        )
+                    }
+                    item {
+                        Text(
+                            text = "Holiday",
+                            textAlign = TextAlign.Start,
+                            color = colorResource(id = R.color.gray_400)
+                        )
+                    }
+                    item {
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceXXSmall)) {
+                                Text(
+                                    text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate),
+                                    textAlign = TextAlign.Center,
+                                )
+                                Text(
+                                    text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                     }
+                    item {
+                        Text(
+                            modifier = Modifier.weight(3f),
+                            text = mainViewModel.holidaysList?.find {
+                                checkHaveSameDates(
+                                    it.date,
+                                    db_util.localDateToDate(mainViewModel.calendarSelectedDate)
+                                )
+                            }?.holidayname ?: "",
+                            textAlign = TextAlign.Start,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                item {
-                    Text(
-                        text = formatDateToStringTimeOnly(currentAttendance?.timein) ?: "",
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                item {
-                    Text(
-                        text = formatDateToStringTimeOnly(currentAttendance?.timeout) ?: "",
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-                item {
-                    Text(
-                        text = convertTimeMinutesIntToString(currentAttendance?.worktime),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Medium
-                    )
+            } else {
+                LazyVerticalGrid(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    columns = GridCells.Fixed(4),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)
+                ) {
+                    item {
+                        Text(
+                            text = "Date",
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.gray_400)
+                        )
+                    }
+                    item {
+                        Text(
+                            text = "Tap In",
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.gray_400)
+                        )
+                    }
+                    item {
+                        Text(
+                            text = "Tap Out",
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.gray_400)
+                        )
+                    }
+                    item {
+                        Text(
+                            text = "Duration",
+                            textAlign = TextAlign.Center,
+                            color = colorResource(id = R.color.gray_400)
+                        )
+                    }
+                    item {
+                        Box(contentAlignment = Alignment.Center) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceXXSmall)) {
+                                Text(
+                                    text = formatLocalDateToStringDateOnly(mainViewModel.calendarSelectedDate),
+                                    textAlign = TextAlign.Center,
+                                )
+                                Text(
+                                    text = formatLocalDateToStringDayOnly(mainViewModel.calendarSelectedDate),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Text(
+                            text = formatDateToStringTimeOnly(currentAttendance?.timein) ?: "",
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    item {
+                        Text(
+                            text = formatDateToStringTimeOnly(currentAttendance?.timeout) ?: "",
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    item {
+                        Text(
+                            text = convertTimeMinutesIntToString(currentAttendance?.worktime),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
             Row(

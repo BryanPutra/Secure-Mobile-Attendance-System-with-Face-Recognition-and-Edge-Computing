@@ -25,9 +25,17 @@ fun TapInContainer(navController: NavController, mainViewModel: MainViewModel) {
     val permissions = if (Build.VERSION.SDK_INT <= 28) {
         listOf(
             Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE
         )
-    } else listOf(Manifest.permission.CAMERA)
+    } else listOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_WIFI_STATE
+    )
     // Create a permission request state for camera
     val cameraPermissionState = rememberMultiplePermissionsState(
         permissions = permissions
@@ -49,7 +57,8 @@ fun TapInContainer(navController: NavController, mainViewModel: MainViewModel) {
             TapInCameraView(
                 executor = Executors.newSingleThreadExecutor(),
                 onError = { exception -> Log.e("Error scanning photo", "$exception") },
-                mainViewModel = mainViewModel, navController = navController)
+                mainViewModel = mainViewModel, navController = navController
+            )
         }
     }
     // we will show camera preview once permission is granted

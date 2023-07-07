@@ -254,7 +254,7 @@ fun CancelLeaveDialog(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (leaveRequest?.approvedflag == true) {
+                    if (leaveRequest?.approvedflag == true || leaveRequest?.rejectedflag == true) {
                         Box(modifier = Modifier.weight(1f)) {
                             ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
                         }

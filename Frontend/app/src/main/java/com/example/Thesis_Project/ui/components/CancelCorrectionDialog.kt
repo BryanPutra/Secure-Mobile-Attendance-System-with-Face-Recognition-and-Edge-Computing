@@ -406,7 +406,7 @@ fun CancelCorrectionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
                 ) {
-                    if (correctionRequest?.approvedflag == true) {
+                    if (correctionRequest?.approvedflag == true || correctionRequest?.rejectedflag == true) {
                         Box(modifier = Modifier.weight(1f)) {
                             ButtonHalfWidth(onClick = { onCancelClicked() }, buttonText = "Close")
                         }

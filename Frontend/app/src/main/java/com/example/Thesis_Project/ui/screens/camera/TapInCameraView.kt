@@ -4,7 +4,12 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
@@ -46,6 +51,9 @@ import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
 import com.example.Thesis_Project.ui.components.ButtonHalfWidth
 import com.example.Thesis_Project.ui.components.CircularLoadingBar
+import com.example.Thesis_Project.ui.components.ConnectCompanyWifiBlocker
+import com.example.Thesis_Project.ui.utils.checkDateIsHoliday
+import com.example.Thesis_Project.ui.utils.checkDateIsWeekend
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.example.mvp.ui.detect.FrameAnalyzer
 import com.google.mlkit.vision.common.InputImage
@@ -53,9 +61,11 @@ import com.google.mlkit.vision.common.internal.ImageConvertUtils
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import java.util.*
 import java.util.concurrent.Executor
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,6 +76,31 @@ fun TapInCameraView(
     mainViewModel: MainViewModel,
     navController: NavController
 ) {
+
+    var isConnectedToCompanyWifi by rememberSaveable { mutableStateOf(false) }
+
+    fun getConnectedWifiBssid(context: Context): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork ?: return ""
+            val networkCapabilities =
+                connectivityManager.getNetworkCapabilities(network) ?: return ""
+
+            if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                val wifiManager =
+                    context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                val wifiInfo = wifiManager.connectionInfo
+                return wifiInfo.bssid
+            }
+            return ""
+        }
+        val wifiManager =
+            context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val wifiInfo: WifiInfo = wifiManager.connectionInfo
+        return wifiInfo.bssid
+    }
+
     suspend fun Context.getCameraProvider(): ProcessCameraProvider = suspendCancellableCoroutine { continuation ->
         ProcessCameraProvider.getInstance(this).also { cameraProvider ->
             cameraProvider.addListener({
@@ -94,30 +129,44 @@ fun TapInCameraView(
 
     // 2
     LaunchedEffect(Unit) {
-        val cameraProvider = context.getCameraProvider()
+        while (true) {
+            isConnectedToCompanyWifi = if (getConnectedWifiBssid(context).isEmpty()) {
+                false
+            } else {
+                mainViewModel.companyVariable?.wifissid?.contains(getConnectedWifiBssid(context)) == true
+            }
+            delay(1000L) // Delay for 1 minute (60000 milliseconds)
+        }
+    }
 
-        cameraProvider.unbindAll()
-        cameraProvider.bindToLifecycle(
-            lifecycleOwner,
-            cameraSelector,
-            preview,
-            imageAnalyzer
-        )
-        imageAnalyzer.setAnalyzer(
-            executor,
-            FrameAnalyzer(context, mainViewModel, model, navController)
-        )
-        preview.setSurfaceProvider(previewView.surfaceProvider)
-        Log.d("restart component", "ahwuda")
+    LaunchedEffect(isConnectedToCompanyWifi) {
+        val cameraProvider = context.getCameraProvider()
+        if (isConnectedToCompanyWifi){
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                preview,
+                imageAnalyzer
+            )
+            imageAnalyzer.setAnalyzer(
+                executor,
+                FrameAnalyzer(context, mainViewModel, model, navController)
+            )
+            preview.setSurfaceProvider(previewView.surfaceProvider)
+        }
     }
 
     // 3
     Box(modifier = Modifier.fillMaxSize()) {
-        if (mainViewModel.isLoading){
-            CircularLoadingBar()
+
+        if (!isConnectedToCompanyWifi) {
+            ConnectCompanyWifiBlocker()
         }
-        Box(modifier = Modifier.fillMaxSize()) {
-            AndroidView({ previewView }, modifier = Modifier.fillMaxSize())
+        else {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AndroidView({ previewView }, modifier = Modifier.fillMaxSize())
+            }
         }
         Box(
             modifier = Modifier
@@ -135,6 +184,9 @@ fun TapInCameraView(
                     id = R.color.blue_500
                 )
             )
+        }
+        if (mainViewModel.isLoading) {
+            CircularLoadingBar()
         }
     }
 

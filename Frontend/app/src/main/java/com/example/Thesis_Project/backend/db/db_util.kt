@@ -2,6 +2,7 @@ package com.example.Thesis_Project.backend.db
 
 import android.util.Log
 import com.example.Thesis_Project.backend.db.db_models.*
+import com.example.Thesis_Project.ui.utils.minusOneDayDate
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
@@ -1168,7 +1169,7 @@ object db_util {
         db: FirebaseFirestore,
         user: User,
         companyparams: CompanyParams,
-        callback: (Boolean?) -> Unit
+        callback: suspend (Boolean?) -> Unit
     ) {
         try {
             var popupflag = false
@@ -1179,7 +1180,7 @@ object db_util {
                     LocalDate.now().atStartOfDay().minusDays(14).atZone(ZoneId.systemDefault())
                         .toInstant()
                 ),
-                curDateTime()
+                minusOneDayDate(curDateTime())
             ) { attendances ->
                 if (attendances != null) {
                     getHolidays(db, 14) { holidays ->

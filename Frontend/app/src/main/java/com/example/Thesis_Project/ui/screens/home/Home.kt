@@ -50,10 +50,7 @@ import com.example.Thesis_Project.ui.navgraphs.NavGraphs
 import com.example.Thesis_Project.ui.utils.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import com.google.gson.Gson
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.time.LocalDate
 import java.util.*
 
@@ -268,16 +265,18 @@ fun HomeContainer(
 ) {
     val context: Context = LocalContext.current
     var logoutConfirmDialogShown by rememberSaveable { mutableStateOf(false) }
+    var checkBackAttendanceDialogShown by rememberSaveable { mutableStateOf(false) }
+
     val initHomeScope = rememberCoroutineScope()
     val sharedPreferences =
         context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
     val gson = Gson()
 
-    var currentDateTime by rememberSaveable { mutableStateOf(Date()) }
+    val currentDateTime by rememberSaveable { mutableStateOf(Date()) }
 
     suspend fun getInitData() {
-        mainViewModel.setIsLoading(true)
         coroutineScope {
+            mainViewModel.setIsLoading(true)
             launch {
                 db_util.getUser(
                     mainViewModel.db,
@@ -359,12 +358,55 @@ fun HomeContainer(
                 editor.putString(COMPANYVAR_KEY, companyParamString)
                 editor.apply()
             }
+            mainViewModel.setIsLoading(false)
         }
     }
+
+    suspend fun initCheckBackAttendance() {
+        db_util.checkBackAttendance(
+            mainViewModel.db,
+            mainViewModel.userData!!,
+            mainViewModel.companyVariable!!
+        ) { previous14DaysHasAbsent ->
+            if (previous14DaysHasAbsent == true) {
+                db_util.getAttendance(
+                    mainViewModel.db,
+                    mainViewModel.userData!!.userid,
+                    db_util.startOfDay(LocalDate.now()),
+                    db_util.endOfDay(LocalDate.now()),
+                ) { attendances ->
+                    if (attendances == null) {
+                        if (checkDateIsWeekend(currentDateTime) && checkDateIsHoliday(
+                                db_util.dateToLocalDate(
+                                    currentDateTime
+                                ), mainViewModel.holidaysList
+                            )
+                        ) {
+                            mainViewModel.setTapInDisabled(true)
+                        }
+                        mainViewModel.setTodayAttendance(null)
+                    } else {
+                        if (attendances[0].timeout == null) {
+                            mainViewModel.setIsTappedIn(true)
+                        } else {
+                            mainViewModel.setTapInDisabled(true)
+                        }
+                        mainViewModel.setTodayAttendance(attendances[0])
+                    }
+                }
+                checkBackAttendanceDialogShown = true
+            }
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (!mainViewModel.isHomeInit) {
             runBlocking {
-                getInitData()
+                val getInitDataDone = async {
+                    getInitData()
+                }
+                getInitDataDone.await()
+                initCheckBackAttendance()
                 mainViewModel.setIsHomeInit(true)
                 mainViewModel.setIsLoading(false)
             }
@@ -411,17 +453,13 @@ fun HomeContainer(
                         mainViewModel.setTodayAttendance(attendances[0])
                     }
                 }
-//                if (mainViewModel.todayAttendance == null) {
-//                    Log.d("todayattendancenull", "settapindisabled")
-//                    mainViewModel.setTapInDisabled(false)
-//                } else {
-//                    if (mainViewModel.todayAttendance!!.timeout == null) {
-//                        mainViewModel.setIsTappedIn(true)
-//                    } else {
-//                        mainViewModel.setTapInDisabled(true)
-//                    }
-//                }
             }
+        }
+    }
+
+    if (checkBackAttendanceDialogShown) {
+        CheckBackAttendanceDialog {
+            checkBackAttendanceDialogShown = false
         }
     }
 
@@ -429,7 +467,12 @@ fun HomeContainer(
         AlertDialog(
             onDismissRequest = { logoutConfirmDialogShown = false },
             title = { Text(text = "Logout", textAlign = TextAlign.Center) },
-            text = { Text(text = "Are you sure you want to log out?", textAlign = TextAlign.Center) },
+            text = {
+                Text(
+                    text = "Are you sure you want to log out?",
+                    textAlign = TextAlign.Center
+                )
+            },
             confirmButton = {
                 Button(
                     onClick = {

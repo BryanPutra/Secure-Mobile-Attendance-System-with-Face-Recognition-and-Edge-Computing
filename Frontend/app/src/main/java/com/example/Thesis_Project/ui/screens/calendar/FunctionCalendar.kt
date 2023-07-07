@@ -110,7 +110,8 @@ fun setDateTextColor(
         isAbsent -> R.color.red_800
         isLeave -> R.color.purple_500
         isAttended -> R.color.teal_600
-        isWeekend || isHoliday -> R.color.gray_400
+        isWeekend -> R.color.gray_400
+        isHoliday -> R.color.light_orange_300
         else -> R.color.black
     }
 }
