@@ -8,18 +8,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.Thesis_Project.R
-import com.example.Thesis_Project.backend.db.db_models.Attendance
-import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.elevation
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.utils.getUserMonthlyToleranceWorkTime
-import com.example.Thesis_Project.viewmodel.MainViewModel
 
 
 @Composable

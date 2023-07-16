@@ -326,6 +326,25 @@ fun CancelCorrectionDialog(
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
                             ) {
                                 Text(
+                                    text = "Date",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Left
+                                )
+                                Text(
+                                    text = formatDateToStringForInputs(mainViewModel.selectedCorrectionRequestAttendance?.timein) ?: "",
+                                    modifier = Modifier.weight(2f),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Left
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                            ) {
+                                Text(
                                     text = "Tap In",
                                     modifier = Modifier.weight(1f),
                                     style = MaterialTheme.typography.titleLarge,

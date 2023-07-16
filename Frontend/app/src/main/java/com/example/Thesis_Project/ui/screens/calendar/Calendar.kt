@@ -90,7 +90,7 @@ fun Calendar(mainViewModel: MainViewModel) {
             datesInMonthList.add(LocalDate.of(year, month, day))
         }
 
-        for (i in 1 until 35) {
+        for (i in 1 until 42) {
             if (i <= dayOfWeek!! || i > daysInMonthAmount + dayOfWeek) {
                 daysInMonthList.add(DayOfMonthItem(date = null, dateString = "", attendance = null))
             } else {

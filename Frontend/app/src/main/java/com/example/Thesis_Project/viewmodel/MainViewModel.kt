@@ -76,24 +76,6 @@ class MainViewModel(val application: Application) : ViewModel() {
         Log.d("check login as admin", "admin: $isLoggedInAsAdmin")
     }
 
-    var isFaceRegistered: Boolean by mutableStateOf(false)
-    val setIsFaceRegistered: (Boolean?) -> Unit = { newIsFaceRegistered ->
-        if (newIsFaceRegistered != null) {
-            isFaceRegistered = newIsFaceRegistered
-        }
-        Log.d("check embeddings", "admin: $isFaceRegistered")
-    }
-
-    val setUserEmbeddings: (String?) -> Unit = { newEmbeddings ->
-        if (newEmbeddings != null) {
-            userData?.embedding = newEmbeddings
-            Log.d("set user embeddings", "user: ${userData!!.embedding}")
-        } else {
-            Log.d("set user embeddings", "no user embeddings found")
-            userData?.embedding = null
-        }
-    }
-
     var isUserAdmin: Boolean by mutableStateOf(false)
 
     val setUserAdmin: (Boolean?) -> Unit = { isAdmin ->
@@ -227,6 +209,23 @@ class MainViewModel(val application: Application) : ViewModel() {
     }
 
     //main
+    var isFaceRegistered: Boolean by mutableStateOf(false)
+    val setIsFaceRegistered: (Boolean?) -> Unit = { newIsFaceRegistered ->
+        if (newIsFaceRegistered != null) {
+            isFaceRegistered = newIsFaceRegistered
+        }
+        Log.d("check embeddings", "admin: $isFaceRegistered")
+    }
+
+    val setUserEmbeddings: (String?) -> Unit = { newEmbeddings ->
+        if (newEmbeddings != null) {
+            userData?.embedding = newEmbeddings
+            Log.d("set user embeddings", "user: ${userData!!.embedding}")
+        } else {
+            Log.d("set user embeddings", "no user embeddings found")
+            userData?.embedding = null
+        }
+    }
     val timer = Timer()
     val timerHelper = TimerHelper(appContext)
 
@@ -373,32 +372,6 @@ class MainViewModel(val application: Application) : ViewModel() {
         imgBitmap = null
     }
 
-    //history
-    var correctionSelected by mutableStateOf(true)
-    var leaveSelected by mutableStateOf(false)
-
-    val onCorrectionTabClicked: () -> Unit = {
-        correctionSelected = true
-        leaveSelected = false
-    }
-
-    val onLeaveTabClicked: () -> Unit = {
-        leaveSelected = true
-        correctionSelected = false
-    }
-
-    var isCancelLeaveDialogShown by mutableStateOf(false)
-
-    fun toggleCancelLeaveDialog() {
-        isCancelLeaveDialogShown = !isCancelLeaveDialogShown
-    }
-
-    var isCancelCorrectionDialogShown by mutableStateOf(false)
-
-    fun toggleCancelCorrectionDialog() {
-        isCancelCorrectionDialogShown = !isCancelCorrectionDialogShown
-    }
-
     //calendar
     var isCalendarInit by mutableStateOf(false)
         private set
@@ -439,7 +412,32 @@ class MainViewModel(val application: Application) : ViewModel() {
         isRequestCorrectionButtonEnabled = newIsRequestCorrectionEnabled
     }
 
-    //leave & correction request
+    //history
+
+    var correctionSelected by mutableStateOf(true)
+    var leaveSelected by mutableStateOf(false)
+
+    val onCorrectionTabClicked: () -> Unit = {
+        correctionSelected = true
+        leaveSelected = false
+    }
+
+    val onLeaveTabClicked: () -> Unit = {
+        leaveSelected = true
+        correctionSelected = false
+    }
+
+    var isCancelLeaveDialogShown by mutableStateOf(false)
+
+    fun toggleCancelLeaveDialog() {
+        isCancelLeaveDialogShown = !isCancelLeaveDialogShown
+    }
+
+    var isCancelCorrectionDialogShown by mutableStateOf(false)
+
+    fun toggleCancelCorrectionDialog() {
+        isCancelCorrectionDialogShown = !isCancelCorrectionDialogShown
+    }
     var isHistoryInit by mutableStateOf(false)
         private set
 
