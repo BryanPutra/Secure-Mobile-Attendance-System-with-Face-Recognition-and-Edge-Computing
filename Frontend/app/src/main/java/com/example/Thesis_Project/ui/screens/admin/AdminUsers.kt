@@ -28,10 +28,7 @@ import com.example.Thesis_Project.backend.db.db_models.LeaveRequest
 import com.example.Thesis_Project.backend.db.db_models.User
 import com.example.Thesis_Project.backend.db.db_util
 import com.example.Thesis_Project.spacing
-import com.example.Thesis_Project.ui.components.AdminApproveUserDialog
-import com.example.Thesis_Project.ui.components.AdminCreateUserDialog
-import com.example.Thesis_Project.ui.components.AdminUsersRow
-import com.example.Thesis_Project.ui.components.AdminViewUserDialog
+import com.example.Thesis_Project.ui.components.*
 import com.example.Thesis_Project.viewmodel.MainViewModel
 import kotlinx.coroutines.*
 import java.util.*
@@ -172,11 +169,13 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
                     AdminUsersRow(user = userItem, onViewClick = { viewItem ->
                         selectedViewUser = viewItem
                         mainViewModel.toggleViewUserDialog()
-                    }) {
-                        approveItem ->
+                    }, onApproveClick = { approveItem ->
                         selectedViewUser = approveItem
                         mainViewModel.toggleApproveUserRequestDialog()
-                    }
+                    }, onViewAttendanceUser = { viewAttendanceItem ->
+                        selectedViewUser = viewAttendanceItem
+                        mainViewModel.toggleViewAttendanceUserDialog()
+                    })
                     if (index != lastUserItemIndex?.minus(1)) {
                         Box(
                             modifier = Modifier
@@ -190,6 +189,12 @@ fun AdminUsersContainer(navController: NavController, mainViewModel: MainViewMod
         }
         if (mainViewModel.isCreateUserDialogShown) {
             AdminCreateUserDialog(mainViewModel = mainViewModel)
+        }
+        if (mainViewModel.isAttendanceUserDialogShown) {
+            AdminViewAttendanceUserDialog(mainViewModel = mainViewModel, user = selectedViewUser) {
+                selectedViewUser = null
+                mainViewModel.toggleViewAttendanceUserDialog()
+            }
         }
         if (mainViewModel.isViewUserDialogShown) {
             AdminViewUserDialog(mainViewModel = mainViewModel, user = selectedViewUser) {

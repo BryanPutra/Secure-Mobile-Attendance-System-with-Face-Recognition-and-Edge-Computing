@@ -53,7 +53,7 @@ fun AdminUsersApproveCorrectionRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = MaterialTheme.spacing.spaceMedium)
-            .clickable{
+            .clickable {
                 onViewClick(correctionRequest)
             },
         horizontalArrangement = Arrangement.SpaceBetween,

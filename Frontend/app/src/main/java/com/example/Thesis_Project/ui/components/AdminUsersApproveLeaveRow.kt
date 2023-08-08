@@ -32,10 +32,6 @@ fun AdminUsersApproveLeaveRow(
     onRejectClick: (LeaveRequest) -> Unit
 ) {
 
-    if (mainViewModel.isLoading) {
-        CircularLoadingBar()
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()

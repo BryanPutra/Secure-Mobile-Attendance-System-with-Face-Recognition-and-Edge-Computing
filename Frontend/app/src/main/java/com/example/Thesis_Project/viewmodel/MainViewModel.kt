@@ -195,6 +195,12 @@ class MainViewModel(val application: Application) : ViewModel() {
         isViewUserDialogShown = !isViewUserDialogShown
     }
 
+    var isAttendanceUserDialogShown by mutableStateOf(false)
+
+    fun toggleViewAttendanceUserDialog() {
+        isAttendanceUserDialogShown = !isAttendanceUserDialogShown
+    }
+
     var isApproveUserRequestDialogShown by mutableStateOf(false)
 
     fun toggleApproveUserRequestDialog() {
@@ -401,7 +407,6 @@ class MainViewModel(val application: Application) : ViewModel() {
             Log.d("calendarSelectedDate", "calendarSelectedDate null")
         }
     }
-
 
     var isRequestLeaveButtonEnabled: Boolean by mutableStateOf(true)
     val setIsRequestLeaveButtonEnabled: (Boolean) -> Unit = { newIsRequestLeaveButtonEnabled ->

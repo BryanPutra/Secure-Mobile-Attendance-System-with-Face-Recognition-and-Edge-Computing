@@ -55,6 +55,7 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
     var dateToIsValid by remember { mutableStateOf(true) }
     var detailIsValid by remember { mutableStateOf(true) }
     var dateIsValid by remember { mutableStateOf(false) }
+    var dateIsHoliday by remember { mutableStateOf(false) }
     var confirmLeaveRequest by remember { mutableStateOf(false) }
 
 
@@ -187,6 +188,11 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
         dateFromIsValid = isValidLeaveRequestDateFrom(dateFrom)
         dateToIsValid = isValidLeaveRequestDateTo(dateFrom, dateTo)
         detailIsValid = isValidDetailRequest(detail)
+        dateIsHoliday =
+            checkDateIsHoliday(dateFrom, mainViewModel.holidaysList) || checkDateIsHoliday(
+                dateTo,
+                mainViewModel.holidaysList
+            )
 
         if (!dateFromIsValid) {
             errorText =
@@ -200,8 +206,13 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
             return
         }
 
-        if (!detailIsValid){
+        if (!detailIsValid) {
             errorText = "Please fill in the details"
+            return
+        }
+
+        if (dateIsHoliday){
+            errorText = "Date is a holiday"
             return
         }
 
@@ -303,7 +314,10 @@ fun LeaveRequestDialog(mainViewModel: MainViewModel) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceLarge)
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceLarge),

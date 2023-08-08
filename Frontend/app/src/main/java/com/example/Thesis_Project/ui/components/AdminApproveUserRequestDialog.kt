@@ -170,7 +170,8 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
 
         val tempFilteredCorrection =
             correctionRequests?.filter {
-                formatDateToStringWithOrdinal(it.createdate)?.lowercase()?.contains(searchValue.lowercase()) ?: false
+                formatDateToStringWithOrdinal(it.createdate)?.lowercase()
+                    ?.contains(searchValue.lowercase()) ?: false
             }
         if (tempFilteredCorrection != null) {
             for (i in tempFilteredCorrection) {
@@ -414,6 +415,7 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
             confirmButton = {
                 Button(
                     onClick = {
+                        approveCorrectionDialogShown = false
                         onApproveCorrectionClicked()
                     }
                 ) {
@@ -444,6 +446,7 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
             confirmButton = {
                 Button(
                     onClick = {
+                        rejectCorrectionDialogShown = false
                         onRejectCorrectionClicked()
                     }
                 ) {
@@ -484,6 +487,7 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
             confirmButton = {
                 Button(
                     onClick = {
+                        approveLeaveDialogShown = false
                         onApproveLeaveClicked()
                     }
                 ) {
@@ -514,6 +518,7 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
             confirmButton = {
                 Button(
                     onClick = {
+                        rejectLeaveDialogShown = false
                         onRejectLeaveClicked()
                     }
                 ) {
@@ -539,6 +544,10 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
             usePlatformDefaultWidth = false
         )
     ) {
+
+        if(mainViewModel.isLoading){
+            CircularLoadingBar()
+        }
 
         Card(
             modifier = Modifier
@@ -634,7 +643,10 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
                         }
                     }
                     if (correctionRequests != null && correctionRequests!!.isNotEmpty()) {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
+                            modifier = Modifier.height(250.dp)
+                        ) {
                             itemsIndexed(filteredCorrectionQuery) { index, correctionRequestItem ->
                                 AdminUsersApproveCorrectionRow(
                                     mainViewModel = mainViewModel,
@@ -721,8 +733,11 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
                         }
                     }
                     if (leaveRequests != null && leaveRequests!!.isNotEmpty()) {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium)) {
-                            itemsIndexed(filteredLeaveQuery!!) { index, leaveRequestItem ->
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.spaceMedium),
+                            modifier = Modifier.height(250.dp)
+                        ) {
+                            itemsIndexed(filteredLeaveQuery) { index, leaveRequestItem ->
                                 AdminUsersApproveLeaveRow(
                                     mainViewModel = mainViewModel,
                                     leaveRequest = leaveRequestItem,
@@ -747,6 +762,14 @@ fun AdminApproveUserDialog(mainViewModel: MainViewModel, user: User?, onCancelCl
                                 }
                             }
                         }
+                    } else {
+                        Text(
+                            text = "No leave request found",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = MaterialTheme.spacing.spaceMedium)
+                        )
                     }
                 }
                 Row(

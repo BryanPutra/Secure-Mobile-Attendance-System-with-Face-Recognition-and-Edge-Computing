@@ -362,7 +362,7 @@ fun CorrectionRequestDialog(mainViewModel: MainViewModel, selectedAttendance: At
                 reason = detail,
                 attendanceid = selectedAttendance?.attendanceid,
                 timein = replaceTimeInDate(selectedAttendance?.timein, tapInTime),
-                timeout = replaceTimeInDate(selectedAttendance?.timein, tapOutTime)
+                timeout = replaceTimeInDate(selectedAttendance?.timeout, tapOutTime)
             )
             Log.d("tempCorrectionRequest", "$tempCorrectionRequest")
         }
